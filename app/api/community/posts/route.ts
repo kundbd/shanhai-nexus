@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { discussionId } from "@/lib/directory/reviews";
-import { CommunityError,postHref } from "@/lib/community/limits";
+import { CommunityError } from "@/lib/community/limits";
 import { cleanPostBody,postWriteAllowed,targetPost,writeCommunityPost } from "@/lib/community/posts";
 import { discardCommunityFiles,readPostForm,saveCommunityFiles,type MediaFile } from "@/lib/community/media";
 import { communityFailure,communityResponse,requireCommunityMember } from "@/lib/community/request";
@@ -37,11 +37,9 @@ export async function POST(request:NextRequest) {
       return communityResponse({message:penalty.strike===1?firstWarning:repeatedWarning,removed:true},422);
     }
     files=await saveCommunityFiles(attachments);
-    const pending=assessment?.decision==="review";
-    const post=writeCommunityPost(db,member.id,body,files,replyTo,Date.now(),pending);
+    writeCommunityPost(db,member.id,body,files,replyTo);
     files=[];
-    if(pending)return communityResponse({pending:true,message:"已提交人工复核，审核通过后公开。"},202);
-    return communityResponse({href:replyTo?`${postHref(replyTo)}?posted=${post.id}#post-${post.id}`:postHref(post.id)},201);
+    return communityResponse({pending:true,message:"已提交审核，审核通过后公开。"},202);
   } catch(error) {
     await discardCommunityFiles(files.map(file=>file.id));
     return communityFailure(error);

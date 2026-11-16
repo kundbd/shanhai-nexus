@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { registerMember } from "./member-fixture";
 
-test("signed posts, photo and video attachments, reactions and private bookmarks",async({page,browser,baseURL,request})=>{
+test("posts and media stay private until approved, then support community interactions",async({page,browser,baseURL,request})=>{
   const label="数字工具体验 "+randomBytes(4).toString("hex");
   const replyText="附上视频演示 "+randomBytes(4).toString("hex");
   const headers={"sec-fetch-site":"same-origin"};
@@ -18,20 +18,54 @@ test("signed posts, photo and video attachments, reactions and private bookmarks
   await page.getByRole("textbox",{name:"写帖子"}).fill(label);
   const png=await sharp({create:{width:40,height:40,channels:3,background:"#244e46"}}).png().toBuffer();
   await page.locator("#compose input[type=file]").setInputFiles({name:"photo.png",mimeType:"image/png",buffer:png});
-  await page.getByRole("button",{name:"发布帖子"}).click();
-  await expect(page).toHaveURL(/\/community\/posts\/\d+$/);
-  const permalink=new URL(page.url()).pathname;
-  const original=page.locator("article.social-card").first();
-  await expect(original.getByText(label,{exact:true})).toBeVisible();
-  await expect(original.getByText(author.username,{exact:true})).toBeVisible();
-  await expect(original.locator(".social-views")).toHaveText("浏览 1");
-  const photo=original.getByRole("img",{name:/的照片/});
-  await expect.poll(()=>photo.evaluate(img=>(img as HTMLImageElement).naturalWidth)).toBe(40);
-  const photoSrc=await photo.getAttribute("src");
-  expect((await request.get(photoSrc!)).headers()["content-type"]).toContain("image/webp");
-
+  await page.getByRole("button",{name:"提交帖子审核"}).click();
+  await expect(page.locator("#compose").getByRole("status")).toContainText("已提交审核");
+  await expect(page.locator("article.social-card").getByText(label,{exact:true})).toHaveCount(0);
+  const editor=await browser.newPage({baseURL});
   const visitor=await browser.newPage({baseURL,viewport:page.viewportSize()??undefined});
   try {
+    await editor.goto("/admin/moderation");
+    await editor.getByLabel("用户名").fill("test-editor");
+    await editor.getByLabel("密码").fill(process.env.E2E_ADMIN_PASSWORD!);
+    await editor.getByRole("button",{name:"登录后台"}).click();
+    await expect(editor).not.toHaveURL(/\/admin\/login/);
+    await editor.goto("/admin/moderation");
+    const pendingPhoto=editor.locator("article").filter({hasText:label});
+    await expect(pendingPhoto).toBeVisible();
+    const pendingId=await pendingPhoto.locator('input[name="id"]').inputValue();
+    const permalink=`/community/posts/${pendingId}`;
+    const reviewPhoto=pendingPhoto.getByRole("img",{name:"图片 1"});
+    await expect.poll(()=>reviewPhoto.evaluate(img=>(img as HTMLImageElement).naturalWidth)).toBe(40);
+    const reviewPhotoSrc=(await reviewPhoto.getAttribute("src"))!;
+    const publicPhotoSrc=reviewPhotoSrc.replace("/api/admin/community-media/","/api/community/media/");
+    await visitor.goto("/community");
+    await expect(visitor.getByText(label,{exact:true})).toHaveCount(0);
+    expect((await request.get(permalink)).status()).toBe(404);
+    expect((await request.get(reviewPhotoSrc)).status()).toBe(404);
+    expect((await request.get(publicPhotoSrc)).status()).toBe(404);
+    expect((await request.head(publicPhotoSrc)).status()).toBe(404);
+    const incomplete=await editor.request.post("/api/admin/manage",{
+      headers:{origin:baseURL!},form:{action:"ai-moderation-approve",id:pendingId},maxRedirects:0,
+    });
+    expect(incomplete.status()).toBe(303);
+    expect(decodeURIComponent(incomplete.headers().location)).toContain("逐一审核");
+    await pendingPhoto.getByRole("checkbox",{name:/图片 1/}).check();
+    await pendingPhoto.getByRole("button",{name:"公开帖子"}).click();
+    await expect(editor.getByRole("status")).toContainText("已公开帖子");
+    expect((await editor.request.get(reviewPhotoSrc)).status()).toBe(404);
+
+    await page.bringToFront();
+    await page.goto(permalink);
+    const original=page.locator("article.social-card").first();
+    await expect(original.getByText(label,{exact:true})).toBeVisible();
+    await expect(original.getByText(author.username,{exact:true})).toBeVisible();
+    await expect(original.locator(".social-views")).toHaveText("浏览 1");
+    const photo=original.getByRole("img",{name:/的照片/});
+    await expect.poll(()=>photo.evaluate(img=>(img as HTMLImageElement).naturalWidth)).toBe(40);
+    const photoSrc=await photo.getAttribute("src");
+    expect((await request.get(photoSrc!)).headers()["content-type"]).toContain("image/webp");
+
+    await visitor.bringToFront();
     await visitor.goto(permalink);
     await expect(visitor.getByText(label,{exact:true})).toBeVisible();
     await expect(visitor.locator("article.social-card .social-views").first()).toHaveText("浏览 2");
@@ -60,7 +94,24 @@ test("signed posts, photo and video attachments, reactions and private bookmarks
     const clip=readFileSync(resolve("tests/fixtures/community-clip.webm"));
     await visitor.getByRole("textbox",{name:"写回复"}).fill(replyText);
     await visitor.locator("#reply input[type=file]").setInputFiles({name:"recording.webm",mimeType:"video/webm",buffer:clip});
-    await visitor.getByRole("button",{name:"发布回复"}).click();
+    await visitor.getByRole("button",{name:"提交回复审核"}).click();
+    await expect(visitor.locator("#reply").getByRole("status")).toContainText("已提交审核");
+    await expect(visitor.locator("#replies").getByText(replyText,{exact:true})).toHaveCount(0);
+    await editor.goto("/admin/moderation");
+    const pendingVideo=editor.locator("article").filter({hasText:replyText});
+    await expect(pendingVideo).toBeVisible();
+    const previewVideo=pendingVideo.locator("video");
+    const privateVideoSrc=(await previewVideo.getAttribute("src"))!;
+    const publicVideoSrc=privateVideoSrc.replace("/api/admin/community-media/","/api/community/media/");
+    expect((await request.get(privateVideoSrc)).status()).toBe(404);
+    expect((await request.get(publicVideoSrc,{headers:{Range:"bytes=0-15"}})).status()).toBe(404);
+    expect((await editor.request.get(privateVideoSrc,{headers:{Range:"bytes=0-15"}})).status()).toBe(206);
+    await expect.poll(()=>previewVideo.evaluate(element=>(element as HTMLVideoElement).videoWidth)).toBe(64);
+    await pendingVideo.getByRole("checkbox",{name:/视频 1/}).check();
+    await pendingVideo.getByRole("button",{name:"公开帖子"}).click();
+    await expect(editor.getByRole("status")).toContainText("已公开帖子");
+    await visitor.bringToFront();
+    await visitor.reload();
     const reply=visitor.locator("#replies .social-card").filter({hasText:replyText});
     await expect(reply.getByText(member.username,{exact:true})).toBeVisible();
     const video=reply.locator("video");
@@ -75,7 +126,22 @@ test("signed posts, photo and video attachments, reactions and private bookmarks
     await reply.getByRole("button",{name:"删除帖子"}).click();
     await expect(visitor.getByText(replyText,{exact:true})).toHaveCount(0);
     expect((await request.get(videoSrc!)).status()).toBe(404);
+
+    const rejected=`待拒绝图片 ${label}`;
+    await page.goto("/community");
+    await page.getByRole("textbox",{name:"写帖子"}).fill(rejected);
+    await page.locator("#compose input[type=file]").setInputFiles({name:"rejected.png",mimeType:"image/png",buffer:png});
+    await page.getByRole("button",{name:"提交帖子审核"}).click();
+    await expect(page.locator("#compose").getByRole("status")).toContainText("已提交审核");
+    await editor.goto("/admin/moderation");
+    const rejectedRow=editor.locator("article").filter({hasText:rejected});
+    const rejectedSrc=(await rejectedRow.getByRole("img",{name:"图片 1"}).getAttribute("src"))!;
+    await rejectedRow.getByRole("button",{name:"拒绝发布"}).click();
+    await expect(editor.getByRole("status")).toContainText("已拒绝发布");
+    expect((await editor.request.get(rejectedSrc)).status()).toBe(404);
+    expect((await request.get(rejectedSrc.replace("/api/admin/community-media/","/api/community/media/"))).status()).toBe(404);
   } finally {
+    await editor.close();
     await visitor.close();
   }
 });

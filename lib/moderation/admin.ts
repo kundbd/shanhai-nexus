@@ -1,5 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
-import { discardCommunityFiles } from "../community/media";
+import { discardCommunityFiles,type MediaType } from "../community/media";
+import { targetPost } from "../community/posts";
 import { all,one,transaction } from "../directory/db";
 import { matchingReviewWords } from "../directory/review-word-rules";
 import { reviewBlockedWords } from "../directory/reviews";
@@ -8,29 +9,37 @@ import { screenContent } from "./service";
 import type { ContentSurface } from "./policy";
 import { recordContentPenalty } from "./store";
 
-type Item={id:number;account:number|null;body:string;pending:number};
+type Item={id:number;account:number|null;body:string;pending:number;reply_to:number|null};
+type ReviewMedia={id:string;mime:MediaType;post_id:number};
 function moderationItem(db:DatabaseSync,surface:ContentSurface,id:number) {
   const sql=surface==="post"?
-    "SELECT id,author_id account,body,ai_pending pending FROM community_posts WHERE id=? AND hidden=0":
-    "SELECT id,account_id account,body,ai_pending pending FROM user_reviews WHERE id=? AND moderation<>'rejected'";
+    "SELECT id,author_id account,body,ai_pending pending,reply_to FROM community_posts WHERE id=? AND hidden=0":
+    "SELECT id,account_id account,body,ai_pending pending,reply_to FROM user_reviews WHERE id=? AND moderation<>'rejected'";
   return one<Item>(db,sql,id);
 }
 
 export function pendingModeration(db:DatabaseSync,page:number) {
-  return all<Item&{surface:ContentSurface}>(db,`SELECT * FROM (
-    SELECT id,author_id account,body,ai_pending pending,'post' surface,created_at time FROM community_posts WHERE hidden=0 AND ai_pending=1
+  const items=all<Item&{surface:ContentSurface}>(db,`SELECT * FROM (
+    SELECT id,author_id account,body,ai_pending pending,reply_to,'post' surface,created_at time FROM community_posts WHERE hidden=0 AND ai_pending=1
     UNION ALL
-    SELECT id,account_id account,body,ai_pending pending,'review' surface,unixepoch(submitted_at)*1000 time FROM user_reviews WHERE moderation='pending' AND ai_pending=1
+    SELECT id,account_id account,body,ai_pending pending,reply_to,'review' surface,unixepoch(submitted_at)*1000 time FROM user_reviews WHERE moderation='pending' AND ai_pending=1
   ) ORDER BY time DESC, surface, id DESC LIMIT 31 OFFSET ?`,(page-1)*30);
+  const posts=items.filter(item=>item.surface==="post").map(item=>item.id);
+  const files=posts.length?all<ReviewMedia>(db,`SELECT id,content_type mime,post_id FROM community_media
+    WHERE post_id IN (${posts.map(()=>"?").join(",")}) ORDER BY position`,...posts):[];
+  return items.map(item=>({...item,media:item.surface==="post"?files.filter(file=>file.post_id===item.id):[]}));
 }
 
-export function approvePendingPost(db:DatabaseSync,id:number,actor:string) {
+export function approvePendingPost(db:DatabaseSync,id:number,actor:string,reviewedMedia:readonly string[]=[]) {
   transaction(db,()=>{
     const post=moderationItem(db,"post",id);
     if(!post?.pending)throw new Error("找不到待复核的帖子。");
     if(matchingReviewWords(post.body,reviewBlockedWords(db)).length)throw new Error("帖子仍包含屏蔽词，无法公开。");
+    if(post.reply_to)targetPost(db,post.reply_to);
+    const files=all<{id:string}>(db,"SELECT id FROM community_media WHERE post_id=?",id).map(file=>file.id);
+    if(files.length!==reviewedMedia.length||files.some(file=>!reviewedMedia.includes(file)))throw new Error("请逐一审核并确认本帖所有图片或视频。");
     db.prepare("UPDATE community_posts SET ai_pending=0 WHERE id=?").run(id);
-    audit(db,actor,"approve","community_posts",id,{ai_pending:1},{ai_pending:0});
+    audit(db,actor,"approve","community_posts",id,{ai_pending:1},{ai_pending:0,reviewed_attachments:files});
   });
 }
 
@@ -41,7 +50,7 @@ export async function moderateWithAi(db:DatabaseSync,surface:ContentSurface,id:n
   if(!assessment)throw new Error("AI 审核未启用。");
   if(assessment.decision==="review")return "DSH 暂未给出可执行的结论，请人工复核。";
   if(assessment.decision==="allow") {
-    if(item.pending&&surface==="post")approvePendingPost(db,id,actor);
+    if(item.pending&&surface==="post")return "DSH 正文审核通过，帖子及附件等待管理员审核。";
     if(surface==="review") db.prepare("UPDATE user_reviews SET ai_pending=0 WHERE id=?").run(id);
     return "DSH 审核通过。";
   }

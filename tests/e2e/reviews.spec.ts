@@ -107,10 +107,17 @@ test("members can review privately by account and admins can publish or block co
     await page.goto("/community");
     const published="这条旧帖含有社区测试短语";
     await page.getByRole("textbox",{name:"写帖子"}).fill(published);
-    await page.getByRole("button",{name:"发布帖子"}).click();
-    await expect(page).toHaveURL(/\/community\/posts\/\d+$/);
+    await page.getByRole("button",{name:"提交帖子审核"}).click();
+    await expect(page.locator("#compose").getByRole("status")).toContainText("已提交审核");
+    await editor.goto("/admin/moderation");
+    const queued=editor.locator("article").filter({hasText:published});
+    const postId=await queued.locator('input[name="id"]').inputValue();
+    await queued.getByRole("button",{name:"公开帖子"}).click();
+    await expect(editor.getByRole("status")).toContainText("已公开帖子");
+    await page.goto(`/community/posts/${postId}`);
     const postURL=page.url();
 
+    await editor.goto("/admin/reviews");
     await editor.getByRole("link",{name:"管理社区帖子"}).click();
     await expect(editor.getByRole("heading",{name:"社区帖子管理"})).toBeVisible();
     await expect(words).toHaveValue(/操作很顺手/);
@@ -124,13 +131,13 @@ test("members can review privately by account and admins can publish or block co
 
     const draft="带空格的社区 测试短语";
     await page.getByRole("textbox",{name:"写回复"}).fill(draft);
-    await page.getByRole("button",{name:"发布回复"}).click();
+    await page.getByRole("button",{name:"提交回复审核"}).click();
     await expect(page.locator("#reply").getByRole("alert")).toContainText("内容包含屏蔽词");
     await expect(page.getByRole("textbox",{name:"写回复"})).toHaveValue(draft);
     await expect(page).toHaveURL(postURL);
     await page.goto("/community");
     await page.getByRole("textbox",{name:"写帖子"}).fill(draft);
-    await page.getByRole("button",{name:"发布帖子"}).click();
+    await page.getByRole("button",{name:"提交帖子审核"}).click();
     await expect(page.locator("#compose").getByRole("alert")).toContainText("内容包含屏蔽词");
     await expect(page.locator("article.social-card").getByText(draft,{exact:true})).toHaveCount(0);
   } finally {

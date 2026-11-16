@@ -107,7 +107,7 @@ export function targetPost(db:DatabaseSync,id:number) {
   return row;
 }
 
-export function writeCommunityPost(db:DatabaseSync,author:number,text:string,files:readonly MediaFile[],replyTo?:number,time=Date.now(),pending=false) {
+export function writeCommunityPost(db:DatabaseSync,author:number,text:string,files:readonly MediaFile[],replyTo?:number,time=Date.now()) {
   return transaction(db,()=>{
     postWriteAllowed(db,author,time);
     const body=cleanPostBody(db,text);
@@ -120,8 +120,8 @@ export function writeCommunityPost(db:DatabaseSync,author:number,text:string,fil
         FROM community_media m JOIN community_posts p ON p.id=m.post_id`,author)!;
       if(totals.all_bytes+bytes>diskBudget||totals.member_bytes+bytes>memberBudget) throw new CommunityError("附件空间已满，可继续发布文字。",413);
     }
-    const id=Number(db.prepare("INSERT INTO community_posts(author_id,body,thread_id,reply_to,created_at,ai_pending) VALUES (?,?,?,?,?,?)")
-      .run(author,body,root,replyTo??null,time,pending?1:0).lastInsertRowid);
+    const id=Number(db.prepare("INSERT INTO community_posts(author_id,body,thread_id,reply_to,created_at,ai_pending) VALUES (?,?,?,?,?,1)")
+      .run(author,body,root,replyTo??null,time).lastInsertRowid);
     const insert=db.prepare("INSERT INTO community_media(id,post_id,position,content_type,size_bytes) VALUES (?,?,?,?,?)");
     for(const [position,file] of files.entries())insert.run(file.id,id,position,file.mime,file.bytes);
     return {id,root};
@@ -153,6 +153,11 @@ export function removeCommunityPost(db:DatabaseSync,id:number,owner?:number,edit
 export function publicCommunityMedia(id:string,db=directory()) {
   return one<{content_type:MediaType;size_bytes:number}>(db,`SELECT m.content_type,m.size_bytes FROM community_media m
     JOIN community_posts p ON p.id=m.post_id WHERE m.id=? AND ${visible}`,id);
+}
+
+export function pendingCommunityMedia(id:string,db=directory()) {
+  return one<{content_type:MediaType;size_bytes:number}>(db,`SELECT m.content_type,m.size_bytes FROM community_media m
+    JOIN community_posts p ON p.id=m.post_id WHERE m.id=? AND p.hidden=0 AND p.ai_pending=1`,id);
 }
 
 export function communityModeration(page:number,db=directory()) {

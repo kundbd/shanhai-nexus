@@ -39,7 +39,7 @@ export default async function Community({searchParams}:{searchParams:Promise<Par
     {view==="reviews"?<ReviewThreads page={page}/>:<>
       {view==="posts"&&<section id="compose" aria-label="发表帖子">
         {member?<PostComposer username={member.username} loginHref={login}/>:
-          <p className="plain-empty boxed-empty"><Link className="text-link" href={login}>登录后发帖</Link>，也可以点赞、转发、收藏和回复。</p>}
+          <p className="plain-empty boxed-empty"><Link className="text-link" href={login}>登录后发帖</Link>，审核通过后公开。也可以点赞、转发、收藏和回复。</p>}
       </section>}
       <section className="community-feed" aria-label={view==="saved"?"已收藏的帖子":"公开帖子"}>
         {posts.length===0&&<p className="plain-empty boxed-empty">{view==="saved"?"暂无收藏。":"暂无帖子。"}</p>}

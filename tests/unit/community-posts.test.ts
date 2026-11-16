@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { all,openDirectory } from "../../lib/directory/db";
 import { communityFeed,communityPost,communityReplies,publicCommunityMedia,removeCommunityPost,setCommunityReaction,writeCommunityPost } from "../../lib/community/posts";
 import { mediaRange } from "../../lib/community/media";
+import { approvePendingPost } from "../../lib/moderation/admin";
 
 test("community feed keeps bookmarks private and signed reposts idempotent",()=>{
   using db=openDirectory(":memory:");
@@ -12,11 +13,13 @@ test("community feed keeps bookmarks private and signed reposts idempotent",()=>
   const bob=Number(insert.run(randomUUID(),"bob","2026-01-01").lastInsertRowid);
   const media=randomUUID();
   const {id}=writeCommunityPost(db,alice,"公开体验",[{id:media,mime:"image/webp",bytes:17}]);
+  approvePendingPost(db,id,"fixture",[media]);
   assert.equal(communityPost(id,alice,db)?.username,"alice");
   assert.equal(publicCommunityMedia(media,db)?.content_type,"image/webp");
   assert.throws(()=>writeCommunityPost(db,bob,"刷 单 返 利",[]),/屏蔽词/);
   assert.throws(()=>writeCommunityPost(db,bob,"x".repeat(501),[]),/500/);
   const reply=writeCommunityPost(db,bob,"公开回复",[],id);
+  approvePendingPost(db,reply.id,"fixture");
   assert.equal(communityReplies(id,1,bob,db)[0]?.username,"bob");
   assert.equal(communityPost(id,bob,db)?.replies,1);
   setCommunityReaction(db,id,bob,"like",true);

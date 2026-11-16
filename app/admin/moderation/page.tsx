@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { reviewMediaHref } from "@/lib/community/limits";
 import { AdminNav,Notice,requireAdmin } from "@/components/directory/admin";
 import { param,type Params } from "@/components/directory/catalog-page";
 import { directory,one } from "@/lib/directory/db";
@@ -25,7 +27,7 @@ export default async function ModerationAdmin({searchParams}:{searchParams:Promi
     <div className="catalog-heading"><h1>DSH 内容审核</h1></div>
     <AdminNav/><Notice input={input}/>
     <p className="section-note">{!config.enabled?"AI 审核未启用。":!config.key?"缺少 DSH 凭证，文字提交会进入人工复核。":`已启用 · ${config.model}`} · UTC 今日请求 {usage.total} 次，失败 {usage.failures} 次。</p>
-    <p>确认违规后移除内容。首次警告，第二次起禁言 3 天。模型未能判断的内容由管理员复核。</p>
+    <p>帖子、回复及附件须经管理员审核后公开。DSH 检查正文。确认违规后移除内容，首次警告，第二次起禁言 3 天。</p>
     <p className="section-note">涉政审核结合正文语境和现行屏蔽词，识别简繁体、拼音、缩写和拆写等变体。<Link className="text-link" href="/admin/community">管理屏蔽词</Link></p>
     <div className="directory-section"><h2>待人工复核</h2></div>
     {!queue.length&&<p className="plain-empty">暂无待复核内容。</p>}
@@ -36,11 +38,26 @@ export default async function ModerationAdmin({searchParams}:{searchParams:Promi
         <input type="hidden" name="id" value={item.id}/>
         <input type="hidden" name="surface" value={item.surface}/>
         <input type="hidden" name="scope" value="moderation"/>
-        {config.enabled&&item.body&&<button className="button" name="action" value="ai-moderation-check">重新 AI 审核</button>}
-        {item.surface==="post"?<>
+        {item.media.length>0&&<fieldset className="moderation-media">
+          <legend>逐一预览并确认附件</legend>
+          {item.media.map(({id,mime},index)=>{
+            const src=reviewMediaHref(id);
+            const video=mime.startsWith("video/");
+            const label=`${video?"视频":"图片"} ${index+1}`;
+            return <div key={id} className="moderation-attachment">
+              {video?<video src={src} controls playsInline preload="metadata" aria-label={label}/>:
+                <a href={src} target="_blank" rel="noreferrer" aria-label={`查看原${label}`}>
+                  <Image src={src} width={640} height={440} unoptimized alt={label}/>
+                </a>}
+              <label><input type="checkbox" name={`reviewed_media_${id}`} value="yes" required/> {label}审核通过</label>
+            </div>;
+          })}
+        </fieldset>}
+        {config.enabled&&item.body&&<button className="button" name="action" value="ai-moderation-check" formNoValidate>AI 复查正文</button>}
+        {item.surface==="post"&&<>
           <button className="button primary" name="action" value="ai-moderation-approve">公开帖子</button>
-          <button className="button" name="action" value="community-hide">隐藏帖子</button>
-        </>:null}
+          <button className="button" name="action" value="community-hide" formNoValidate>拒绝发布</button>
+        </>}
       </form>
       {item.surface==="review"&&<form className="form-buttons" action="/api/admin/manage" method="post">
         <input type="hidden" name="id" value={item.id}/>

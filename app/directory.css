@@ -220,6 +220,10 @@
 .social-media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 .social-media img,.social-media video{display:block;width:100%;height:auto;max-height:540px;object-fit:contain;background:var(--soft)}
 .social-media-grid img{aspect-ratio:4/3;object-fit:cover}
+.moderation-media{flex-basis:100%;min-width:0;margin-block:8px;padding:10px;border:1px solid var(--line);border-radius:6px}
+.moderation-attachment{margin-block:8px}
+.moderation-attachment img,.moderation-attachment video{display:block;width:100%;height:auto;max-width:480px;max-height:360px;object-fit:contain;background:var(--soft)}
+.moderation-attachment label{display:inline-flex;align-items:center;gap:6px;margin-top:6px}
 .social-actions,.social-composer-buttons,.social-attachments{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
 .social-actions{margin-top:8px}
 .social-composer-buttons{justify-content:space-between}

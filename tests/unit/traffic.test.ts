@@ -3,6 +3,7 @@ import test from "node:test";
 import { all,openDirectory } from "../../lib/directory/db";
 import { recordPageView,trafficReport } from "../../lib/directory/traffic";
 import { communityFeed,communityPost,removeCommunityPost,writeCommunityPost } from "../../lib/community/posts";
+import { approvePendingPost } from "../../lib/moderation/admin";
 
 test("traffic aggregates public paths by minute and returns the rolling 24-hour ranking",()=>{
   using db=openDirectory(":memory:");
@@ -38,8 +39,10 @@ test("post views accumulate beyond the rolling traffic window and count only pub
   const now=Date.UTC(2026,10,16,6);
   const member=Number(db.prepare("INSERT INTO member_accounts(issuer,subject,username,created_at) VALUES ('fixture','post-views','reader','2026-01-01')").run().lastInsertRowid);
   const root=writeCommunityPost(db,member,"数字服务体验",[],undefined,now);
+  approvePendingPost(db,root.id,"fixture");
   const reply=writeCommunityPost(db,member,"补充",[],root.id,now);
-  const pending=writeCommunityPost(db,member,"审核中",[],undefined,now,true);
+  approvePendingPost(db,reply.id,"fixture");
+  const pending=writeCommunityPost(db,member,"审核中",[],undefined,now);
   const path=`/community/posts/${root.id}`;
   assert.equal(communityPost(root.id,undefined,db)?.views,0);
   assert.equal(recordPageView(db,"/community",now),true);

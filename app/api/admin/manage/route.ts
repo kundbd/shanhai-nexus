@@ -27,7 +27,9 @@ export async function POST(request: NextRequest) {
       path="/admin/moderation";
       const id=recordId(form.id);
       if(form.action==="ai-moderation-approve") {
-        approvePendingPost(db,id,actor);
+        const fieldPrefix="reviewed_media_";
+        const reviewedMedia=Object.keys(form).filter(key=>key.startsWith(fieldPrefix)&&form[key]==="yes").map(key=>key.slice(fieldPrefix.length));
+        approvePendingPost(db,id,actor,reviewedMedia);
         return returnTo(request,path,"已公开帖子。",true);
       }
       const surface=choice(form.surface,["post","review"] as const,"内容类型");
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
       path=form.scope==="moderation"?"/admin/moderation":"/admin/community";
       const removed=removeCommunityPost(db,recordId(form.id),undefined,actor);
       await discardCommunityFiles(removed.files);
-      return returnTo(request,path,"已隐藏帖子。",true);
+      return returnTo(request,path,form.scope==="moderation"?"已拒绝发布并移除附件。":"已隐藏帖子。",true);
     }
     if (form.action==="review-words" || form.action==="review-moderate") {
       path=form.action==="review-words"&&form.scope==="community"?"/admin/community":"/admin/reviews";

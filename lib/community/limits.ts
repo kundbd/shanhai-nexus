@@ -11,6 +11,7 @@ export type ReactionKind=typeof reactionKinds[number];
 
 export const postHref=(id:number)=>`/community/posts/${id}`;
 export const mediaHref=(id:string)=>`/api/community/media/${id}`;
+export const reviewMediaHref=(id:string)=>`/api/admin/community-media/${id}`;
 
 export class CommunityError extends Error {
   constructor(message:string,readonly status=400){super(message);}

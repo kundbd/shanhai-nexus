@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { all,openDirectory,transaction } from "../../lib/directory/db";
 import { setReviewBlockedWords,submitReview } from "../../lib/directory/reviews";
-import { communityFeed,communityPost,publicCommunityMedia,setCommunityReaction,writeCommunityPost } from "../../lib/community/posts";
+import { communityFeed,communityPost,pendingCommunityMedia,publicCommunityMedia,removeCommunityPost,setCommunityReaction,writeCommunityPost } from "../../lib/community/posts";
 import { approvePendingPost,moderateWithAi,pendingModeration } from "../../lib/moderation/admin";
 import { deepSeekModeration,parseAssessment } from "../../lib/moderation/provider";
 import { screenContent } from "../../lib/moderation/service";
@@ -31,6 +31,7 @@ test("new content shares account strikes, retry deduplication and 72 hour expira
   assert.equal(submitReview(db,"claude",user,{score:"4"},start+6),"muted");
   assert.throws(()=>writeCommunityPost(db,user,"正常文字",[],undefined,start+6),/禁言期/);
   const original=writeCommunityPost(db,other,"正常帖子",[],undefined,start+6);
+  approvePendingPost(db,original.id,"fixture");
   assert.throws(()=>setCommunityReaction(db,original.id,user,"repost",true,start+6),/禁言期/);
   assert.equal(setCommunityReaction(db,original.id,user,"like",true,start+6).likes,1);
   assert.equal(writingMuted(db,user,end),false);
@@ -42,18 +43,26 @@ test("manual review holds posts, replies, attachments and scores out of public v
   using db=openDirectory(":memory:");
   const user=member(db,"reader");
   const attachment=randomUUID();
-  const root=writeCommunityPost(db,user,"人工复核示例",[{id:attachment,mime:"image/webp",bytes:20}],undefined,Date.now(),true);
+  const second=randomUUID();
+  const root=writeCommunityPost(db,user,"人工复核示例",[{id:attachment,mime:"image/webp",bytes:20},{id:second,mime:"image/webp",bytes:21}]);
   assert.equal(communityPost(root.id,user,db),undefined);
   assert.equal(publicCommunityMedia(attachment,db),undefined);
+  assert.equal(pendingCommunityMedia(attachment,db)?.size_bytes,20);
   assert.equal(communityFeed(1,user,false,db).length,0);
   assert.equal(submitReview(db,"chatgpt",user,{score:"3",body:"待复核的评价"},Date.now(),{decision:"review"}),"submitted");
   assert.equal(pendingModeration(db,1).length,2);
-  approvePendingPost(db,root.id,"test-editor");
+  assert.throws(()=>approvePendingPost(db,root.id,"test-editor"),/逐一审核/);
+  assert.throws(()=>approvePendingPost(db,root.id,"test-editor",[attachment]),/逐一审核/);
+  assert.throws(()=>approvePendingPost(db,root.id,"test-editor",[attachment,randomUUID()]),/逐一审核/);
+  approvePendingPost(db,root.id,"test-editor",[attachment,second]);
   assert.equal(communityPost(root.id,user,db)?.body,"人工复核示例");
   assert.equal(publicCommunityMedia(attachment,db)?.content_type,"image/webp");
-  const reply=writeCommunityPost(db,user,"待复核的回复",[],root.id,Date.now(),true);
+  assert.equal(pendingCommunityMedia(attachment,db),undefined);
+  const reply=writeCommunityPost(db,user,"待复核的回复",[],root.id);
   assert.equal(communityPost(reply.id,user,db),undefined);
   assert.equal(communityPost(root.id,user,db)?.replies,0);
+  removeCommunityPost(db,root.id,user);
+  assert.throws(()=>approvePendingPost(db,reply.id,"test-editor"),/已不存在或已隐藏/);
 });
 
 test("DSH failures hold text, require quoted evidence, and withdraw historical posts once",async(t)=>{
@@ -77,6 +86,7 @@ test("DSH failures hold text, require quoted evidence, and withdraw historical p
     return Response.json({choices:[{finish_reason:"stop",message:{content:JSON.stringify({decision:"violation",category:"scam",evidence:"可疑的推广用语"})}}]});
   });
   const post=writeCommunityPost(db,user,text,[]);
+  approvePendingPost(db,post.id,"test-editor");
   assert.match(await moderateWithAi(db,"post",post.id,"test-editor"),/已移除内容并警告/);
   assert.equal(communityPost(post.id,user,db),undefined);
   assert.equal(latestPenalty(db,user)?.strike,1);

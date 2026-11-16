@@ -23,6 +23,7 @@ export default async function CommunityAdmin({searchParams}:{searchParams:Promis
   const aiEnabled=moderationConfig().enabled;
   return <div className="frame page admin-page">
     <div className="catalog-heading"><h1>社区帖子管理</h1></div><AdminNav/><Notice input={input}/>
+    <p><Link className="text-link" href="/admin/moderation">审核待发布的帖子和附件</Link></p>
     <details className="admin-import-row" open>
       <summary>社区屏蔽词</summary>
       <ReviewWordsEditor initialWords={words.map(({word})=>word).join("\n")} savedCount={words.length} community/>
