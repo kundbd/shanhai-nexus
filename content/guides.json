@@ -1,0 +1,540 @@
+[
+  {
+    "id": "pdf-to-word",
+    "title": "如何将 PDF 转为可编辑的 Word",
+    "description": "用桌面版 Word 将文字型 PDF 转为 DOCX，并检查表格、分页与字体。",
+    "kind": "guide",
+    "category": "文档办公",
+    "difficulty": "入门",
+    "minutes": 4,
+    "verified": "2026-11-14",
+    "tags": [
+      "PDF",
+      "Word",
+      "文档转换"
+    ],
+    "keywords": [
+      "pdf转word",
+      "pdf变word",
+      "pdf转docx",
+      "可编辑文档",
+      "扫描件",
+      "pdf转换"
+    ],
+    "sources": [
+      {
+        "title": "Microsoft 支持 · 在 Word 中打开 PDF",
+        "url": "https://support.microsoft.com/en-us/word/opening-pdfs-in-word"
+      }
+    ]
+  },
+  {
+    "id": "json-errors",
+    "title": "如何定位 JSON 语法错误",
+    "description": "从双引号、尾逗号和转义入手，找出接口或配置中的格式问题。",
+    "kind": "guide",
+    "category": "开发调试",
+    "difficulty": "入门",
+    "minutes": 5,
+    "verified": "2026-11-14",
+    "tags": [
+      "JSON",
+      "配置文件",
+      "调试"
+    ],
+    "keywords": [
+      "json报错",
+      "json语法",
+      "unexpected token",
+      "invalid json",
+      "json解析失败"
+    ],
+    "sources": [
+      {
+        "title": "IETF · RFC 8259 JSON",
+        "url": "https://www.rfc-editor.org/rfc/rfc8259"
+      }
+    ],
+    "relatedTool": "json"
+  },
+  {
+    "id": "unix-time",
+    "title": "如何区分秒和毫秒时间戳",
+    "description": "把 Unix 时间戳换成可读日期，并检查单位和时区是否一致。",
+    "kind": "guide",
+    "category": "开发调试",
+    "difficulty": "入门",
+    "minutes": 4,
+    "verified": "2026-11-14",
+    "tags": [
+      "时间戳",
+      "日期转换",
+      "UTC"
+    ],
+    "keywords": [
+      "时间戳换日期",
+      "秒毫秒",
+      "unix timestamp",
+      "epoch",
+      "日期偏移",
+      "时区"
+    ],
+    "sources": [
+      {
+        "title": "MDN · JavaScript Date",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date"
+      }
+    ],
+    "relatedTool": "timestamp"
+  },
+  {
+    "id": "base64-utf8",
+    "title": "Base64 转换中文后出现乱码怎么办",
+    "description": "用同一套 UTF-8 编码还原中文、换行与 Emoji。",
+    "kind": "guide",
+    "category": "开发调试",
+    "difficulty": "入门",
+    "minutes": 5,
+    "verified": "2026-11-14",
+    "tags": [
+      "Base64",
+      "UTF-8",
+      "字符编码"
+    ],
+    "keywords": [
+      "base64乱码",
+      "解码中文",
+      "utf8",
+      "编码乱码",
+      "base64url"
+    ],
+    "sources": [
+      {
+        "title": "IETF · RFC 4648 Base64",
+        "url": "https://www.rfc-editor.org/rfc/rfc4648"
+      }
+    ],
+    "relatedTool": "base64"
+  },
+  {
+    "id": "sha256-text",
+    "title": "如何用 SHA-256 比对两段文本",
+    "description": "计算 UTF-8 文本的摘要，并检查容易忽略的空格与换行差异。",
+    "kind": "guide",
+    "category": "开发调试",
+    "difficulty": "入门",
+    "minutes": 4,
+    "verified": "2026-11-14",
+    "tags": [
+      "SHA-256",
+      "哈希",
+      "完整性"
+    ],
+    "keywords": [
+      "哈希校验",
+      "sha256校验",
+      "摘要对比",
+      "文本一致",
+      "hash"
+    ],
+    "sources": [
+      {
+        "title": "NIST · Secure Hash Standard",
+        "url": "https://csrc.nist.gov/pubs/fips/180-4/upd1/final"
+      }
+    ],
+    "relatedTool": "sha256"
+  },
+  {
+    "id": "word-to-pdf",
+    "title": "如何导出分页稳定的 PDF",
+    "description": "使用 Office 内置导出功能，并在发出文件前检查字体与分页。",
+    "kind": "guide",
+    "category": "文档办公",
+    "difficulty": "入门",
+    "minutes": 4,
+    "verified": "2026-11-14",
+    "tags": [
+      "Word",
+      "PDF",
+      "导出"
+    ],
+    "keywords": [
+      "word转pdf",
+      "docx转pdf",
+      "导出pdf",
+      "字体错乱",
+      "分页"
+    ],
+    "sources": [
+      {
+        "title": "Microsoft 支持 · 保存或转换为 PDF",
+        "url": "https://support.microsoft.com/en-gb/office/save-or-convert-to-pdf-or-xps-in-office-desktop-apps-d85416c5-7d77-4fd6-a216-6f4bf7c7c110"
+      }
+    ]
+  },
+  {
+    "id": "http-status",
+    "title": "如何读懂 HTTP 响应状态",
+    "description": "用状态码、响应头与请求 ID 缩小网页或接口故障范围。",
+    "kind": "article",
+    "category": "开发调试",
+    "difficulty": "入门",
+    "minutes": 6,
+    "verified": "2026-11-14",
+    "tags": [
+      "HTTP",
+      "状态码",
+      "接口调试"
+    ],
+    "keywords": [
+      "http响应",
+      "http状态码",
+      "接口失败",
+      "响应头",
+      "请求id",
+      "network"
+    ],
+    "sources": [
+      {
+        "title": "IETF · HTTP Semantics",
+        "url": "https://www.rfc-editor.org/rfc/rfc9110"
+      }
+    ]
+  },
+  {
+    "id": "dns-records",
+    "title": "A、AAAA 与 CNAME 记录怎么选",
+    "description": "弄清域名记录类型，减少站点迁移时的配置错误。",
+    "kind": "article",
+    "category": "网络运维",
+    "difficulty": "进阶",
+    "minutes": 6,
+    "verified": "2026-11-14",
+    "tags": [
+      "DNS",
+      "域名",
+      "CNAME"
+    ],
+    "keywords": [
+      "域名配置",
+      "a记录",
+      "aaaa记录",
+      "cname",
+      "ipv6",
+      "dns记录",
+      "域名绑定"
+    ],
+    "sources": [
+      {
+        "title": "Cloudflare · DNS 排查",
+        "url": "https://developers.cloudflare.com/dns/troubleshooting/dns-issues/"
+      }
+    ]
+  },
+  {
+    "id": "api-401",
+    "title": "AI API 返回 401 怎么办",
+    "description": "检查请求是否带上凭据、密钥是否有效，以及服务端点是否匹配。",
+    "kind": "solution",
+    "category": "AI 接口",
+    "difficulty": "入门",
+    "minutes": 5,
+    "verified": "2026-11-14",
+    "tags": [
+      "401",
+      "身份验证",
+      "API Key"
+    ],
+    "keywords": [
+      "401 unauthorized",
+      "invalid api key",
+      "api认证失败",
+      "鉴权失败",
+      "ai api 401"
+    ],
+    "sources": [
+      {
+        "title": "OpenAI API · 错误码",
+        "url": "https://developers.openai.com/api/docs/guides/error-codes"
+      }
+    ],
+    "diagnosis": "api"
+  },
+  {
+    "id": "api-403",
+    "title": "AI API 返回 403 怎么办",
+    "description": "按响应来源区分项目权限、组织策略与访问范围问题。",
+    "kind": "solution",
+    "category": "AI 接口",
+    "difficulty": "入门",
+    "minutes": 5,
+    "verified": "2026-11-14",
+    "tags": [
+      "403",
+      "权限",
+      "API"
+    ],
+    "keywords": [
+      "403 forbidden",
+      "permission denied api",
+      "没有权限",
+      "访问被拒绝",
+      "ai api 403"
+    ],
+    "sources": [
+      {
+        "title": "OpenAI API · 错误码",
+        "url": "https://developers.openai.com/api/docs/guides/error-codes"
+      }
+    ],
+    "diagnosis": "api"
+  },
+  {
+    "id": "api-429",
+    "title": "AI API 返回 429 怎么办",
+    "description": "区分请求超限与额度不足，选择对应的恢复方式。",
+    "kind": "solution",
+    "category": "AI 接口",
+    "difficulty": "入门",
+    "minutes": 6,
+    "verified": "2026-11-14",
+    "tags": [
+      "429",
+      "限流",
+      "API 额度"
+    ],
+    "keywords": [
+      "429 too many requests",
+      "rate limit",
+      "insufficient_quota",
+      "请求太频繁",
+      "余额",
+      "ai api 429"
+    ],
+    "sources": [
+      {
+        "title": "OpenAI API · 速率限制",
+        "url": "https://developers.openai.com/api/docs/guides/rate-limits"
+      }
+    ],
+    "diagnosis": "api"
+  },
+  {
+    "id": "ssh-connection",
+    "title": "SSH 连接失败如何排查",
+    "description": "按超时、拒绝连接和认证失败，检查网络、端口与登录配置。",
+    "kind": "solution",
+    "category": "网络运维",
+    "difficulty": "进阶",
+    "minutes": 7,
+    "verified": "2026-11-14",
+    "tags": [
+      "SSH",
+      "服务器连接",
+      "公钥"
+    ],
+    "keywords": [
+      "ssh连不上",
+      "ssh连接超时",
+      "connection refused",
+      "connection timed out",
+      "permission denied publickey",
+      "host key verification failed"
+    ],
+    "sources": [
+      {
+        "title": "OpenBSD · ssh(1)",
+        "url": "https://man.openbsd.org/ssh"
+      },
+      {
+        "title": "GitHub Docs · SSH 排查",
+        "url": "https://docs.github.com/en/authentication/troubleshooting-ssh"
+      }
+    ],
+    "diagnosis": "ssh"
+  },
+  {
+    "id": "dns-resolution",
+    "title": "域名解析失败如何排查",
+    "description": "对比 DNS 返回码和记录内容，判断故障出在记录、委派还是缓存。",
+    "kind": "solution",
+    "category": "网络运维",
+    "difficulty": "进阶",
+    "minutes": 7,
+    "verified": "2026-11-14",
+    "tags": [
+      "DNS",
+      "域名解析",
+      "NXDOMAIN"
+    ],
+    "keywords": [
+      "域名打不开",
+      "dns解析失败",
+      "nxdomain",
+      "servfail",
+      "找不到服务器ip",
+      "域名未生效",
+      "解析不了",
+      "域名解析不生效"
+    ],
+    "sources": [
+      {
+        "title": "Cloudflare · DNS 排查",
+        "url": "https://developers.cloudflare.com/dns/troubleshooting/dns-issues/"
+      }
+    ],
+    "diagnosis": "dns"
+  },
+  {
+    "id": "wifi-no-internet",
+    "title": "电脑连上 Wi-Fi 但无法上网怎么办",
+    "description": "用其他设备和 Windows 网络工具，区分路由器、DNS 和电脑自身故障。",
+    "kind": "solution",
+    "category": "网络运维",
+    "difficulty": "入门",
+    "minutes": 6,
+    "verified": "2026-11-14",
+    "tags": [
+      "Wi-Fi",
+      "网络",
+      "Windows"
+    ],
+    "keywords": [
+      "电脑无法连接网络",
+      "电脑没网",
+      "电脑连不上网",
+      "无线网络不可用",
+      "无法上网",
+      "wifi已连接无互联网"
+    ],
+    "sources": [
+      {
+        "title": "Microsoft 支持 · 修复 Windows Wi-Fi 连接",
+        "url": "https://support.microsoft.com/en-us/windows/experience/connectivity-networking/fix-wi-fi-connection-issues-in-windows"
+      }
+    ],
+    "relatedGuides": [
+      "dns-resolution"
+    ]
+  },
+  {
+    "id": "compress-images",
+    "title": "如何压缩图片并尽量保持画质",
+    "description": "按使用尺寸、图像内容和透明需求选择导出格式与质量。",
+    "kind": "guide",
+    "category": "日常数字工具",
+    "difficulty": "入门",
+    "minutes": 5,
+    "verified": "2026-11-14",
+    "tags": [
+      "图片压缩",
+      "WebP",
+      "JPEG",
+      "PNG"
+    ],
+    "keywords": [
+      "图片变小",
+      "压缩图片",
+      "图片减小体积",
+      "保持画质",
+      "优化图片"
+    ],
+    "sources": [
+      {
+        "title": "MDN · 图像格式指南",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types"
+      }
+    ]
+  },
+  {
+    "id": "convert-video",
+    "title": "如何用 FFmpeg 将视频转成 MP4",
+    "description": "保留原文件，在本地转码为常用的 H.264 视频与 AAC 音频。",
+    "kind": "guide",
+    "category": "日常数字工具",
+    "difficulty": "进阶",
+    "minutes": 7,
+    "verified": "2026-11-14",
+    "tags": [
+      "视频转换",
+      "FFmpeg",
+      "MP4"
+    ],
+    "keywords": [
+      "视频转换格式",
+      "mov转mp4",
+      "视频转其他格式",
+      "视频转码",
+      "视频格式转换"
+    ],
+    "sources": [
+      {
+        "title": "FFmpeg · 命令行文档",
+        "url": "https://ffmpeg.org/ffmpeg.html"
+      }
+    ]
+  },
+  {
+    "id": "url-query",
+    "title": "如何在网址参数里传递中文和特殊字符",
+    "description": "按查询参数编码值，避免中文、空格、加号和 & 被错误解释。",
+    "kind": "guide",
+    "category": "开发调试",
+    "difficulty": "入门",
+    "minutes": 5,
+    "verified": "2026-11-14",
+    "tags": [
+      "URL",
+      "查询参数",
+      "百分号编码"
+    ],
+    "keywords": [
+      "url编码",
+      "url解码",
+      "编码中文链接",
+      "百分号",
+      "网址参数"
+    ],
+    "sources": [
+      {
+        "title": "MDN · encodeURIComponent",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent"
+      }
+    ],
+    "relatedTool": "url"
+  },
+  {
+    "id": "ai-429-retries",
+    "title": "如何为 AI API 调用设计重试与限流",
+    "description": "把限流与额度错误分别处理，用有上限的退避保护队列。",
+    "kind": "guide",
+    "category": "AI 接口",
+    "difficulty": "进阶",
+    "minutes": 7,
+    "verified": "2026-11-14",
+    "tags": [
+      "AI API",
+      "重试",
+      "指数退避"
+    ],
+    "keywords": [
+      "ai应用",
+      "api重试",
+      "限并发",
+      "退避抖动",
+      "429自动恢复"
+    ],
+    "sources": [
+      {
+        "title": "OpenAI API · 速率限制",
+        "url": "https://developers.openai.com/api/docs/guides/rate-limits"
+      }
+    ],
+    "relatedTool": "timestamp",
+    "relatedGuides": [
+      "api-429"
+    ],
+    "diagnosis": "api"
+  }
+]

@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env*
+playwright-report
+.playwright-cli
+test-results
+test-results-v03-*
+output
+data
+*.tsbuildinfo
+README.operations.md

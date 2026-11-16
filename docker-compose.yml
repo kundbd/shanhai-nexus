@@ -1,0 +1,69 @@
+name: shanhai-nexus
+services:
+  web:
+    build:
+      context: .
+      args:
+        SITE_URL: ${SITE_URL:-https://shanhainexus.com}
+    init: true
+    restart: unless-stopped
+    environment:
+      SITE_URL: ${SITE_URL:-https://shanhainexus.com}
+      DB_PATH: /app/data/directory.sqlite
+      ADMIN_ORIGIN: ${ADMIN_ORIGIN:-https://shanhainexus.com}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-}
+      FILEBOX_ACCOUNT_ORIGIN: ${FILEBOX_ACCOUNT_ORIGIN:-https://account-test.unziptool.cn}
+      MEMBER_SESSION_KEY: ${MEMBER_SESSION_KEY:-}
+      MEMBER_DEVELOPER_SUBJECT: ${MEMBER_DEVELOPER_SUBJECT:-}
+      EDITOR_AI_ENDPOINT: ${EDITOR_AI_ENDPOINT:-}
+      EDITOR_AI_TOKEN: ${EDITOR_AI_TOKEN:-}
+      DSH_MODERATION_ENABLED: ${DSH_MODERATION_ENABLED:-0}
+      DSH_MODERATION_API_KEY: ${DSH_MODERATION_API_KEY:-}
+      DSH_MODERATION_MODEL: ${DSH_MODERATION_MODEL:-deepseek-flash}
+      DSH_MODERATION_DAILY_LIMIT: ${DSH_MODERATION_DAILY_LIMIT:-120}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    volumes:
+      - directory-data:/app/data
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  refresh:
+    build:
+      context: .
+      target: directory-ops
+    entrypoint: ["./node_modules/.bin/tsx", "scripts/directory-refresh.ts"]
+    command: ["--watch"]
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 45s
+    environment:
+      DB_PATH: /app/data/directory.sqlite
+      DIRECTORY_REFRESH_ENABLED: ${DIRECTORY_REFRESH_ENABLED:-1}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_DISCOVERY_DAILY_LIMIT: ${DEEPSEEK_DISCOVERY_DAILY_LIMIT:-5}
+      DEEPSEEK_PROXY: ${DEEPSEEK_PROXY:-}
+      MERCHANT_PROXY: ${MERCHANT_PROXY:-}
+      MERCHANT_REFRESH_RATE: ${MERCHANT_REFRESH_RATE:-6}
+    volumes:
+      - directory-data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  directory-data:

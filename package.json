@@ -1,0 +1,56 @@
+{
+  "name": "shanhai-nexus",
+  "version": "0.4.0",
+  "private": true,
+  "engines": {
+    "node": "^24.0.0 || >=26"
+  },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "node scripts/prepare-standalone.mjs && node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/start-standalone.mjs",
+    "db:migrate": "tsx scripts/migrate-directory.ts",
+    "db:backup": "node --env-file-if-exists=.env scripts/backup-directory.mjs",
+    "directory:batch": "tsx scripts/merchant-directory.ts",
+    "directory:storefronts": "tsx scripts/import-storefronts.ts",
+    "directory:observations": "tsx scripts/import-third-party-observations.ts",
+    "directory:refresh": "tsx scripts/directory-refresh.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "test": "tsx --test tests/unit/*.test.ts",
+    "test:e2e": "node scripts/prepare-standalone.mjs && playwright test",
+    "directory:avatars": "tsx scripts/collect-merchant-avatars.ts"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.0.1",
+    "diff": "^8.0.0",
+    "ipaddr.js": "^2.5.0",
+    "jsonc-parser": "^3.3.1",
+    "lucide-react": "^0.577.0",
+    "next": "^16.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "sharp": "0.35.5",
+    "socks": "^2.8.10",
+    "tldts": "^7.5.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@next/eslint-plugin-next": "^16.4.6",
+    "@playwright/test": "^1.58.0",
+    "@tailwindcss/postcss": "^4.2.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "tailwindcss": "^4.2.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.72.2"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
+}

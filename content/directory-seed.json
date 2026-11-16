@@ -1,0 +1,1047 @@
+{
+  "date": "2026-11-15",
+  "categories": [
+    {
+      "slug": "ai",
+      "label": "AI 服务",
+      "description": "官方订阅、模型 API 与聚合平台",
+      "parent": null,
+      "position": 0
+    },
+    {
+      "slug": "ai-subscriptions",
+      "label": "官方订阅",
+      "description": "面向个人与团队的官方 AI 产品",
+      "parent": "ai",
+      "position": 0
+    },
+    {
+      "slug": "ai-platforms",
+      "label": "模型与聚合",
+      "description": "模型 API、接入与托管",
+      "parent": "ai",
+      "position": 1
+    },
+    {
+      "slug": "payments",
+      "label": "虚拟卡与支付",
+      "description": "跨境付款、账户、卡片和费用",
+      "parent": null,
+      "position": 1
+    },
+    {
+      "slug": "payment-accounts",
+      "label": "跨境账户与支付",
+      "description": "多币种账户、跨境收付与卡片",
+      "parent": "payments",
+      "position": 0
+    },
+    {
+      "slug": "network",
+      "label": "网络服务",
+      "description": "VPS、云服务器、VPN 与组网",
+      "parent": null,
+      "position": 2
+    },
+    {
+      "slug": "vps",
+      "label": "VPS 与云服务器",
+      "description": "虚拟机与云服务器托管",
+      "parent": "network",
+      "position": 0
+    },
+    {
+      "slug": "vpn",
+      "label": "VPN",
+      "description": "加密连接服务",
+      "parent": "network",
+      "position": 1
+    },
+    {
+      "slug": "network-infrastructure",
+      "label": "组网与基础设施",
+      "description": "DNS、CDN 和设备组网",
+      "parent": "network",
+      "position": 2
+    },
+    {
+      "slug": "digital",
+      "label": "数字工具",
+      "description": "文件处理、云存储与在线协作",
+      "parent": null,
+      "position": 3
+    },
+    {
+      "slug": "cloud-storage",
+      "label": "云存储",
+      "description": "网盘和对象存储",
+      "parent": "digital",
+      "position": 0
+    },
+    {
+      "slug": "digital-services",
+      "label": "在线服务",
+      "description": "文件处理和代码协作",
+      "parent": "digital",
+      "position": 1
+    }
+  ],
+  "sites": [
+    {
+      "slug": "chatgpt",
+      "name": "ChatGPT",
+      "website": "https://chatgpt.com/",
+      "category": "ai-subscriptions",
+      "summary": "OpenAI 的个人与团队 AI 助手，包含网页版对话、文件分析和图像功能。",
+      "aliases": [
+        "OpenAI",
+        "Chat GPT",
+        "聊天机器人"
+      ],
+      "domains": [
+        {
+          "domain": "chat.openai.com",
+          "kind": "historical"
+        }
+      ],
+      "contact": "OpenAI Help Center（help.openai.com）",
+      "products": "Free、Go、Plus、Pro、Business",
+      "payments": "ChatGPT 付费计划支持主要信用卡。",
+      "fees": null,
+      "renewal": "Plus 按月计费。",
+      "refunds": null,
+      "regions": "网页订阅与 API 账单分开。",
+      "verified": true,
+      "source": {
+        "title": "ChatGPT · 官方资料",
+        "url": "https://chatgpt.com/pricing/",
+        "excerpt": "OpenAI 的个人与团队 AI 助手，包含网页版对话、文件分析和图像功能。"
+      },
+      "prices": [
+        {
+          "plan": "Plus",
+          "amount": 2000,
+          "currency": "USD",
+          "period": "月",
+          "region": "官方美元报价",
+          "notes": "API 用量另计。",
+          "source": "https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus"
+        }
+      ]
+    },
+    {
+      "slug": "claude",
+      "name": "Claude",
+      "website": "https://claude.ai/",
+      "category": "ai-subscriptions",
+      "summary": "Anthropic 的 AI 助手，面向写作、文档处理和编程协作。",
+      "aliases": [
+        "Anthropic",
+        "克劳德"
+      ],
+      "domains": [
+        {
+          "domain": "claude.com",
+          "kind": "alias"
+        }
+      ],
+      "contact": null,
+      "products": "Free、Pro、Max、Team",
+      "payments": null,
+      "fees": null,
+      "renewal": "Pro 有月付与年付；年付一次扣款。",
+      "refunds": null,
+      "regions": "套餐设用量窗口及额度。",
+      "verified": true,
+      "source": {
+        "title": "Claude · 官方资料",
+        "url": "https://claude.com/pricing",
+        "excerpt": "Anthropic 的 AI 助手，面向写作、文档处理和编程协作。"
+      },
+      "prices": [
+        {
+          "plan": "Pro 月付",
+          "amount": 2000,
+          "currency": "USD",
+          "period": "月",
+          "region": "官网美元报价",
+          "notes": ""
+        },
+        {
+          "plan": "Pro 年付",
+          "amount": 20000,
+          "currency": "USD",
+          "period": "年",
+          "region": "官网美元报价",
+          "notes": "一次扣款。"
+        }
+      ]
+    },
+    {
+      "slug": "gemini",
+      "name": "Google Gemini",
+      "website": "https://gemini.google.com/",
+      "category": "ai-subscriptions",
+      "summary": "Google 的 AI 助手，部分个人套餐同时包含 Google One 存储与其他应用权益。",
+      "aliases": [
+        "Gemini",
+        "谷歌AI",
+        "Google One",
+        "双子座"
+      ],
+      "domains": [
+        {
+          "domain": "gemini.google",
+          "kind": "alias"
+        }
+      ],
+      "contact": null,
+      "products": "Gemini 免费版及 Google AI 订阅",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": "价格、权益和资格按市场显示。",
+      "verified": true,
+      "source": {
+        "title": "Google Gemini · 官方资料",
+        "url": "https://gemini.google/subscriptions/",
+        "excerpt": "Google 的 AI 助手，部分个人套餐同时包含 Google One 存储与其他应用权益。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "grok",
+      "name": "Grok",
+      "website": "https://grok.com/",
+      "category": "ai-subscriptions",
+      "summary": "xAI 推出的对话、搜索及媒体生成助手，可通过网页和移动应用使用。",
+      "aliases": [
+        "xAI",
+        "格罗克"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Grok、SuperGrok",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": "订阅档位以账号及官方报价为准。",
+      "verified": true,
+      "source": {
+        "title": "Grok · 官方资料",
+        "url": "https://x.ai/grok",
+        "excerpt": "xAI 推出的对话、搜索及媒体生成助手，可通过网页和移动应用使用。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "openrouter",
+      "name": "OpenRouter",
+      "website": "https://openrouter.ai/",
+      "category": "ai-platforms",
+      "summary": "通过一个 API 访问多家模型提供方，并可配置模型及上游路由。",
+      "aliases": [
+        "模型聚合",
+        "API 中转",
+        "Open Router"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "模型调用、预付额度",
+      "payments": "支持购买额度；具体方式以官方结算为准。",
+      "fees": "官方 FAQ 列出常规购买额度费率 5.5%，最低 USD 0.80；适用方式见原文。",
+      "renewal": null,
+      "refunds": null,
+      "regions": "模型与上游供应商有各自条款。",
+      "verified": true,
+      "source": {
+        "title": "OpenRouter · 官方资料",
+        "url": "https://openrouter.ai/docs/faq",
+        "excerpt": "通过一个 API 访问多家模型提供方，并可配置模型及上游路由。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "deepseek",
+      "name": "DeepSeek",
+      "website": "https://deepseek.com/",
+      "category": "ai-platforms",
+      "summary": "深度求索的网页聊天与独立 API 服务，API 文档列出不同模型用量价格。",
+      "aliases": [
+        "深度求索",
+        "深度搜索",
+        "DS"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "网页助手、模型 API",
+      "payments": null,
+      "fees": "API 按模型与输入、输出用量计费。",
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "DeepSeek · 官方资料",
+        "url": "https://api-docs.deepseek.com/quick_start/pricing/",
+        "excerpt": "深度求索的网页聊天与独立 API 服务，API 文档列出不同模型用量价格。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "hugging-face",
+      "name": "Hugging Face",
+      "website": "https://huggingface.co/",
+      "category": "ai-platforms",
+      "summary": "模型与数据集社区，另提供推理、应用托管和团队产品。",
+      "aliases": [
+        "HF",
+        "抱抱脸",
+        "模型托管"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Hub、Spaces、Inference Providers、PRO",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Hugging Face · 官方资料",
+        "url": "https://huggingface.co/pricing",
+        "excerpt": "模型与数据集社区，另提供推理、应用托管和团队产品。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "perplexity",
+      "name": "Perplexity",
+      "website": "https://perplexity.ai/",
+      "category": "ai-subscriptions",
+      "summary": "提供带来源引用的问答与研究能力，另有 Pro 订阅。",
+      "aliases": [
+        "AI 搜索",
+        "Perplexity Pro"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Perplexity Pro",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Perplexity · 官方资料",
+        "url": "https://www.perplexity.ai/help-center/en/articles/10352901-what-is-perplexity-pro",
+        "excerpt": "提供带来源引用的问答与研究能力，另有 Pro 订阅。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "wise",
+      "name": "Wise",
+      "website": "https://wise.com/",
+      "category": "payment-accounts",
+      "summary": "多币种账户、跨境转账与卡片服务。费用依金额、币种和地区而异。",
+      "aliases": [
+        "TransferWise",
+        "跨境汇款",
+        "虚拟卡"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "个人跨境转账、多币种账户、Wise 卡",
+      "payments": null,
+      "fees": "美国公开页列出转账费取决于币种；报价应按具体路径查看。",
+      "renewal": "美国页显示 Wise 卡无订阅费。",
+      "refunds": null,
+      "regions": "本档费用样本来自美国站。",
+      "verified": true,
+      "source": {
+        "title": "Wise · 官方资料",
+        "url": "https://wise.com/us/pricing/",
+        "excerpt": "多币种账户、跨境转账与卡片服务。费用依金额、币种和地区而异。"
+      },
+      "prices": [
+        {
+          "plan": "Wise 多币种卡",
+          "amount": 900,
+          "currency": "USD",
+          "period": "一次性",
+          "region": "美国",
+          "notes": "仅为官方页上的办卡费用，不含换汇等交易费用。"
+        }
+      ]
+    },
+    {
+      "slug": "paypal",
+      "name": "PayPal",
+      "website": "https://paypal.com/",
+      "category": "payment-accounts",
+      "summary": "提供数字钱包和线上付款服务，按国家、用途与支付方式公布费率。",
+      "aliases": [
+        "贝宝",
+        "美元支付",
+        "跨境支付"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "消费者钱包、付款、转账",
+      "payments": null,
+      "fees": "美国费率页区分购买、转账与货币转换。",
+      "renewal": null,
+      "refunds": null,
+      "regions": "记录来自美国个人费率页。",
+      "verified": true,
+      "source": {
+        "title": "PayPal · 官方资料",
+        "url": "https://www.paypal.com/us/digital-wallet/paypal-consumer-fees",
+        "excerpt": "提供数字钱包和线上付款服务，按国家、用途与支付方式公布费率。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "payoneer",
+      "name": "Payoneer",
+      "website": "https://payoneer.com/",
+      "category": "payment-accounts",
+      "summary": "面向自由职业者和跨境企业的收款与付款平台。",
+      "aliases": [
+        "派安盈",
+        "跨境收款"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "收款账户、付款请求、批量付款",
+      "payments": null,
+      "fees": "费用按交易路径和账户情况区分。",
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Payoneer · 官方资料",
+        "url": "https://www.payoneer.com/pricing/",
+        "excerpt": "面向自由职业者和跨境企业的收款与付款平台。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "revolut",
+      "name": "Revolut",
+      "website": "https://revolut.com/",
+      "category": "payment-accounts",
+      "summary": "提供个人账户、卡片和分层订阅，权益随地区与套餐变化。",
+      "aliases": [
+        "支付卡",
+        "跨境支付",
+        "虚拟卡"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Standard、Premium、Metal",
+      "payments": null,
+      "fees": "消费、货币兑换和提款费依套餐条件而异。",
+      "renewal": "美国官方页以月为单位展示计划。",
+      "refunds": null,
+      "regions": "美国页面的套餐和费率仅用于美国市场对照。",
+      "verified": true,
+      "source": {
+        "title": "Revolut · 官方资料",
+        "url": "https://www.revolut.com/en-US/our-pricing-plans/",
+        "excerpt": "提供个人账户、卡片和分层订阅，权益随地区与套餐变化。"
+      },
+      "prices": [
+        {
+          "plan": "Standard",
+          "amount": 0,
+          "currency": "USD",
+          "period": "月",
+          "region": "美国",
+          "notes": ""
+        },
+        {
+          "plan": "Premium",
+          "amount": 999,
+          "currency": "USD",
+          "period": "月",
+          "region": "美国",
+          "notes": ""
+        },
+        {
+          "plan": "Metal",
+          "amount": 1699,
+          "currency": "USD",
+          "period": "月",
+          "region": "美国",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "slug": "mullvad",
+      "name": "Mullvad VPN",
+      "website": "https://mullvad.net/",
+      "category": "vpn",
+      "summary": "提供按固定月价计费的个人 VPN，官网列出各时长价格。",
+      "aliases": [
+        "Mullvad",
+        "VPN"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Mullvad VPN",
+      "payments": null,
+      "fees": null,
+      "renewal": "公开定价按使用时长展示。",
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Mullvad VPN · 官方资料",
+        "url": "https://mullvad.net/en/pricing",
+        "excerpt": "提供按固定月价计费的个人 VPN，官网列出各时长价格。"
+      },
+      "prices": [
+        {
+          "plan": "1 个月",
+          "amount": 500,
+          "currency": "EUR",
+          "period": "月",
+          "region": "官网欧元报价",
+          "notes": "官网注明含 VAT。"
+        }
+      ]
+    },
+    {
+      "slug": "proton-vpn",
+      "name": "Proton VPN",
+      "website": "https://protonvpn.com/",
+      "category": "vpn",
+      "summary": "Proton 的个人 VPN，提供免费和付费选项。",
+      "aliases": [
+        "ProtonVPN",
+        "VPN"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Free、VPN Plus",
+      "payments": "官方列出银行卡、PayPal 和 Proton credits。",
+      "fees": null,
+      "renewal": null,
+      "refunds": "定价页说明 30 天退款保证，适用条件见服务条款。",
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Proton VPN · 官方资料",
+        "url": "https://protonvpn.com/pricing",
+        "excerpt": "Proton 的个人 VPN，提供免费和付费选项。"
+      },
+      "prices": [
+        {
+          "plan": "Free",
+          "amount": 0,
+          "currency": "USD",
+          "period": "月",
+          "region": "公开免费计划",
+          "notes": "仅记录免费档，其他档位按官方页面为准。"
+        }
+      ]
+    },
+    {
+      "slug": "digitalocean",
+      "name": "DigitalOcean",
+      "website": "https://digitalocean.com/",
+      "category": "vps",
+      "summary": "提供 Droplets 云服务器，公开表格按配置列出月价和规格。",
+      "aliases": [
+        "DO",
+        "Droplet",
+        "VPS",
+        "云主机"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Basic Droplets、通用和专用配置",
+      "payments": null,
+      "fees": null,
+      "renewal": "官方价格页说明按秒计费及最低收费，月度封顶见各规格。",
+      "refunds": null,
+      "regions": "可选配置随数据中心不同。",
+      "verified": true,
+      "source": {
+        "title": "DigitalOcean · 官方资料",
+        "url": "https://www.digitalocean.com/pricing/droplets",
+        "excerpt": "提供 Droplets 云服务器，公开表格按配置列出月价和规格。"
+      },
+      "prices": [
+        {
+          "plan": "Basic · 512 MiB／1 vCPU",
+          "amount": 400,
+          "currency": "USD",
+          "period": "月上限",
+          "region": "官网美元报价",
+          "notes": "500 GiB 流量，10 GiB SSD。"
+        }
+      ]
+    },
+    {
+      "slug": "hetzner",
+      "name": "Hetzner Cloud",
+      "website": "https://hetzner.com/",
+      "category": "vps",
+      "summary": "Hetzner 的云服务器产品，提供共享及独享 vCPU 等规格。",
+      "aliases": [
+        "Hetzner",
+        "VPS",
+        "云主机"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Cloud 共享及独享 vCPU 实例",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": "页面提供税率与货币选择，价格受地区与税费影响。",
+      "verified": true,
+      "source": {
+        "title": "Hetzner Cloud · 官方资料",
+        "url": "https://www.hetzner.com/cloud/",
+        "excerpt": "Hetzner 的云服务器产品，提供共享及独享 vCPU 等规格。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "ovhcloud",
+      "name": "OVHcloud VPS",
+      "website": "https://ovhcloud.com/",
+      "category": "vps",
+      "summary": "OVHcloud 的虚拟专用服务器产品，规格和供应区域在官网列出。",
+      "aliases": [
+        "OVH",
+        "VPS",
+        "云主机"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "VPS",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "OVHcloud VPS · 官方资料",
+        "url": "https://www.ovhcloud.com/en/vps/",
+        "excerpt": "OVHcloud 的虚拟专用服务器产品，规格和供应区域在官网列出。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "tailscale",
+      "name": "Tailscale",
+      "website": "https://tailscale.com/",
+      "category": "network-infrastructure",
+      "summary": "用于连接设备、服务器和私有资源的组网服务，提供个人与企业层级。",
+      "aliases": [
+        "组网",
+        "WireGuard",
+        "虚拟局域网"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Personal、Standard、Premium、Enterprise",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Tailscale · 官方资料",
+        "url": "https://tailscale.com/pricing",
+        "excerpt": "用于连接设备、服务器和私有资源的组网服务，提供个人与企业层级。"
+      },
+      "prices": [
+        {
+          "plan": "Personal",
+          "amount": 0,
+          "currency": "USD",
+          "period": "免费档",
+          "region": "官方公开计划",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "slug": "cloudflare",
+      "name": "Cloudflare",
+      "website": "https://cloudflare.com/",
+      "category": "network-infrastructure",
+      "summary": "提供 DNS、CDN 及网站安全服务，设有 Free 等站点计划。",
+      "aliases": [
+        "CF",
+        "CDN",
+        "域名解析"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "网站 Free 计划、DNS、CDN",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Cloudflare · 官方资料",
+        "url": "https://www.cloudflare.com/plans/free/",
+        "excerpt": "提供 DNS、CDN 及网站安全服务，设有 Free 等站点计划。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "vultr",
+      "name": "Vultr",
+      "website": "https://vultr.com/",
+      "category": "vps",
+      "summary": "云服务器服务商。本档先记录官方网站，待核实套餐及报价。",
+      "aliases": [
+        "VPS",
+        "云主机"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": null,
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": false,
+      "source": {
+        "title": "Vultr · 官方定价入口",
+        "url": "https://www.vultr.com/pricing/",
+        "excerpt": "该官方定价入口返回 403，本次未读取套餐或报价。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "dropbox",
+      "name": "Dropbox",
+      "website": "https://dropbox.com/",
+      "category": "cloud-storage",
+      "summary": "提供文件同步和共享，面向个人与团队推出不同储存与协作计划。",
+      "aliases": [
+        "网盘",
+        "云存储"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Plus、Standard 等文件存储计划",
+      "payments": null,
+      "fees": null,
+      "renewal": "官网可切换月付与年付。",
+      "refunds": null,
+      "regions": "套餐页按访问地区显示币种。",
+      "verified": true,
+      "source": {
+        "title": "Dropbox · 官方资料",
+        "url": "https://www.dropbox.com/plans",
+        "excerpt": "提供文件同步和共享，面向个人与团队推出不同储存与协作计划。"
+      },
+      "prices": [
+        {
+          "plan": "Plus",
+          "amount": 999,
+          "currency": "EUR",
+          "period": "月",
+          "region": "官网欧元展示",
+          "notes": "官网可切换计费周期；应核对结算条件。"
+        }
+      ]
+    },
+    {
+      "slug": "backblaze",
+      "name": "Backblaze B2",
+      "website": "https://backblaze.com/",
+      "category": "cloud-storage",
+      "summary": "提供 S3 兼容对象存储，适用于备份、归档和应用数据。",
+      "aliases": [
+        "B2",
+        "S3",
+        "对象存储"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "B2 Cloud Storage",
+      "payments": null,
+      "fees": "存储按用量计费；出口和预购额度条件见官方。",
+      "renewal": "有按月用量与年度容量承诺。",
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Backblaze B2 · 官方资料",
+        "url": "https://www.backblaze.com/cloud-storage/pricing",
+        "excerpt": "提供 S3 兼容对象存储，适用于备份、归档和应用数据。"
+      },
+      "prices": [
+        {
+          "plan": "B2 按用量存储",
+          "amount": 695,
+          "currency": "USD",
+          "period": "TB／30 日",
+          "region": "官网美元报价",
+          "notes": "按字节小时结算。"
+        }
+      ]
+    },
+    {
+      "slug": "ilovepdf",
+      "name": "iLovePDF",
+      "website": "https://ilovepdf.com/",
+      "category": "digital-services",
+      "summary": "提供 PDF 合并、拆分、压缩与格式转换等文件处理服务。",
+      "aliases": [
+        "PDF 转 Word",
+        "PDF压缩",
+        "PDF转换"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Basic、Premium、Business",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "iLovePDF · 官方资料",
+        "url": "https://www.ilovepdf.com/pricing",
+        "excerpt": "提供 PDF 合并、拆分、压缩与格式转换等文件处理服务。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "github",
+      "name": "GitHub",
+      "website": "https://github.com/",
+      "category": "digital-services",
+      "summary": "代码托管与协作平台，提供个人、团队和企业层级。",
+      "aliases": [
+        "代码托管",
+        "Git Hub"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Free、Team、Enterprise",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "GitHub · 官方资料",
+        "url": "https://github.com/pricing",
+        "excerpt": "代码托管与协作平台，提供个人、团队和企业层级。"
+      },
+      "prices": []
+    },
+    {
+      "slug": "proton-drive",
+      "name": "Proton Drive",
+      "website": "https://proton.me/",
+      "category": "cloud-storage",
+      "summary": "Proton 的文件存储与共享产品，提供免费容量与付费计划。",
+      "aliases": [
+        "网盘",
+        "云盘",
+        "云存储"
+      ],
+      "domains": [],
+      "contact": null,
+      "products": "Drive Free、付费 Drive 计划",
+      "payments": null,
+      "fees": null,
+      "renewal": null,
+      "refunds": null,
+      "regions": null,
+      "verified": true,
+      "source": {
+        "title": "Proton Drive · 官方资料",
+        "url": "https://proton.me/drive/pricing",
+        "excerpt": "Proton 的文件存储与共享产品，提供免费容量与付费计划。"
+      },
+      "prices": []
+    }
+  ],
+  "reviews": [
+    {
+      "slug": "chatgpt-claude-plans",
+      "title": "ChatGPT Plus 和 Claude Pro，付费前看这三件事",
+      "summary": "两个计划都有 20 美元的月付选项。用量限制、计费周期和 API 权益更值得逐项确认。",
+      "body": "先写下你一周内需要反复做的任务，用免费档验证能否完成。打算连续使用数月时，算清年付总额与实际使用月份；只想试一个月，则记录自己的续费日。\n\n如果要把 AI 接入脚本或产品，先单独估算 API 账单。网页端和 API 的报价口径不同，月付价格无法直接代表应用成本。",
+      "claims": [
+        [
+          "公开价格",
+          "ChatGPT Plus 的官方帮助页列出按月 USD 20，API 另计。",
+          "chatgpt",
+          "https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus"
+        ],
+        [
+          "年付规则",
+          "Claude Pro 月付 USD 20；官方同时列出预付 USD 200 的年付选项。",
+          "claude"
+        ],
+        [
+          "用量条件",
+          "Claude 官方将个人计划的使用额度按 5 小时及每周窗口说明。",
+          "claude"
+        ]
+      ]
+    },
+    {
+      "slug": "wise-paypal-checklist",
+      "title": "跨境支付怎么比：先对齐币种、地区和费用口径",
+      "summary": "Wise 和 PayPal 都公开了地区费率。把同一笔交易的总成本放在一起，才有可比性。",
+      "body": "比较前写下付款方与收款方地区、发送和到账币种、交易用途与金额。逐项抄录结算时显示的费用、汇率和预计到账金额。办卡费、换汇费与收款费分别记录。\n\n如果某个优惠只适用于特定地区或账户等级，保留原始链接和日期，避免把它当成所有用户的通用价格。",
+      "claims": [
+        [
+          "交易计价",
+          "Wise 美国费率页将跨境转账与货币转换列为不同的费用项，具体费用依币种变化。",
+          "wise"
+        ],
+        [
+          "费用分类",
+          "PayPal 美国消费者费率页分别说明消费、转账和货币转换等场景。",
+          "paypal"
+        ]
+      ]
+    },
+    {
+      "slug": "vps-budget-basics",
+      "title": "一台小型 VPS 的账单，除了标价还要看什么",
+      "summary": "用规格、流量、地区与计费粒度检查月度预算，避免直接比较两条起步价。",
+      "body": "先选定部署地区和最低内存，再记录提供方列出的基础费用以及流量、备份和公网地址的口径。短时测试还要核对最小账单和停止与删除的区别。\n\n明确税费是否已计入。档案里的价格是记录日期的公开样本。",
+      "claims": [
+        [
+          "账单粒度",
+          "DigitalOcean 公告说明 Droplets 从 2026 年起切换到按秒计费，另有最低收费。",
+          "digitalocean",
+          "https://www.digitalocean.com/blog/dropletplans-persecbilling-byoip-natgateway"
+        ],
+        [
+          "报价地区",
+          "Hetzner Cloud 的公开页提供税率国家和货币选项。",
+          "hetzner"
+        ]
+      ]
+    },
+    {
+      "slug": "chatgpt-observation",
+      "site": "chatgpt",
+      "title": "ChatGPT 的订阅与 API 预算",
+      "summary": "适用于按月使用网页助手、需要估算开发调用成本的读者。",
+      "body": "网页订阅适合直接使用聊天与文件处理。需要在应用里调用模型时单独估算 API 开销。购买前复核登录账号所显示的功能、可用地区与额度。",
+      "claims": [
+        [
+          "服务定位",
+          "OpenAI 为 ChatGPT 提供不同的网页计划，付费档扩展模型与工具使用条件。",
+          "chatgpt"
+        ],
+        [
+          "需注意",
+          "Plus 月费和 API 费用分别计价。",
+          "chatgpt",
+          "https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus"
+        ]
+      ]
+    },
+    {
+      "slug": "wise-observation",
+      "site": "wise",
+      "title": "Wise 的地区费率怎么看",
+      "summary": "适用于比较一笔具体金额的跨币种转账或卡片成本。",
+      "body": "同一服务的账户地区会影响可用功能和费用。对比之前，把一笔报价的币种、费用与预计到账金额记录在一起。",
+      "claims": [
+        [
+          "可核实特点",
+          "美国个人价目表分别列示转账、币种转换和卡片的费用。",
+          "wise"
+        ]
+      ]
+    },
+    {
+      "slug": "openrouter-observation",
+      "site": "openrouter",
+      "title": "OpenRouter 的模型路由与额度费用",
+      "summary": "适合需要从同一接口比较多家模型成本的开发者。",
+      "body": "预算里同时核对模型本身的计费、额度购买费和路由策略。提交数据前核对实际接收数据的上游以及服务条款。",
+      "claims": [
+        [
+          "功能",
+          "官方 FAQ 分别说明模型上游、路由和回退机制。",
+          "openrouter"
+        ],
+        [
+          "需注意",
+          "额度购买可能另收费用，标准费用与具体方式见官方 FAQ。",
+          "openrouter"
+        ]
+      ]
+    }
+  ],
+  "incidents": [
+    {
+      "site": "chatgpt",
+      "title": "登录、注册及部分 ChatGPT 功能报错",
+      "summary": "OpenAI 状态页记录登录、注册和部分 ChatGPT 功能发生错误，随后标记恢复。",
+      "kind": "status",
+      "date": "2026-11-11",
+      "url": "https://status.openai.com/incidents/01M765MJQK7F85SC82RMTYN0V3"
+    },
+    {
+      "site": "chatgpt",
+      "title": "ChatGPT 对话错误增加",
+      "summary": "官方状态页记载对话功能错误增加，缓解措施生效后已恢复。",
+      "kind": "status",
+      "date": "2026-11-09",
+      "url": "https://status.openai.com/incidents/01M70RDA2GWD2WXE58ANY0WV5R"
+    },
+    {
+      "site": "digitalocean",
+      "title": "Droplets 开始按秒计费",
+      "summary": "官方公告称从 2026 年 1 月 1 日起切换为按秒计费，仍设最小计费。",
+      "kind": "price",
+      "date": "2026-01-01",
+      "url": "https://www.digitalocean.com/blog/dropletplans-persecbilling-byoip-natgateway"
+    },
+    {
+      "site": "cloudflare",
+      "title": "Cloudflare 发布网络中断复盘",
+      "summary": "官方复盘记录 2025 年 11 月 18 日的一次网络异常、影响范围及恢复过程。",
+      "kind": "status",
+      "date": "2025-11-18",
+      "url": "https://blog.cloudflare.com/18-november-2025-outage/"
+    },
+    {
+      "site": "grok",
+      "title": "Grok 4 发布及付费档位变化",
+      "summary": "xAI 公告发布 Grok 4 并推出 SuperGrok Heavy。此条记录为当时事件。",
+      "kind": "policy",
+      "date": "2025-07-09",
+      "url": "https://x.ai/news/grok-4"
+    }
+  ]
+}

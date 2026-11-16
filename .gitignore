@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+playwright-report/
+.playwright-cli/
+test-results/
+test-results-v03-*/
+output/
+data/
+README.operations.md

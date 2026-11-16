@@ -1,0 +1,65 @@
+{
+  "api": {
+    "label": "AI API 调用错误",
+    "category": "AI 接口",
+    "keywords": ["401", "403", "429", "限流", "API 鉴权", "AI API 排查"],
+    "relatedTool": { "id": "timestamp", "label": "对齐不同日志的时间" },
+    "description": "处理鉴权、权限或调用额度问题。",
+    "icon": "terminal",
+    "tone": "teal",
+    "start": "status",
+    "nodes": {
+      "status": {"question":"HTTP 响应返回了哪个状态码？","options":[{"label":"401 · Unauthorized","next":"auth"},{"label":"403 · Forbidden","next":"permission"},{"label":"429 · Too Many Requests","next":"limit"},{"label":"还没有看到状态码","next":"unknown"}]},
+      "auth": {"question":"响应中是否明确提示密钥不正确或已失效？","options":[{"label":"是，提示 Invalid API key","next":"key"},{"label":"没有，或错误信息不明确","next":"authConfig"}]},
+      "permission": {"question":"响应正文指向哪种访问限制？","options":[{"label":"模型、端点或项目无权限","next":"project"},{"label":"网关、组织或区域策略","next":"policy"}]},
+      "limit": {"question":"错误类型更接近哪一项？","options":[{"label":"rate_limit · 请求或 Token 太多","next":"rate"},{"label":"quota / credit · 额度或余额不足","next":"quota"},{"label":"暂时无法区分","next":"limitUnknown"}]},
+      "key": {"title":"核对密钥来源和状态","steps":["确认 Base URL 与密钥提供方一致，当前项目的密钥仍有效。","若更新了密钥，重新加载服务配置后发起一次最小请求。"],"guide":"api-401"},
+      "authConfig": {"title":"检查认证配置和来源限制","steps":["确认运行中的进程读到了正确的密钥，并按接口约定发送认证信息。","核对项目、组织及来源 IP 策略。分享日志前移除凭据。"],"guide":"api-401"},
+      "project": {"title":"核对项目对目标资源的权限","steps":["确认密钥所属项目允许使用该模型与端点。","请管理员检查服务商控制台的角色和密钥权限。"],"guide":"api-403"},
+      "policy": {"title":"确认返回 403 的服务层","steps":["从响应正文和请求 ID 判断错误来自服务商还是应用网关。","交由对应管理员核对策略，并遵循服务商公布的可用范围。"],"guide":"api-403"},
+      "rate": {"title":"降低发送速率与并发量","steps":["按 Retry-After（如有）等候，限制并发和每分钟请求量。","使用有上限且带随机抖动的退避，并用少量请求验证。"],"guide":"api-429"},
+      "quota": {"title":"检查项目或组织的额度","steps":["在服务商控制台核对账单余额、项目预算和组织上限。","额度恢复后用一个小请求验证，再恢复正常流量。"],"guide":"api-429"},
+      "limitUnknown": {"title":"先读取结构化错误类型","steps":["记录响应正文中的 error.code 或 error.type，并核对 Retry-After。","区分速率与额度后再选择恢复步骤。"],"guide":"api-429"},
+      "unknown": {"title":"先确认接口的实际响应","steps":["在浏览器网络面板或客户端日志定位失败请求，记录 HTTP 状态和错误类型。","如果没有 HTTP 响应，记录网络或证书错误，检查客户端到目标服务的连接。"],"guide":"http-status"}
+    }
+  },
+  "ssh": {
+    "label": "SSH 连接失败",
+    "category": "网络运维",
+    "keywords": ["SSH 连不上", "SSH 超时", "公钥认证"],
+    "relatedTool": { "id": "diff", "label": "比较脱敏后的两份 SSH 配置" },
+    "description": "定位超时、连接拒绝或登录失败。",
+    "icon": "server",
+    "tone": "blue",
+    "start": "message",
+    "nodes": {
+      "message": {"question":"SSH 客户端显示什么提示？","options":[{"label":"Connection timed out · 连接超时","next":"network"},{"label":"Connection refused · 连接被拒绝","next":"listener"},{"label":"Permission denied · 认证失败","next":"identity"},{"label":"Host key verification failed · 指纹校验失败","next":"hostKey"},{"label":"Could not resolve hostname · 主机名解析失败","next":"hostName"}]},
+      "network": {"question":"相同地址与端口在另一条授权网络上能连接吗？","options":[{"label":"能连接","next":"clientNetwork"},{"label":"仍然超时，或暂无条件验证","next":"serverNetwork"}]},
+      "clientNetwork": {"title":"优先检查客户端到目标的网络路径","steps":["核对当前网络是否允许访问指定端口，以及是否需要连接组织 VPN。","核对客户端目标地址、路由和网络管理要求。"],"guide":"ssh-connection"},
+      "serverNetwork": {"title":"核对服务器可达性和入站规则","steps":["通过已有管理控制台确认服务器运行状态、目标 IP 和端口。","核对云安全组与主机防火墙是否允许预期来源访问。"],"guide":"ssh-connection"},
+      "listener": {"title":"核对 SSH 服务与端口监听","steps":["确认连接端口与服务器配置一致。","通过控制台检查 SSH 服务状态和监听地址。"],"guide":"ssh-connection"},
+      "identity": {"title":"核对用户名与公钥授权","steps":["在授权主机上用 ssh -v 查看客户端选择的身份，并确认远端用户名。","让管理员核对该用户已授权的公钥和服务端日志。"],"guide":"ssh-connection"},
+      "hostKey": {"title":"通过可信渠道确认主机指纹","steps":["检查服务端是否迁移或重装，请管理员提供可信的当前指纹。","核实目标和新指纹后，再更新该主机对应的本地信任记录。"],"guide":"ssh-connection"},
+      "hostName": {"title":"核对目标主机名和 DNS","steps":["检查主机名、SSH 别名和必要的内部网络连接。","通过适用的解析器确认主机名有正确的地址记录。"],"guide":"dns-resolution"}
+    }
+  },
+  "dns": {
+    "label": "域名解析问题",
+    "category": "网络运维",
+    "keywords": ["DNS 解析失败", "域名打不开", "NXDOMAIN"],
+    "relatedTool": { "id": "diff", "label": "比较两次 DNS 查询输出" },
+    "description": "检查权威记录、委派或缓存。",
+    "icon": "globe",
+    "tone": "amber",
+    "start": "answer",
+    "nodes": {
+      "answer": {"question":"查询域名时看到什么结果？","options":[{"label":"NXDOMAIN · 名称不存在","next":"missing"},{"label":"SERVFAIL · 解析器处理失败","next":"delegation"},{"label":"能解析，但返回地址错误或站点打不开","next":"compare"},{"label":"还没有查过 DNS","next":"lookup"}]},
+      "compare": {"question":"返回的地址是否与预期一致？","options":[{"label":"与预期一致","next":"service"},{"label":"与预期不一致","next":"cache"}]},
+      "missing": {"title":"核对域名拼写与权威记录","steps":["检查查询的完整域名、记录名称及域名是否仍有效。","对照权威服务器确认记录存在，并检查递归解析器是否缓存了旧的不存在响应。"],"guide":"dns-resolution"},
+      "delegation": {"title":"检查权威服务器、委派和 DNSSEC","steps":["核对注册商的 NS 与实际权威 DNS 是否一致，确认对应服务器能响应。","启用 DNSSEC 时核对父区 DS 和当前 DNSKEY 的匹配状态。"],"guide":"dns-resolution"},
+      "service": {"title":"继续检查证书和目标服务","steps":["确认 HTTPS 证书包含当前域名，目标服务已配置该域名。","核对 A 与 AAAA 的目标是否均已提供服务。"],"guide":"dns-resolution"},
+      "cache": {"title":"对比权威记录和递归缓存","steps":["查询权威服务器，确认返回的是当前正在使用的记录。","如果只有递归端还返回旧记录，查看旧记录 TTL 并等待缓存更新。"],"guide":"dns-resolution"},
+      "lookup": {"title":"先取得 DNS 查询结果","steps":["Windows 用 Resolve-DnsName；macOS 或 Linux 可用 dig。","记录完整域名、查询类型、返回码与地址，再按结果继续排查。"],"guide":"dns-resolution"}
+    }
+  }
+}

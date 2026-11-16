@@ -1,0 +1,8 @@
+shanhainexus.com {
+	header Strict-Transport-Security "max-age=86400"
+	reverse_proxy 127.0.0.1:3000
+}
+
+www.shanhainexus.com {
+	redir https://shanhainexus.com{uri} 308
+}

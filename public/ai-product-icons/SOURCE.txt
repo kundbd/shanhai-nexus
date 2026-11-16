@@ -1,0 +1,3 @@
+Lobe Icons SVG collection (MIT).
+Source revision: https://github.com/lobehub/lobe-icons/tree/55746b0b082258211121c70bd26e6878fd3bd292/packages/static-svg/icons
+The brand marks identify their respective products.

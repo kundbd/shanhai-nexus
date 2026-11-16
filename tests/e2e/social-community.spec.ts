@@ -1,0 +1,81 @@
+import { expect,test } from "@playwright/test";
+import sharp from "sharp";
+import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { registerMember } from "./member-fixture";
+
+test("signed posts, photo and video attachments, reactions and private bookmarks",async({page,browser,baseURL,request})=>{
+  const label="数字工具体验 "+randomBytes(4).toString("hex");
+  const replyText="附上视频演示 "+randomBytes(4).toString("hex");
+  const headers={"sec-fetch-site":"same-origin"};
+  expect((await request.post("/api/community/actions",{form:{post:"1",kind:"like",active:"yes"},headers})).status()).toBe(401);
+  expect((await request.post("/api/community/posts",{multipart:{body:"未登录发帖"},headers})).status()).toBe(401);
+  await page.goto("/community");
+  await page.getByRole("link",{name:"登录后发帖"}).click();
+  const author=await registerMember(page);
+  await expect(page).toHaveURL(/\/community#compose$/);
+  await page.getByRole("textbox",{name:"写帖子"}).fill(label);
+  const png=await sharp({create:{width:40,height:40,channels:3,background:"#244e46"}}).png().toBuffer();
+  await page.locator("#compose input[type=file]").setInputFiles({name:"photo.png",mimeType:"image/png",buffer:png});
+  await page.getByRole("button",{name:"发布帖子"}).click();
+  await expect(page).toHaveURL(/\/community\/posts\/\d+$/);
+  const permalink=new URL(page.url()).pathname;
+  const original=page.locator("article.social-card").first();
+  await expect(original.getByText(label,{exact:true})).toBeVisible();
+  await expect(original.getByText(author.username,{exact:true})).toBeVisible();
+  await expect(original.locator(".social-views")).toHaveText("浏览 1");
+  const photo=original.getByRole("img",{name:/的照片/});
+  await expect.poll(()=>photo.evaluate(img=>(img as HTMLImageElement).naturalWidth)).toBe(40);
+  const photoSrc=await photo.getAttribute("src");
+  expect((await request.get(photoSrc!)).headers()["content-type"]).toContain("image/webp");
+
+  const visitor=await browser.newPage({baseURL,viewport:page.viewportSize()??undefined});
+  try {
+    await visitor.goto(permalink);
+    await expect(visitor.getByText(label,{exact:true})).toBeVisible();
+    await expect(visitor.locator("article.social-card .social-views").first()).toHaveText("浏览 2");
+    await visitor.getByRole("link",{name:"登录后回复",exact:true}).click();
+    const member=await registerMember(visitor);
+    await expect(visitor).toHaveURL(/\/community\/posts\/\d+#reply$/);
+    const viewed=visitor.locator("article.social-card").first();
+    await expect(viewed.locator(".social-views")).toHaveText("浏览 3");
+    for(const action of ["点赞","收藏","转发"]) {
+      const button=viewed.getByRole("button",{name:new RegExp(`^${action}`)});
+      await button.click();
+      await expect(button).toHaveAttribute("aria-pressed","true");
+    }
+    await expect(viewed.getByRole("button",{name:"点赞 1",exact:true})).toBeVisible();
+    await expect(viewed.getByRole("button",{name:"转发 1",exact:true})).toBeVisible();
+    await expect(viewed.locator(".social-views")).toHaveText("浏览 3");
+    await visitor.goto("/community?view=saved");
+    await expect(visitor.getByText(label,{exact:true})).toBeVisible();
+    await expect(visitor.locator("article.social-card .social-views").first()).toHaveText("浏览 3");
+    await page.goto("/community?view=saved");
+    await expect(page.getByText("暂无收藏。")).toBeVisible();
+    await visitor.goto("/community");
+    await expect(visitor.getByText(`${member.username} 转发了`,{exact:true})).toBeVisible();
+    await visitor.goto(permalink+"#reply");
+
+    const clip=readFileSync(resolve("tests/fixtures/community-clip.webm"));
+    await visitor.getByRole("textbox",{name:"写回复"}).fill(replyText);
+    await visitor.locator("#reply input[type=file]").setInputFiles({name:"recording.webm",mimeType:"video/webm",buffer:clip});
+    await visitor.getByRole("button",{name:"发布回复"}).click();
+    const reply=visitor.locator("#replies .social-card").filter({hasText:replyText});
+    await expect(reply.getByText(member.username,{exact:true})).toBeVisible();
+    const video=reply.locator("video");
+    const videoSrc=await video.getAttribute("src");
+    await expect.poll(()=>video.evaluate(element=>(element as HTMLVideoElement).videoWidth)).toBe(64);
+    const range=await request.get(videoSrc!,{headers:{Range:"bytes=0-15"}});
+    expect(range.status()).toBe(206);
+    expect(range.headers()["content-type"]).toContain("video/webm");
+    expect((await range.body()).length).toBe(16);
+    expect(await visitor.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(visitor.viewportSize()!.width);
+    visitor.once("dialog",dialog=>dialog.accept());
+    await reply.getByRole("button",{name:"删除帖子"}).click();
+    await expect(visitor.getByText(replyText,{exact:true})).toHaveCount(0);
+    expect((await request.get(videoSrc!)).status()).toBe(404);
+  } finally {
+    await visitor.close();
+  }
+});
