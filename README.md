@@ -1,4 +1,4 @@
-# 山海知序 · Shanhai Nexus
+# 山海知序 · Shanhai Nexus · AI订阅信息及交流社区
 
 **了解清楚，再做选择。**
 
