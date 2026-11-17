@@ -59,21 +59,24 @@ test("posts and media stay private until approved, then support community intera
     const original=page.locator("article.social-card").first();
     await expect(original.getByText(label,{exact:true})).toBeVisible();
     await expect(original.getByText(author.username,{exact:true})).toBeVisible();
-    await expect(original.locator(".social-views")).toHaveText("浏览 1");
+    await expect(original.locator(".social-views")).toHaveText("浏览人数 1");
     const photo=original.getByRole("img",{name:/的照片/});
     await expect.poll(()=>photo.evaluate(img=>(img as HTMLImageElement).naturalWidth)).toBe(40);
     const photoSrc=await photo.getAttribute("src");
     expect((await request.get(photoSrc!)).headers()["content-type"]).toContain("image/webp");
+    const reloaded=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/traffic" && response.request().postData()===permalink);
+    await page.reload();
+    expect(await (await reloaded).json()).toEqual({visitors:1});
 
     await visitor.bringToFront();
     await visitor.goto(permalink);
     await expect(visitor.getByText(label,{exact:true})).toBeVisible();
-    await expect(visitor.locator("article.social-card .social-views").first()).toHaveText("浏览 2");
+    await expect(visitor.locator("article.social-card .social-views").first()).toHaveText("浏览人数 2");
     await visitor.getByRole("link",{name:"登录后回复",exact:true}).click();
     const member=await registerMember(visitor);
     await expect(visitor).toHaveURL(/\/community\/posts\/\d+#reply$/);
     const viewed=visitor.locator("article.social-card").first();
-    await expect(viewed.locator(".social-views")).toHaveText("浏览 3");
+    await expect(viewed.locator(".social-views")).toHaveText("浏览人数 2");
     for(const action of ["点赞","收藏","转发"]) {
       const button=viewed.getByRole("button",{name:new RegExp(`^${action}`)});
       await button.click();
@@ -81,10 +84,10 @@ test("posts and media stay private until approved, then support community intera
     }
     await expect(viewed.getByRole("button",{name:"点赞 1",exact:true})).toBeVisible();
     await expect(viewed.getByRole("button",{name:"转发 1",exact:true})).toBeVisible();
-    await expect(viewed.locator(".social-views")).toHaveText("浏览 3");
+    await expect(viewed.locator(".social-views")).toHaveText("浏览人数 2");
     await visitor.goto("/community?view=saved");
     await expect(visitor.getByText(label,{exact:true})).toBeVisible();
-    await expect(visitor.locator("article.social-card .social-views").first()).toHaveText("浏览 3");
+    await expect(visitor.locator("article.social-card .social-views").first()).toHaveText("浏览人数 2");
     await page.goto("/community?view=saved");
     await expect(page.getByText("暂无收藏。")).toBeVisible();
     await visitor.goto("/community");

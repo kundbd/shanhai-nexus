@@ -23,12 +23,12 @@ const reactionColumns=`(SELECT count(*) FROM community_reactions r WHERE r.post_
   EXISTS(SELECT 1 FROM community_reactions r WHERE r.post_id=p.id AND r.kind='bookmark' AND r.account_id=viewer.id) bookmarked`;
 
 type PostRow=Reactions&{
-  id:number;author_id:number;username:string;body:string;created_at:number;reply_to:number|null;thread_id:number|null;reply_author:string|null;replies:number;views:number;
+  id:number;author_id:number;username:string;body:string;created_at:number;reply_to:number|null;thread_id:number|null;reply_author:string|null;replies:number;visitors:number;
 };
 export type CommunityPost=PostRow&{media:Pick<MediaFile,"id"|"mime">[]};
 type FeedRow=PostRow&{reposter:string|null;reposter_id:number|null;event_at:number};
 
-const postColumns=`p.id,p.author_id,a.username,p.body,p.created_at,p.reply_to,p.thread_id,p.view_count views,parent_author.username reply_author,
+const postColumns=`p.id,p.author_id,a.username,p.body,p.created_at,p.reply_to,p.thread_id,p.visitor_count visitors,parent_author.username reply_author,
   CASE WHEN p.thread_id IS NULL THEN (SELECT count(*) FROM community_posts r WHERE r.thread_id=p.id AND r.hidden=0 AND r.ai_pending=0)
        ELSE (SELECT count(*) FROM community_posts r WHERE r.reply_to=p.id AND r.hidden=0 AND r.ai_pending=0) END replies,${reactionColumns}`;
 const authors=`JOIN member_accounts a ON a.id=p.author_id
@@ -68,13 +68,18 @@ export function communityPost(id:number,viewer?:number,db=directory()) {
   return row?attachMedia(db,[row])[0]:undefined;
 }
 
-export function communityPostViews(db:DatabaseSync,id:number) {
-  return one<{views:number}>(db,`SELECT view_count views FROM community_posts p WHERE p.id=? AND ${visible}`,id);
+export function communityPostVisitors(db:DatabaseSync,id:number) {
+  return one<{visitors:number}>(db,`SELECT visitor_count visitors FROM community_posts p WHERE p.id=? AND ${visible}`,id);
 }
 
-export function incrementCommunityPostViews(db:DatabaseSync,id:number) {
-  const row=one<{views:number}>(db,`UPDATE community_posts AS p SET view_count=view_count+1 WHERE p.id=? AND ${visible} RETURNING view_count views`,id);
-  return row&&{views:row.views};
+// Called in the same transaction as the traffic counter.
+export function recordCommunityPostVisitor(db:DatabaseSync,id:number,visitorHash:Buffer) {
+  const row=communityPostVisitors(db,id);
+  if(!row)return;
+  const result=db.prepare("INSERT INTO community_post_visitors(post_id,visitor_hash) VALUES (?,?) ON CONFLICT DO NOTHING")
+    .run(id,visitorHash);
+  if(result.changes)db.prepare("UPDATE community_posts SET visitor_count=visitor_count+1 WHERE id=?").run(id);
+  return {visitors:row.visitors+Number(result.changes)};
 }
 
 export function communityReplies(root:number,page:number,viewer?:number,db=directory(),direct=false) {
@@ -145,6 +150,7 @@ export function removeCommunityPost(db:DatabaseSync,id:number,owner?:number,edit
     const files=all<{id:string}>(db,"SELECT id FROM community_media WHERE post_id=?",id);
     db.prepare("UPDATE community_posts SET hidden=1 WHERE id=?").run(id);
     db.prepare("DELETE FROM community_media WHERE post_id=?").run(id);
+    db.prepare("DELETE FROM community_post_visitors WHERE post_id=?").run(id);
     if(editor&&!row.hidden)audit(db,editor,"hide","community_posts",id,{hidden:0},{hidden:1});
     return {root:row.thread_id,files:files.map(file=>file.id)};
   });

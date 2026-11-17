@@ -63,6 +63,7 @@ export async function moderateWithAi(db:DatabaseSync,surface:ContentSurface,id:n
       files=all<{id:string}>(db,"SELECT id FROM community_media WHERE post_id=?",id).map(file=>file.id);
       db.prepare("UPDATE community_posts SET hidden=1,ai_pending=0 WHERE id=?").run(id);
       db.prepare("DELETE FROM community_media WHERE post_id=?").run(id);
+      db.prepare("DELETE FROM community_post_visitors WHERE post_id=?").run(id);
     } else {
       db.prepare("UPDATE user_reviews SET moderation='rejected',ai_pending=0 WHERE id=?").run(id);
     }

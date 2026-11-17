@@ -1,18 +1,21 @@
+import { createHash } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { getGuide,getTool } from "../catalog";
-import { communityPostViews,incrementCommunityPostViews } from "../community/posts";
-import { isTrafficPath,publicPageLabels,trafficPostId } from "../traffic-path";
+import { communityPostVisitors,recordCommunityPostVisitor } from "../community/posts";
+import { isTrafficPath,isTrafficVisitor,publicPageLabels,trafficPostId } from "../traffic-path";
 import { all,directory,one,transaction } from "./db";
 import { getCategory,publicEditorial } from "./read";
 
 const windowMinutes=24*60;
 const bucket=(time:number)=>Math.floor(time/60_000);
 const lastPruned=new WeakMap<DatabaseSync,number>();
+// Different scopes cannot be joined by the stored hashes.
+const hashVisitor=(scope:string,id:string)=>createHash("sha256").update(scope).update("\0").update(id).digest();
 
 function trafficTitle(db:DatabaseSync,path:string) {
   if (Object.hasOwn(publicPageLabels,path)) return publicPageLabels[path as keyof typeof publicPageLabels];
   const post=trafficPostId(path);
-  if (post!==undefined) return communityPostViews(db,post)?`社区帖子 #${post}`:undefined;
+  if (post!==undefined) return communityPostVisitors(db,post)?`社区帖子 #${post}`:undefined;
   const [,section,slug]=path.split("/");
   if (section==="categories") return getCategory(slug,db)?.label;
   if (section==="observations") return publicEditorial(slug,db)?.title;
@@ -26,16 +29,19 @@ function trafficTitle(db:DatabaseSync,path:string) {
   }
 }
 
-export function recordPageView(db:DatabaseSync,path:string,time=Date.now()) {
-  if (!isTrafficPath(path)) return false;
+export function recordPageVisitor(db:DatabaseSync,path:string,visitor:string,time=Date.now()) {
+  if (!isTrafficPath(path)||!isTrafficVisitor(visitor)) return false;
   const minute=bucket(time);
   const recorded=transaction(db,()=>{
     const id=trafficPostId(path);
-    const result=id===undefined?Boolean(trafficTitle(db,path)):incrementCommunityPostViews(db,id);
+    const result=id===undefined?Boolean(trafficTitle(db,path)):recordCommunityPostVisitor(db,id,hashVisitor(`post:${id}`,visitor));
     if(!result)return false;
-    db.prepare(`INSERT INTO page_traffic(minute,page,views) VALUES (?,?,1)
-      ON CONFLICT(minute,page) DO UPDATE SET views=views+1`).run(minute,path);
-    if(lastPruned.get(db)!==minute)db.prepare("DELETE FROM page_traffic WHERE minute<=?").run(minute-windowMinutes);
+    const latest=db.prepare(`INSERT INTO traffic_visitors(page,visitor_hash,last_seen) VALUES (?,?,?)
+      ON CONFLICT(page,visitor_hash) DO UPDATE SET last_seen=excluded.last_seen
+      WHERE excluded.last_seen>traffic_visitors.last_seen`);
+    latest.run("",hashVisitor("site",visitor),minute);
+    latest.run(path,hashVisitor(`page:${path}`,visitor),minute);
+    if(lastPruned.get(db)!==minute)db.prepare("DELETE FROM traffic_visitors WHERE last_seen<=?").run(minute-windowMinutes);
     return result;
   });
   if(recorded)lastPruned.set(db,minute);
@@ -44,7 +50,9 @@ export function recordPageView(db:DatabaseSync,path:string,time=Date.now()) {
 
 export function trafficReport(db=directory(),time=Date.now()) {
   const minute=bucket(time);
-  const rows=all<{page:string;views:number;total:number}>(db,`SELECT page,SUM(views) views,SUM(SUM(views)) OVER () total
-    FROM page_traffic WHERE minute>? AND minute<=? GROUP BY page ORDER BY views DESC,page ASC LIMIT 15`,minute-windowMinutes,minute);
-  return {asOf:time,total:rows[0]?.total??0,pages:rows.map(({page,views})=>({page,views,title:trafficTitle(db,page)}))};
+  const cutoff=minute-windowMinutes;
+  const total=one<{n:number}>(db,"SELECT count(*) n FROM traffic_visitors WHERE page='' AND last_seen>? AND last_seen<=?",cutoff,minute)!.n;
+  const rows=all<{page:string;visitors:number}>(db,`SELECT page,count(*) visitors FROM traffic_visitors
+    WHERE page<>'' AND last_seen>? AND last_seen<=? GROUP BY page ORDER BY visitors DESC,page ASC LIMIT 15`,cutoff,minute);
+  return {asOf:time,total,pages:rows.map(({page,visitors})=>({page,visitors,title:trafficTitle(db,page)}))};
 }

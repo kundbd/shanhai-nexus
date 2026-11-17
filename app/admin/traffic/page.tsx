@@ -20,17 +20,17 @@ export default async function TrafficAdmin() {
     </div>
     <AdminNav/>
     <section className="traffic-summary" aria-labelledby="traffic-total-label">
-      <h2 id="traffic-total-label">最近 24 小时浏览量</h2>
+      <h2 id="traffic-total-label">最近 24 小时浏览人数</h2>
       <strong data-traffic-total={total}>{number.format(total)}</strong>
-      <p className="section-note">同一访客可产生多次浏览。搜索和筛选条件统一按页面统计。</p>
+      <p className="section-note">按浏览器去重。全站和各页面分别统计，同一访客可以浏览多个页面。</p>
     </section>
     <section className="admin-overview" aria-labelledby="traffic-popular-label">
       <h2 id="traffic-popular-label">热门页面</h2>
       {pages.length===0?<p className="plain-empty boxed-empty">最近 24 小时暂无浏览记录。</p>:<table className="traffic-table" aria-labelledby="traffic-popular-label">
-        <thead><tr><th scope="col">页面</th><th scope="col">浏览量</th><th scope="col">占比</th></tr></thead>
-        <tbody>{pages.map(({page,views,title})=><tr key={page}>
+        <thead><tr><th scope="col">页面</th><th scope="col">浏览人数</th><th scope="col">占全站访客</th></tr></thead>
+        <tbody>{pages.map(({page,visitors,title})=><tr key={page}>
           <th scope="row">{title?<><Link href={page}>{title}</Link><small>{page}</small></>:page}</th>
-          <td>{number.format(views)}</td><td>{percent.format(views/total)}</td>
+          <td>{number.format(visitors)}</td><td>{percent.format(visitors/total)}</td>
         </tr>)}</tbody>
       </table>}
     </section>

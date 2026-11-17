@@ -5,6 +5,12 @@ export const publicPageLabels = {
 } as const;
 
 export const trafficPathLimit=120;
+export const trafficVisitorHeader="x-traffic-visitor";
+
+export function isTrafficVisitor(value:string|null):value is string {
+  return value!==null&&value.length===36&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
+}
+
 const publicDetailPath=/^\/(?:services|categories|observations|guides|tools)\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicThreadPath=/^\/community\/[1-9][0-9]{0,15}$/;
 

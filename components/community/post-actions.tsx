@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bookmark,Eye,Heart,MessageCircle,Repeat2,Trash2 } from "lucide-react";
 import { useState } from "react";
 import { postHref,type ReactionKind } from "@/lib/community/limits";
-import { usePageView } from "@/components/site/page-traffic";
+import { usePageVisitor } from "@/components/site/page-traffic";
 
 type Reactions={likes:number;reposts:number;liked:0|1;reposted:0|1;bookmarked:0|1};
 const actions=[
@@ -15,9 +15,9 @@ const actions=[
 ] as const;
 const number=new Intl.NumberFormat("zh-CN");
 
-export function PostActions({id,initial,replies,views,trackView,loginHref,signedIn,owner}:{id:number;initial:Reactions;replies:number;views:number;trackView?:boolean;loginHref:string;signedIn:boolean;owner:boolean}) {
+export function PostActions({id,initial,replies,visitors,trackView,loginHref,signedIn,owner}:{id:number;initial:Reactions;replies:number;visitors:number;trackView?:boolean;loginHref:string;signedIn:boolean;owner:boolean}) {
   const router=useRouter();
-  const liveViews=usePageView(trackView?postHref(id):null);
+  const liveVisitors=usePageVisitor(trackView?postHref(id):null);
   const [update,setUpdate]=useState<{before:Reactions;after:Reactions}>();
   const reactions=update?.before===initial?update.after:initial;
   const [busy,setBusy]=useState<ReactionKind|"remove"|null>(null);
@@ -55,7 +55,7 @@ export function PostActions({id,initial,replies,views,trackView,loginHref,signed
         onClick={()=>void change(kind,!reactions[flag])}>{contents}</button>:
         <Link key={kind} className="social-action" prefetch={false} href={loginHref}>{contents}</Link>;
     })}
-    <span className="social-views"><Eye size={17} aria-hidden="true"/> 浏览 {number.format(Math.max(views,liveViews??0))}</span>
+    <span className="social-views" title="按浏览器去重"><Eye size={17} aria-hidden="true"/> 浏览人数 {number.format(Math.max(visitors,liveVisitors??0))}</span>
     {owner&&<button className="social-action social-remove" type="button" aria-label="删除帖子" disabled={busy!==null} onClick={()=>void change("remove")}><Trash2 size={16} aria-hidden="true"/></button>}
   </div>
   {notice&&<p className="form-error" role="alert">{notice}{expired&&<> <Link className="text-link" href={loginHref}>重新登录</Link></>}</p>}</>;

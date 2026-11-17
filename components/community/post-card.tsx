@@ -27,6 +27,6 @@ export function PostCard({post,viewer,reposter,trackView}:{post:CommunityPost;vi
         </a>)}
     </div>}
     <PostActions id={post.id} initial={{likes:post.likes,reposts:post.reposts,liked:post.liked,reposted:post.reposted,bookmarked:post.bookmarked}} replies={post.replies}
-      views={post.views} trackView={trackView} signedIn={viewer!==undefined} owner={viewer===post.author_id} loginHref={accountEntryHref("login",postHref(post.id))}/>
+      visitors={post.visitors} trackView={trackView} signedIn={viewer!==undefined} owner={viewer===post.author_id} loginHref={accountEntryHref("login",postHref(post.id))}/>
   </article>;
 }

@@ -1,7 +1,7 @@
 import { directory } from "@/lib/directory/db";
-import { recordPageView } from "@/lib/directory/traffic";
+import { recordPageVisitor } from "@/lib/directory/traffic";
 import { sameOriginBrowserRequest } from "@/lib/site-request";
-import { isTrafficPath,trafficPathLimit } from "@/lib/traffic-path";
+import { isTrafficPath,isTrafficVisitor,trafficPathLimit,trafficVisitorHeader } from "@/lib/traffic-path";
 
 const reply=(status:number)=>new Response(null,{status,headers:{"Cache-Control":"no-store"}});
 const capacity=1_200;
@@ -33,6 +33,8 @@ export async function POST(request:Request) {
   if (new URL(request.url).search) return reply(400);
   if (request.headers.get("content-type")?.split(";",1)[0].trim()!=="text/plain") return reply(415);
   if (Number(request.headers.get("content-length"))>trafficPathLimit) return reply(413);
+  const visitor=request.headers.get(trafficVisitorHeader);
+  if (!isTrafficVisitor(visitor)) return reply(400);
   const now=Date.now();
   const minute=Math.floor(now/60_000);
   if (minute!==currentMinute) { currentMinute=minute;requests=0; }
@@ -42,7 +44,7 @@ export async function POST(request:Request) {
   try { page=await readPage(request); } catch { return reply(400); }
   if (!page || !isTrafficPath(page)) return reply(400);
   try {
-    const recorded=recordPageView(directory(),page,now);
+    const recorded=recordPageVisitor(directory(),page,visitor,now);
     if(typeof recorded==="object")return Response.json(recorded,{headers:{"Cache-Control":"no-store"}});
     return reply(recorded?204:404);
   }

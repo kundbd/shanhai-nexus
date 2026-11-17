@@ -2,11 +2,23 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect,useRef,useState } from "react";
-import { isTrafficPath,trafficPostId } from "@/lib/traffic-path";
+import { isTrafficPath,isTrafficVisitor,trafficPostId,trafficVisitorHeader } from "@/lib/traffic-path";
 
-export function usePageView(path:string|null) {
+const browserVisitorKey="shanhai-traffic-visitor";
+
+function browserVisitor() {
+  try {
+    const saved=localStorage.getItem(browserVisitorKey);
+    if(isTrafficVisitor(saved))return saved;
+    const visitor=crypto.randomUUID();
+    localStorage.setItem(browserVisitorKey,visitor);
+    return visitor;
+  } catch { return undefined; }
+}
+
+export function usePageVisitor(path:string|null) {
   const lastReported=useRef<string|null>(null);
-  const [count,setCount]=useState<{path:string;views:number}>();
+  const [count,setCount]=useState<{path:string;visitors:number}>();
 
   useEffect(()=>{
     if (!path||!isTrafficPath(path)) { lastReported.current=null;return; }
@@ -14,14 +26,16 @@ export function usePageView(path:string|null) {
 
     function report() {
       if (document.visibilityState!=="visible" || lastReported.current===page) return;
+      const visitor=browserVisitor();
+      if(!visitor)return;
       lastReported.current=page;
       void fetch("/api/traffic",{
-        method:"POST",body:page,credentials:"omit",referrerPolicy:"no-referrer",keepalive:true,
+        method:"POST",body:page,headers:{[trafficVisitorHeader]:visitor},credentials:"omit",referrerPolicy:"no-referrer",keepalive:true,
       }).then(async response=>{
         if(response.status!==200)return;
-        const {views}=await response.json() as {views?:number};
-        if(lastReported.current===page&&typeof views==="number"&&Number.isSafeInteger(views)&&views>=0) {
-          setCount(previous=>({path:page,views:Math.max(views,previous?.path===page?previous.views:0)}));
+        const {visitors}=await response.json() as {visitors?:number};
+        if(lastReported.current===page&&typeof visitors==="number"&&Number.isSafeInteger(visitors)&&visitors>=0) {
+          setCount(previous=>({path:page,visitors:Math.max(visitors,previous?.path===page?previous.visitors:0)}));
         }
       }).catch(()=>{});
     }
@@ -30,11 +44,11 @@ export function usePageView(path:string|null) {
     return ()=>document.removeEventListener("visibilitychange",report);
   },[path]);
 
-  return count?.path===path?count.views:undefined;
+  return count?.path===path?count.visitors:undefined;
 }
 
 export function PageTraffic() {
   const path=usePathname();
-  usePageView(path&&trafficPostId(path)===undefined?path:null);
+  usePageVisitor(path&&trafficPostId(path)===undefined?path:null);
   return null;
 }
