@@ -9,19 +9,20 @@ const merchantLabels:Record<string,string>={"ai-topup":"AI 会员代充","ai-car
   "u-card":"U 卡","virtual-card":"虚拟信用卡","payment-accounts":"跨境支付","subscription-payment":"订阅支付",vps:"VPS / 云服务器"};
 
 export const dynamic = "force-dynamic";
-export const metadata:Metadata = {title:"联系与纠错",description:"提交资料纠错、推荐新商家、发表商家回应或联系合作。",alternates:{canonical:"/contact"}};
+export const metadata:Metadata = {title:"联系与纠错",description:"提交资料纠错、地区访问反馈、隐私相关请求或合作联系。",alternates:{canonical:"/contact"}};
 export default async function Contact({searchParams}:{searchParams:Promise<Params>}) {
   const search=await searchParams;
   const visibility=await contentVisibility();
   const site=getSite(param(search.site),undefined,visibility);
   const result=param(search.result);
   return <div className="frame page article editorial-page">
-    <div className="catalog-heading"><p className="print-label">联系本站</p><h1>联系与纠错</h1><p>{site ? `为 ${site.name} 提交信息。` : "通过表单推荐新服务、指出错误或提交商家回应。"}</p></div>
+    <div className="catalog-heading"><p className="print-label">联系本站</p><h1>联系与纠错</h1><p>{site ? `为 ${site.name} 提交资料、更正或回应。` : "通过表单提交资料、反馈站点问题或提出隐私相关请求。"}</p></div>
     <nav className="filter-pills" aria-label="联系渠道"><a href="#feedback">资料投稿与纠错</a><a href="#cooperation">合作联系</a></nav>
     <div className="policy-copy contact-sections">
       <section id="feedback" aria-labelledby="feedback-heading">
         <h2 id="feedback-heading">资料投稿与纠错</h2>
-        <p>请附商家名称、需要核对的内容和可查阅的公开来源。商家回应也可通过下方表单提交。</p>
+        <p>推荐商家、纠正报价或提交商家回应时，请写明商家或商品名称、需要核对的内容及公开来源。涉及报价变化时，请附对应的观察日期。</p>
+        <p>地区访问和隐私相关请求可选择「纠错或补充资料」。反馈地区访问时，请写明页眉显示的内容地区、页面链接和发生时间。请勿提供公网 IP、密码、验证码、卡号或付款凭证。</p>
         {result && <p className="form-notice" role="status">{result==="ok"?"已收到，资料进入编辑审核。":result==="limited"?"相同资料已提交，或当前投稿较多，请稍后再试。":"提交失败，请检查网址和说明内容。"}</p>}
         {!site&&<details open={search.submit==="merchant"}><summary>商家提交收录</summary>
           <form action="/api/submissions" method="post" className="field-stack">
@@ -45,16 +46,16 @@ export default async function Contact({searchParams}:{searchParams:Promise<Param
           {site && <input type="hidden" name="site" value={site.slug}/>}
           <label>信息类型<select name="kind" defaultValue={site?"correction":"site"}><option value="site">推荐服务商</option><option value="correction">纠错或补充资料</option><option value="response">商家回应</option></select></label>
           <label>官网或公开来源<input name="url" placeholder="https://..." maxLength={1500}/></label>
-          <label>详细说明<textarea name="body" required minLength={15} maxLength={1600} rows={6} placeholder="写明需要核查的内容，请勿填入敏感信息。"/></label>
+          <label>详细说明<textarea name="body" required minLength={15} maxLength={1600} rows={6} placeholder="写明问题、发生时间和希望核对的内容。"/></label>
           <div hidden aria-hidden="true"><label>公司<input name="company" tabIndex={-1} autoComplete="off"/></label></div>
           <button type="submit" className="button primary">提交给编辑部</button>
         </form>
       </section>
       <section id="cooperation" aria-labelledby="cooperation-heading">
         <h2 id="cooperation-heading">合作联系</h2>
-        <p>欢迎商家资料对接、数据授权和内容合作。来信请附机构名称、官网、合作事项和可公开的相关资料。</p>
+        <p>欢迎联系商家资料收录、数据授权、内容合作及推广。请在邮件中写明机构名称、官网、合作事项和可公开的资料。涉及推广时，请一并说明拟展示的地区和适用的服务条款。</p>
         <p><a className="text-link cooperation-email" href={`mailto:${brand.cooperationEmail}`}>{brand.cooperationEmail}</a></p>
-        <p>商业合作会明确标注。档案核实、编辑审核和用户评分按本站内容政策独立处理。</p>
+        <p>合作内容须符合本站内容政策、地区访问规则及适用法律法规。商业合作会明确标注，商家档案、编辑审核和用户评分按本站内容政策独立处理。</p>
       </section>
     </div>
   </div>;

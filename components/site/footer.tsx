@@ -10,7 +10,7 @@ export function Footer() {
         <Link href="/about">关于本站</Link>
         <Link href="/contact">联系方式</Link>
         <Link href="/policy">内容政策</Link>
-        <Link href="/policy#privacy">隐私说明</Link>
+        <Link href="/policy#privacy">隐私政策</Link>
         <Link href="/policy#disclaimer">免责声明</Link>
         <Link href="/contact#cooperation">合作联系</Link>
       </nav>
