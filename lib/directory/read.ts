@@ -2,7 +2,7 @@ import type { SQLInputValue } from "node:sqlite";
 import { editorialVisibility, siteVisibility, type ContentVisibility } from "../geo/visibility";
 import { all, directory, one } from "./db";
 import type { Category, Claim, Editorial, Incident, Price, Site, Source, Status } from "./types";
-import { categoryGroups,isRetiredCategory } from "./taxonomy";
+import { categoryGroups,isRetiredCategory,proxyCategory,publicCategoryMembers,publicCategorySlug } from "./taxonomy";
 import { catalogStartingPrices,priceRecordedTime,storefrontTierNeedsReview } from "./price-board";
 import { publicPriceEvidence,storefrontPriceEvidence } from "./public-quote-policy";
 import { directoryCategoryTerms,directorySearch } from "./search-query";
@@ -13,9 +13,11 @@ const storefrontEvidence = `FROM price_records p JOIN sources src ON src.id=p.so
 const productAdmission = `EXISTS(SELECT 1 ${storefrontEvidence})`;
 const pricingEvidence=`EXISTS(SELECT 1 FROM price_records p JOIN sources src ON src.id=p.source_id
   WHERE p.site_id=s.id AND p.publication='published' AND ${publicPriceEvidence})`;
+export const publicCategoryLabelSql = `CASE WHEN c.slug IN ('residential','${proxyCategory.slug}')
+  THEN '${proxyCategory.label}' ELSE c.label END`;
 const siteSelect = `SELECT s.*, a.digest avatar_digest, coalesce(d.domain,
   (SELECT sf.host FROM merchant_storefronts sf WHERE sf.site_id=s.id ORDER BY (sf.url=s.website) DESC,sf.storefront_key LIMIT 1)) domain,
-  (d.site_id IS NULL) hosted_storefront, c.label category_label,
+  (d.site_id IS NULL) hosted_storefront, ${publicCategoryLabelSql} category_label,
   ${pricingEvidence} has_public_prices,
   (SELECT max(p.recorded_at) ${storefrontEvidence}) product_observed_at,
   (SELECT count(*) FROM user_reviews ur WHERE ur.site_id=s.id AND ur.thread_id IS NULL AND ur.moderation='accepted') review_count
@@ -25,11 +27,25 @@ const siteSelect = `SELECT s.*, a.digest avatar_digest, coalesce(d.domain,
 
 export const listCategories = (db = directory()) =>
   all<Category>(db, "SELECT * FROM categories ORDER BY parent_slug IS NOT NULL, parent_slug, position, label");
+export const publicCategoryAllowed = (slug: string, visibility?: ContentVisibility) =>
+  publicCategoryMembers(slug).some(member => visibility ? visibility.categoryAllowed(member) : !isRetiredCategory(member));
+
+function publicCategoryRow(category: Category, visibility?: ContentVisibility): Category {
+  if (category.slug!==proxyCategory.slug) return category;
+  return {
+    ...category, label:proxyCategory.label,
+    description:visibility?.categoryAllowed(category.slug) ? category.description : proxyCategory.description,
+  };
+}
+
 export const listPublicCategories = (db = directory(), visibility?: ContentVisibility) =>
-  listCategories(db).filter(({slug}) => visibility ? visibility.categoryAllowed(slug) : !isRetiredCategory(slug));
-export const getCategory = (slug: string, db = directory(), visibility?: ContentVisibility) =>
-  (visibility ? visibility.categoryAllowed(slug) : !isRetiredCategory(slug))
-    ? one<Category>(db, "SELECT * FROM categories WHERE slug=?", slug) : undefined;
+  listCategories(db).filter(({slug}) => publicCategorySlug(slug)===slug && publicCategoryAllowed(slug,visibility))
+    .map(category=>publicCategoryRow(category,visibility));
+export function getCategory(slug: string, db = directory(), visibility?: ContentVisibility) {
+  if (!publicCategoryAllowed(slug,visibility)) return;
+  const category=one<Category>(db,"SELECT * FROM categories WHERE slug=?",publicCategorySlug(slug));
+  return category && publicCategoryRow(category,visibility);
+}
 
 export function getSite(slug: string, db = directory(), visibility?: ContentVisibility) {
   const region = visibility ? siteVisibility(visibility) : {clause:"1",bindings:[]};
@@ -109,10 +125,12 @@ function filters(input: DirectoryFilter) {
   const clauses = ["s.publication='published'",region.clause];
   const params: SQLInputValue[] = [...region.bindings];
   if (input.category) {
+    const members=publicCategoryMembers(input.category);
     clauses.push(`s.category_slug IN (WITH RECURSIVE descendants(slug) AS
-      (SELECT slug FROM categories WHERE slug=? UNION SELECT c.slug FROM categories c JOIN descendants p ON c.parent_slug=p.slug)
+      (SELECT slug FROM categories WHERE slug IN (${members.map(()=>"?").join(",")})
+       UNION SELECT c.slug FROM categories c JOIN descendants p ON c.parent_slug=p.slug)
       SELECT slug FROM descendants)`);
-    params.push(input.category);
+    params.push(...members);
   }
   if (input.group && Object.hasOwn(categoryGroups,input.group)) {
     const group = categoryGroups[input.group as keyof typeof categoryGroups];
@@ -140,14 +158,16 @@ function filters(input: DirectoryFilter) {
 }
 
 export type SitePriceMatch=Pick<Price,"plan"|"product_title">&{label:string;storefront:boolean};
-type SearchPrice=PriceIdentity&Pick<Price,"site_id"|"product_title"|"amount_minor">&{ category_label:string;category_slug:string };
+type SearchPrice=PriceIdentity&Pick<Price,"site_id"|"product_title"|"amount_minor">&{
+  category_label:string;source_category_label:string;category_slug:string;
+};
 const subscriptionCategories=new Set(["ai-card","ai-topup","ai-platforms","ai-subscriptions"]);
 
 function matchingPublicPrices(db:ReturnType<typeof directory>,where:string,params:SQLInputValue[],search:ReturnType<typeof directorySearch>) {
   const matches=new Map<number,SitePriceMatch&{score:number}>();
   if (!search.searchable) return matches;
   const rows=db.prepare(`SELECT p.site_id,p.plan,p.product_title,p.amount_minor,p.currency,p.region,p.period,p.storefront_observed,
-    p.reported_item_url,src.url source_url,c.label category_label,c.slug category_slug
+    p.reported_item_url,src.url source_url,${publicCategoryLabelSql} category_label,c.label source_category_label,c.slug category_slug
     FROM sites s JOIN price_records p ON p.site_id=s.id JOIN sources src ON src.id=p.source_id
     JOIN categories c ON c.slug=s.category_slug
     WHERE ${where} AND s.lifecycle<>'closed' AND p.publication='published' AND ${publicPriceEvidence}
@@ -174,7 +194,8 @@ function matchingPublicPrices(db:ReturnType<typeof directory>,where:string,param
       search.containsUrl&&row.reported_item_url?scoreText(row.reported_item_url,row)*10:0);
     const planScore=scoreText(row.plan,row)*8;
     const usablePlanScore=planScore>titleScore&&storefrontTierNeedsReview(row)?0:planScore;
-    const categoryScore=search.hasQuoteFilter?scoreText(row.category_label,row)*4:0;
+    const categoryScore=search.hasQuoteFilter
+      ? Math.max(scoreText(row.category_label,row),scoreText(row.source_category_label,row))*4 : 0;
     const score=Math.max(titleScore,usablePlanScore,categoryScore);
     if (score>(matches.get(row.site_id)?.score??0)) {
       matches.set(row.site_id,{label:title&&titleScore>=usablePlanScore?title:row.plan,plan:row.plan,product_title:row.product_title,storefront:row.storefront_observed===1,score});
@@ -214,7 +235,7 @@ export function listSites(input: DirectoryFilter = {}, db = directory()) {
   const search=directorySearch(input.q);
   const priceMatches=matchingPublicPrices(db,where,params,search);
   const hiddenEditorials = input.visibility?.hiddenEditorials ?? [];
-  const candidates = all<Site & { extra_domains: string | null; shop_urls: string | null; editorials: string; parent_label: string; parent_slug: string|null; service_tags:string }>(db, `SELECT base.*,
+  const candidates = all<Site & { extra_domains: string | null; shop_urls: string | null; editorials: string; source_category_label:string; parent_label: string; parent_slug: string|null; service_tags:string }>(db, `SELECT base.*,
     (SELECT group_concat(domain, ' ') FROM site_domains sd WHERE sd.site_id=base.id) extra_domains,
     (SELECT group_concat(url, ' ') FROM merchant_storefronts sf WHERE sf.site_id=base.id) shop_urls,
     COALESCE((SELECT group_concat(tag, ' ') FROM merchant_site_tags mt WHERE mt.site_id=base.id),'') service_tags,
@@ -222,15 +243,16 @@ export function listSites(input: DirectoryFilter = {}, db = directory()) {
       (SELECT group_concat(ec.statement,' ') FROM editorial_claims ec JOIN sources src ON src.id=ec.source_id AND src.verified=1 WHERE ec.editorial_id=e.id), ''))
       FROM editorials e WHERE e.site_id=base.id AND e.publication='published'
       ${hiddenEditorials.length ? "AND e.slug NOT IN (SELECT value FROM json_each(?))" : ""}), '') editorials,
-    COALESCE(p.label,'') parent_label,p.slug parent_slug
+    category.label source_category_label,COALESCE(p.label,'') parent_label,p.slug parent_slug
     FROM (${siteSelect} WHERE ${where}) base
     JOIN categories category ON category.slug=base.category_slug
     LEFT JOIN categories p ON p.slug=category.parent_slug
     ORDER BY ${order.replaceAll("s.","base.")}`, ...(hiddenEditorials.length ? [JSON.stringify(hiddenEditorials)] : []), ...params);
-  const matches = candidates.map(({ extra_domains, shop_urls, editorials, parent_label, parent_slug, service_tags, ...site }) => {
+  const matches = candidates.map(({ extra_domains, shop_urls, editorials, source_category_label, parent_label, parent_slug, service_tags, ...site }) => {
     const quoteScore=priceMatches.get(site.id)?.score??0;
     if (search.hasQuoteFilter) return {site,score:search.literalMatch(site.name)?168:quoteScore};
     const tags=[site.category_label,parent_label,service_tags];
+    if (source_category_label!==site.category_label) tags.push(source_category_label);
     const description=site.status==="listed"?"":site.products??"";
     const categoryScore=[site.category_slug,parent_slug??""]
       .some((category)=>search.matchesCategory(directoryCategoryTerms(category)))?84:0;

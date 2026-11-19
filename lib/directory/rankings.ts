@@ -3,7 +3,8 @@ import { siteVisibility, type ContentVisibility } from "../geo/visibility";
 import { trafficProduct } from "../traffic-path";
 import { all } from "./db";
 import { currentPublicProducts } from "./products";
-import { pipelines,type Pipeline } from "./taxonomy";
+import { publicCategoryLabelSql } from "./read";
+import { rankingCategories,type Pipeline } from "./taxonomy";
 import { trafficWindow } from "./traffic";
 import type { Price,Site } from "./types";
 
@@ -12,7 +13,7 @@ export type RankingPeriod="24h"|"overall";
 type RankedShop=Pick<Site,"id"|"slug"|"name"|"category_slug"|"category_label"|"avatar_digest">&{visitors:number};
 type RankedProduct={path:string;visitors:number;site:Pick<Site,"id"|"slug"|"name"|"category_slug"|"category_label">;price:Price};
 
-const categories=(group:Pipeline)=>JSON.stringify(pipelines[group].categories);
+const categories=(group:Pipeline)=>JSON.stringify(rankingCategories(group));
 
 function visitorCounts(kind:"services"|"products",period:RankingPeriod,time:number) {
   const range=[`/${kind}/`,`/${kind}0`];
@@ -31,7 +32,7 @@ export function shopRanking(db:DatabaseSync,group:Pipeline,period:RankingPeriod=
   const counts=visitorCounts("services",period,time);
   const region=siteVisibility(visibility);
   return all<RankedShop>(db,`WITH counts AS (${counts.sql})
-    SELECT s.id,s.slug,s.name,s.category_slug,c.label category_label,a.digest avatar_digest,v.visitors
+    SELECT s.id,s.slug,s.name,s.category_slug,${publicCategoryLabelSql} category_label,a.digest avatar_digest,v.visitors
     FROM sites s JOIN counts v ON v.page='/services/'||s.slug
     JOIN categories c ON c.slug=s.category_slug
     LEFT JOIN merchant_avatars a ON a.site_id=s.id AND a.website=s.website
@@ -43,7 +44,7 @@ export function productRanking(db:DatabaseSync,group:Pipeline,period:RankingPeri
   const counts=visitorCounts("products",period,time);
   const region=siteVisibility(visibility);
   const visits=db.prepare(`WITH counts AS (${counts.sql})
-    SELECT v.page path,v.visitors,s.id,s.slug,s.name,s.category_slug,c.label category_label
+    SELECT v.page path,v.visitors,s.id,s.slug,s.name,s.category_slug,${publicCategoryLabelSql} category_label
     FROM counts v JOIN sites s ON s.id=CAST(substr(v.page,length('/products/')+1) AS INTEGER)
     JOIN categories c ON c.slug=s.category_slug
     WHERE s.publication='published' AND s.lifecycle<>'closed' AND s.category_slug IN (SELECT value FROM json_each(?)) AND ${region.clause}

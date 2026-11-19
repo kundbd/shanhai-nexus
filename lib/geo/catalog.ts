@@ -1,7 +1,7 @@
 import { getGuide } from "../catalog";
 import { homeAds } from "../catalog/home-ads";
 import type { Guide } from "../catalog/types";
-import { getSite, publicEditorial } from "../directory/read";
+import { getSite, publicCategoryAllowed, publicEditorial } from "../directory/read";
 import { siteUrl } from "../site";
 import type { ContentVisibility } from "./visibility";
 
@@ -17,7 +17,7 @@ export function catalogLinkAllowed(visibility: ContentVisibility, href: string) 
   if (url.origin !== base.origin) return true;
   const [,section,id] = url.pathname.split("/");
   if (!id) return true;
-  if (section === "categories") return visibility.categoryAllowed(id);
+  if (section === "categories") return publicCategoryAllowed(id,visibility);
   if (section === "services") return !!getSite(id,undefined,visibility);
   if (section === "observations") return !!publicEditorial(id,undefined,visibility);
   if (section !== "guides") return true;

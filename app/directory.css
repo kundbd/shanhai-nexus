@@ -155,6 +155,7 @@
 .directory-landscape{display:none}
 .category-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:0}
 .category-strip a{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-height:84px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;color:var(--accent)}
+.category-strip a[href="/categories/proxy-services"]:last-child:nth-child(odd){grid-column:1/-1}
 .category-strip svg{flex:none}
 .category-strip a:hover{background:var(--soft);border-color:var(--line-strong)}
 .category-strip h2{display:flex;align-items:center;gap:6px;font-size:16px;color:var(--ink)}

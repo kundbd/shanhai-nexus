@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { homeAds } from "../../lib/catalog/home-ads";
 import {
   editorialMarker, editorialSlug, hiddenArticle, hiddenGuide, hiddenSite, hiddenSiteName,
-  networkName, networkSite, offerMarker, startGeoStaging,
+  networkName, networkSite, offerMarker, proxyName, proxySite, residentialName, residentialSite, startGeoStaging,
 } from "../fixtures/geo-staging";
 
 const guide=`/guides/${hiddenGuide}`;
@@ -158,6 +158,64 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.ok((await get("/?price=vps")).body.includes(offerMarker));
     assert.ok((await get("/rankings?group=vps&period=overall")).body.includes(hiddenSiteName));
     assert.ok((await get("/community?view=reviews")).body.includes("GeoCheckReviewMarker"));
+  });
+
+  await t.test("proxy and residential entries share a public category with their existing region rules",async ()=>{
+    const category="/categories/proxy-services";
+    const legacy="/categories/residential";
+    const proxy=`/services/${proxySite}`;
+    const residential=`/services/${residentialSite}`;
+    const query=(value:string)=>`/search?${new URLSearchParams({q:value,type:"service"})}`;
+    setRegion("HK");
+    const home=(await get("/")).body;
+    const cards=/<nav id="home-categories"[\s\S]*?<\/nav>/.exec(home)?.[0]??"";
+    assert.equal(cards.split(`href="${category}"`).length-1,1);
+    absent(cards,`href="${legacy}"`);
+    const combined=await get(category+"?sort=name");
+    assert.equal(combined.response.status,200);
+    assert.match(combined.body,/<h1>代理 IP 服务<\/h1>/);
+    assert.ok(combined.body.replaceAll("<!-- -->","").includes("公开 2 家"));
+    assert.ok(combined.body.includes("GeoCheckProxyCategoryNotes"));
+    for (const href of [proxy,residential]) assert.ok(combined.body.includes(`href="${href}"`),href);
+    const original=await get(legacy+"?sort=name&tag=a&tag=b",{redirect:"manual"});
+    assert.equal(original.response.status,307);
+    const destination=new URL(original.response.headers.get("location")!,origin);
+    assert.equal(destination.pathname,category);
+    assert.equal(destination.searchParams.get("sort"),"name");
+    assert.deepEqual(destination.searchParams.getAll("tag"),["a","b"]);
+    assertNoStore(original.response);
+    const filtered=await get("/services?category=residential");
+    assert.equal(filtered.response.status,200);
+    assert.ok(filtered.body.includes(proxyName)&&filtered.body.includes(residentialName));
+    const selectedOption=/<option\b[^>]*\bvalue="proxy-services"[^>]*>/.exec(filtered.body)?.[0]??"";
+    assert.match(selectedOption,/\bselected=""/);
+    absent(filtered.body,'<option value="residential"');
+    assert.ok((await get(query("住宅代理"))).body.includes(`href="${residential}"`));
+    assert.ok((await get(query("代理 IP 服务 月付"))).body.includes(`href="${residential}"`));
+    assert.ok((await get(residential)).body.includes(`href="${category}">代理 IP 服务</a>`));
+    const product=await get(content.residentialProduct);
+    assert.equal(product.response.status,200);
+    assert.ok(product.body.includes("代理 IP 服务"));
+    assert.ok((await get("/rankings?group=connections&period=overall")).body.includes(residentialName));
+    assert.ok((await get("/rankings?group=connections&type=products&period=overall")).body.includes(content.residentialProduct));
+    absent((await get("/rankings?group=vps&period=overall")).body,residentialName);
+
+    setRegion("US");
+    const shared=await get(category);
+    assert.equal(shared.response.status,200);
+    assert.ok(shared.body.includes(residentialName));
+    absent(shared.body,proxyName,"GeoCheckProxyCategoryNotes");
+    assert.equal((await get(proxy)).response.status,404);
+    assert.equal((await get(content.residentialProduct)).response.status,200);
+    assert.ok((await get("/rankings?group=connections&period=overall")).body.includes(residentialName));
+
+    setRegion("CN");
+    for (const path of [category,legacy,proxy,residential,content.residentialProduct,"/services?category=residential"]) {
+      const result=await get(path,{redirect:"manual"});
+      assert.equal(result.response.status,404,path);
+      absent(result.body,proxyName,residentialName);
+    }
+    absent((await get(query("住宅代理"))).body,residentialName);
   });
 
   await t.test("one conservative sitemap for every country",async ()=>{

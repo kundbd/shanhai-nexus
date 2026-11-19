@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { directoryStats,listPublicCategories,listSites } from "@/lib/directory/read";
-import type { Category } from "@/lib/directory/types";
+import { categoryHref,type Category } from "@/lib/directory/types";
 import { day,SiteTable } from "./display";
-import { categoryGroups,operators,publicLifecycleLabels,reachabilityLabels } from "@/lib/directory/taxonomy";
+import { categoryGroups,operators,publicCategorySlug,publicLifecycleLabels,reachabilityLabels } from "@/lib/directory/taxonomy";
 import { contentVisibility } from "@/lib/geo/request";
 
 export type Params = Record<string, string | string[] | undefined>;
@@ -17,14 +17,16 @@ const catalogSorts:Record<string,string>={
 
 export async function CatalogPage({ input, fixed }: { input: Params; fixed?: Category }) {
   const visibility=await contentVisibility();
-  const base = fixed ? `/categories/${fixed.slug}` : "/services";
+  const base = fixed ? categoryHref(fixed.slug) : "/services";
   const q = param(input.q).trim().slice(0,160);
-  const filter = fixed?.slug ?? param(input.category);
+  const filter = publicCategorySlug(fixed?.slug ?? param(input.category));
   const requestedGroup = param(input.group);
   const connections=categoryGroups.connections.some(category=>visibility.categoryAllowed(category));
-  if ((filter&&!visibility.categoryAllowed(filter))||(!fixed&&requestedGroup==="connections"&&!connections)) notFound();
   const categories = listPublicCategories(undefined,visibility);
   const category = categories.find((item)=>item.slug === filter)?.slug ?? "";
+  if ((filter&&!category)||(!fixed&&requestedGroup==="connections"&&!connections)) notFound();
+  const childCategories = fixed ? categories.filter(item =>
+    item.slug!==fixed.slug && item.parent_slug && publicCategorySlug(item.parent_slug)===fixed.slug) : [];
   const requestedStatus=param(input.status);
   const status = Object.hasOwn(catalogStatuses,requestedStatus)?requestedStatus:"";
   const group = !fixed && !category ? Object.hasOwn(categoryGroups,requestedGroup) ? requestedGroup : !q&&requestedGroup!=="all" ? "priority" : "" : "";
@@ -67,7 +69,7 @@ export async function CatalogPage({ input, fixed }: { input: Params; fixed?: Cat
     {fixed && <div className="crumbs"><Link href="/services">服务目录</Link><span>/</span>{fixed.label}</div>}
     <div className="catalog-heading"><h1>{fixed?.label ?? "服务目录"}</h1><p>{fixed?.description ?? "按分类、商家名称、官网域名或公开商品查找服务档案。"}</p></div>
     <p className="catalog-count">公开 {stats.total} 家 · 有公开报价 {stats.priced} 家{stats.last&&` · 最近更新 ${day(stats.last)}`}</p>
-    {fixed && categories.some((item)=>item.parent_slug === fixed.slug) && <nav className="child-categories" aria-label="子分类">{categories.filter((item)=>item.parent_slug === fixed.slug).map((item)=><Link key={item.slug} href={`/categories/${item.slug}`}>{item.label}</Link>)}</nav>}
+    {!!childCategories.length && <nav className="child-categories" aria-label="子分类">{childCategories.map((item)=><Link key={item.slug} href={categoryHref(item.slug)}>{item.label}</Link>)}</nav>}
     {!fixed && <nav className="child-categories" aria-label="重点目录"><Link href="/services?group=priority">重点类别</Link>{categoryGroups["ai-retail"].some(item=>visibility.categoryAllowed(item))&&<Link href="/services?group=ai-retail">AI 代充与卡网</Link>}{connections&&<Link href="/services?group=connections" prefetch={false}>网络服务</Link>}<Link href="/services?group=all">全部服务</Link></nav>}
     <form key={JSON.stringify([q,category,group,status,operator,reachability,lifecycle,sort])} className="catalog-filters" action={base}>
       {(requestedGroup||!q)&&!fixed && <input type="hidden" name="group" value={requestedGroup||""}/>}

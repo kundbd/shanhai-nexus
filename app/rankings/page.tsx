@@ -8,7 +8,7 @@ import { param,type Params } from "@/components/directory/catalog-page";
 import { directory } from "@/lib/directory/db";
 import { productName } from "@/lib/directory/products";
 import { productRanking,shopRanking,type RankingPeriod } from "@/lib/directory/rankings";
-import { pipelines,type Pipeline } from "@/lib/directory/taxonomy";
+import { pipelines,rankingCategories,type Pipeline } from "@/lib/directory/taxonomy";
 import { categoryHref,siteHref } from "@/lib/directory/types";
 import { contentVisibility } from "@/lib/geo/request";
 
@@ -25,7 +25,7 @@ const rankingHref=(group:Pipeline,type:"shops"|"products",period:RankingPeriod)=
 export default async function Rankings({searchParams}:{searchParams:Promise<Params>}) {
   const input=await searchParams;
   const visibility=await contentVisibility();
-  const groups=(Object.keys(pipelines) as Pipeline[]).filter(key=>pipelines[key].categories.some(category=>visibility.categoryAllowed(category)));
+  const groups=(Object.keys(pipelines) as Pipeline[]).filter(key=>rankingCategories(key).some(category=>visibility.categoryAllowed(category)));
   const selected=param(input.group);
   if (Object.hasOwn(pipelines,selected)&&!groups.some(key=>key===selected)) notFound();
   const group=groups.find(key=>key===selected)??groups[0];

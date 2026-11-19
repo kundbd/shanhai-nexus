@@ -1,3 +1,5 @@
+import { publicCategorySlug } from "./taxonomy";
+
 export const statuses = { listed: "资料待核实", verified: "资料已核实", tested: "站方已实测" } as const;
 export const natures = { official: "官方公开资料", tested: "站方实测", media: "第三方公开报道", user: "用户报告", pending: "待核实" } as const;
 export const editorialOrigins = { editorial: "山海观察", third_party: "第三方测评" } as const;
@@ -30,7 +32,7 @@ export type ImportItem = { id: number; batch_id: number; payload: string; domain
 export type Submission = { id: number; site_id: number | null; kind: "site" | "correction" | "response"; url: string | null; body: string; submitted_at: string; moderation: "pending" | "accepted" | "rejected"; review_note: string };
 
 export const siteHref = (slug: string) => `/services/${slug}`;
-export const categoryHref = (slug: string) => `/categories/${slug}`;
+export const categoryHref = (slug: string) => `/categories/${publicCategorySlug(slug)}`;
 export const observationHref = (slug: string) => `/observations/${slug}`;
 export const noData = "暂无数据";
 import type { lifecycleLabels,operators,reachabilityLabels } from "./taxonomy";

@@ -16,6 +16,8 @@ import { productHref } from "../../lib/directory/products";
 import { publicPrices } from "../../lib/directory/read";
 import { recordPageVisitor } from "../../lib/directory/traffic";
 import { saveVisibility } from "../../lib/geo/admin";
+import { makeAudience } from "../../lib/geo/policy";
+import { loadVisibility } from "../../lib/geo/visibility";
 
 export const testAddresses={
   CN:"114.114.114.114",HK:"203.198.23.1",TW:"168.95.1.1",SG:"165.21.83.88",
@@ -26,6 +28,10 @@ export const hiddenSite="geo-vps-fixture";
 export const hiddenSiteName="GeoCheckPrivateCloud";
 export const networkSite="geo-network-fixture";
 export const networkName="GeoCheckNetworkService";
+export const proxySite="geo-proxy-fixture";
+export const proxyName="GeoCheckProxyMerchant";
+export const residentialSite="geo-residential-fixture";
+export const residentialName="GeoCheckResidentialMerchant";
 export const hiddenGuide="json-errors";
 export const hiddenArticle="http-status";
 export const editorialSlug="geo-observation-fixture";
@@ -45,19 +51,33 @@ function installTestContent(file:string) {
   const insertSite=db.prepare("INSERT INTO sites(slug,name,website,category_slug,summary,publication,added_at,updated_at) VALUES (?,?,?,?,?,'published',?,?)");
   const insertDomain=db.prepare("INSERT INTO site_domains(domain,site_id,kind,registrable) VALUES (?,?,'primary',?)");
   region("category","vpn","overseas");
+  region("category","proxy-services","countries","HK");
+  region("category","residential","overseas");
+  db.prepare("UPDATE categories SET description=? WHERE slug='proxy-services'").run("GeoCheckProxyCategoryNotes");
   // Network visibility is explicitly enabled on the fixture only.
   const initial=db.prepare("INSERT INTO sites(slug,name,website,category_slug,summary,publication,added_at,updated_at) VALUES (?,?,?,?,?,'archived',?,?)");
-  const networkId=Number(initial.run(networkSite,networkName,"https://geo-network.example.org/","vpn",networkName,date,date).lastInsertRowid);
-  insertDomain.run("geo-network.example.org",networkId,"example.org");
-  region("site",networkSite,"overseas");
-  db.prepare("UPDATE sites SET publication='published' WHERE id=?").run(networkId);
+  const publish=db.prepare("UPDATE sites SET publication='published' WHERE id=?");
+  function addNetworkSite(slug:string,name:string,category:string,domain:string) {
+    const id=Number(initial.run(slug,name,`https://${domain}/`,category,name,date,date).lastInsertRowid);
+    insertDomain.run(domain,id,"example.org");
+    region("site",slug,"overseas");
+    publish.run(id);
+    return id;
+  }
+  addNetworkSite(networkSite,networkName,"vpn","geo-network.example.org");
+  addNetworkSite(proxySite,proxyName,"proxy-services","geo-proxy.example.org");
+  const residentialDomain="geo-residential.example.org";
+  const residentialId=addNetworkSite(residentialSite,residentialName,"residential",residentialDomain);
+  const insertSource=db.prepare("INSERT INTO sources(site_id,title,url,accessed_at,kind,verified) VALUES (?,?,?,?,'official',1)");
+  const insertPrice=db.prepare("INSERT INTO price_records(site_id,source_id,plan,amount_minor,currency,period,region,recorded_at,publication) VALUES (?,?,?,?,'CNY','月','香港',?,'published')");
+  const residentialSource=Number(insertSource.run(residentialId,"Fixture quotation",`https://${residentialDomain}/pricing`,date).lastInsertRowid);
+  insertPrice.run(residentialId,residentialSource,"公示套餐",2600,date);
+  const residentialProduct=productHref(publicPrices(residentialId,db)[0]);
   const siteId=Number(insertSite.run(hiddenSite,hiddenSiteName,"https://geo-cloud.example.net/","vps",hiddenSiteName,date,new Date().toISOString()).lastInsertRowid);
   insertDomain.run("geo-cloud.example.net",siteId,"example.net");
   region("site",hiddenSite,"countries","HK");
-  const source=Number(db.prepare("INSERT INTO sources(site_id,title,url,accessed_at,kind,verified) VALUES (?,?,?,?,'official',1)")
-    .run(siteId,"Fixture quotation","https://geo-cloud.example.net/pricing",date).lastInsertRowid);
-  db.prepare("INSERT INTO price_records(site_id,source_id,plan,amount_minor,currency,period,region,recorded_at,publication) VALUES (?,?,?,77733,'CNY','月','香港',?,'published')")
-    .run(siteId,source,offerMarker,date);
+  const source=Number(insertSource.run(siteId,"Fixture quotation","https://geo-cloud.example.net/pricing",date).lastInsertRowid);
+  insertPrice.run(siteId,source,offerMarker,77733,date);
   const price=publicPrices(siteId,db).find(item=>item.plan===offerMarker)!;
   const product=productHref(price);
   const stamped=new Date().toISOString();
@@ -78,9 +98,11 @@ function installTestContent(file:string) {
   const commonSite=one<{id:number}>(db,"SELECT id FROM sites WHERE slug='chatgpt'")!.id;
   db.prepare("INSERT INTO sources(site_id,title,url,accessed_at,kind,verified,excerpt) VALUES (?,?,?,?,'official',1,?)")
     .run(commonSite,"GeoCheckPromotionSource",promotion,date,promotion);
-  recordPageVisitor(db,`/services/${hiddenSite}`,randomUUID());
-  recordPageVisitor(db,product,randomUUID());
-  return {product,avatar:`/api/merchant-avatar/${hiddenSite}/${avatar}`,thread:`/community/${thread}`,promotion};
+  const hongKong=loadVisibility(db,makeAudience("HK"));
+  for (const path of [`/services/${hiddenSite}`,product,`/services/${residentialSite}`,residentialProduct]) {
+    assert.ok(recordPageVisitor(db,path,randomUUID(),Date.now(),hongKong));
+  }
+  return {product,residentialProduct,avatar:`/api/merchant-avatar/${hiddenSite}/${avatar}`,thread:`/community/${thread}`,promotion};
 }
 
 export async function startGeoStaging(initial:TestRegion="CN") {

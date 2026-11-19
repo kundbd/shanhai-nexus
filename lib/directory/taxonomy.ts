@@ -10,7 +10,17 @@ export const categoryGroups = {
   connections: ["airport","vpn","proxy-services","residential"],
 } as const;
 
-const retiredNetworkCategories = new Set(["airport", "vpn", "proxy-services", "residential"]);
+export const proxyCategory = {
+  slug: "proxy-services",
+  label: "代理 IP 服务",
+  description: "住宅代理、SOCKS5 和数据中心代理的公开服务档案。",
+} as const;
+
+export const publicCategorySlug = (slug: string) => slug === "residential" ? proxyCategory.slug : slug;
+export const publicCategoryMembers = (slug: string): readonly string[] =>
+  publicCategorySlug(slug) === proxyCategory.slug ? [proxyCategory.slug,"residential"] : [slug];
+
+const retiredNetworkCategories = new Set<string>(categoryGroups.connections);
 export const isRetiredCategory = (slug: string) => retiredNetworkCategories.has(slug);
 export const isRetiredNetworkSite = (category: string, slug: string) => isRetiredCategory(category) || slug === "tailscale";
 
@@ -23,6 +33,11 @@ export const pipelines={
   vps:{label:"VPS 与云服务",categories:["vps","residential"]},
 } as const;
 export type Pipeline=keyof typeof pipelines;
+export function rankingCategories(group: Pipeline): readonly string[] {
+  if (group==="connections") return categoryGroups.connections;
+  if (group==="vps") return ["vps"];
+  return pipelines[group].categories;
+}
 export const publicPipelines = (Object.keys(pipelines) as Pipeline[]).filter(pipeline => pipeline !== "connections");
 export function pipelineForCategory(category:string) {
   return (Object.keys(pipelines) as Pipeline[]).find(key=>(pipelines[key].categories as readonly string[]).includes(category));
