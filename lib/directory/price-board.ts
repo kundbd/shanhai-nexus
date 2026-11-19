@@ -62,7 +62,7 @@ export function comparablePeriod(value:string) {
 
 export const unspecifiedRegion=(value:string)=>/^(?:官网未注明|地区未注明|(?:官方|官网)(?:人民(币)?|美元|欧元)?(?:报价|展示))$/.test(value.trim());
 
-export const priceCategories={vps:"VPS",ai:"AI 订阅","ai-relay":"AI API 中转",payments:"U 卡与支付"} as const;
+export const priceCategories={airport:"机场",vpn:"VPN",vps:"VPS",ai:"AI 订阅","ai-relay":"AI API 中转",payments:"U 卡与支付"} as const;
 type PriceCategory=keyof typeof priceCategories;
 
 export const featuredAiProducts=aiProducts.slice(0,5);
@@ -70,7 +70,8 @@ const aiQuoteCategories=new Set(["ai-subscriptions","ai-platforms","ai-topup","a
 const paymentCategories=new Set(["u-card","virtual-card","payment-accounts","subscription-payment"]);
 
 function quoteCategory(quote:PublishedQuote) {
-  if (quote.category_slug==="vps"||quote.category_slug==="ai-relay") return {category:quote.category_slug,product:null} as const;
+  const category=quote.category_slug;
+  if (category==="airport"||category==="vpn"||category==="vps"||category==="ai-relay") return {category,product:null} as const;
   if (paymentCategories.has(quote.category_slug)) return {category:"payments" as const,product:null};
   if (!aiQuoteCategories.has(quote.category_slug)) return;
   const official=quote.category_slug==="ai-subscriptions"?officialAiProduct(quote.site_slug):undefined;
@@ -240,7 +241,9 @@ export function publicPriceBoard(db=directory(),now=Date.now(),includeExcluded=f
     if (delivery===undefined) continue;
     const cny=toCnyAmount(quote.amount_minor,quote.currency,byCurrency,quote.amount_scale??undefined);
     if (cny===undefined || !Number.isSafeInteger(Math.round(cny*100))) { missingExchange++; continue; }
-    const region=scope.product?null:unspecifiedRegion(quote.region)||quote.region==="公开免费计划"?"报价地区未注明":quote.region.trim();
+    const observedRegion=quote.region.trim();
+    const networkRegionUnspecified=(scope.category==="airport"||scope.category==="vpn")&&observedRegion==="未注明";
+    const region=scope.product?null:unspecifiedRegion(observedRegion)||networkRegionUnspecified||observedRegion==="公开免费计划"?"报价地区未注明":observedRegion;
     let relayModel:string|null=null;
     if (scope.category==="ai-relay"&&isRelayTokenPeriod(period)) {
       const identity=relayModelKey(quote.plan);

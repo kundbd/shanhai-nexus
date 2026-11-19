@@ -1,7 +1,7 @@
 export type HomeAd = {
   id: string; title: string; description: string; href: string; action: string;
-  cardBrand: string; cardLabel: string; network?: boolean;
-};
+  network?: boolean;
+} & ({ logo: string } | { logo?: never; cardBrand: string; cardLabel: string });
 
 export const homeAds: readonly HomeAd[] = [
   {
@@ -30,5 +30,23 @@ export const homeAds: readonly HomeAd[] = [
     action: "前往申请",
     cardBrand: "Muse Card",
     cardLabel: "VISA",
+  },
+  {
+    id: "flowercloud",
+    title: "花云 FlowerCloud",
+    description: "国际网络节点订阅，提供月付和年付套餐。",
+    href: "https://api-flowercloud.com/aff.php?aff=27838",
+    action: "前往花云",
+    logo: "/ad-icons/flowercloud.webp",
+    network: true,
+  },
+  {
+    id: "liangxin-yun",
+    title: "良心云",
+    description: "提供多运营商线路的网络节点订阅。",
+    href: "https://xn--9kqz23b19z.com/#/register?code=pdILA0Yi",
+    action: "前往注册",
+    logo: "/ad-icons/liangxin-yun.webp",
+    network: true,
   },
 ];

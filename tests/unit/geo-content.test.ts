@@ -118,7 +118,8 @@ test("the overseas rollout restores only records archived by the original retire
   db.exec(migration);
   const reopened=db.prepare("SELECT s.slug FROM sites s JOIN audit_log a ON a.entity_id=CAST(s.id AS TEXT) WHERE a.actor='地区设置' AND a.entity='sites' ORDER BY s.slug").all();
   assert.deepEqual(reopened.map(row=>row.slug),["proton-vpn","tailscale"]);
-  assert.equal(db.prepare("SELECT count(*) AS n FROM content_region_rules").get()?.n,3);
+  const catalogRules=db.prepare("SELECT kind||':'||content_key AS key FROM content_region_rules WHERE kind IN ('site','category') ORDER BY key").all();
+  assert.deepEqual(catalogRules.map(rule=>rule.key),["category:vpn","site:proton-vpn","site:tailscale"]);
   for (const country of ["HK","TW","US","SG","DE","AU"]) {
     const visibility=loadVisibility(db,makeAudience(country));
     assert.ok(getCategory("vpn",db,visibility));

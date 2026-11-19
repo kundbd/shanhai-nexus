@@ -59,7 +59,10 @@ export default async function Home({searchParams}:{searchParams:Promise<Params>}
       </Link>)}{networkCategories.map(category=>{
         const Icon=categoryIcons[category.slug as keyof typeof categoryIcons];
         return <Link key={category.slug} href={categoryHref(category.slug)} prefetch={false}>
-          <div><h2>{Icon&&<Icon size={16} aria-hidden="true"/>}{category.label}</h2><p>{category.description}</p></div>
+          <div>
+            <h2>{Icon&&<Icon size={16} aria-hidden="true"/>}{category.label}</h2><p>{category.description}</p>
+            <p className="category-count">公开档案 {countFormat.format(countPublicSites({category:category.slug,lifecycle:"current",visibility}))} 家</p>
+          </div>
           <ArrowUpRight size={19} aria-hidden="true"/>
         </Link>;
       })}</nav>

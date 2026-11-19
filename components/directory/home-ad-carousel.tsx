@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight, Nfc } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
 import type { HomeAd } from "@/lib/catalog/home-ads";
 
@@ -119,10 +120,14 @@ export function HomeAdCarousel({ ads }: { ads: readonly HomeAd[] }) {
               <span className="home-ad-action">{ad.action} <ArrowUpRight size={15} aria-hidden="true" /></span>
             </span>
             <span className="home-ad-art" aria-hidden="true">
-              <span className="home-ad-card" data-brand={ad.id}>
-                <span className="home-ad-card-brand">{ad.cardBrand}</span>
-                <span className="home-ad-card-network">{ad.cardLabel} {ad.id === "roogoo" && <Nfc size={12} />}</span>
-              </span>
+              {ad.logo !== undefined ? (
+                <Image className="home-ad-merchant-logo" src={ad.logo} alt="" width={72} height={72} unoptimized />
+              ) : (
+                <span className="home-ad-card" data-brand={ad.id}>
+                  <span className="home-ad-card-brand">{ad.cardBrand}</span>
+                  <span className="home-ad-card-network">{ad.cardLabel} {ad.id === "roogoo" && <Nfc size={12} />}</span>
+                </span>
+              )}
             </span>
           </a>
         ))}

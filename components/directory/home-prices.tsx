@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Cpu, Wallet } from "lucide-react";
+import { Cpu, Plane, Wallet } from "lucide-react";
 import { canonicalAiTier,orderAiTiers } from "@/lib/directory/ai-subscription-tier";
 import { codexVerificationProduct } from "@/lib/directory/ai-product";
 import { aiPriceDeliveryLabels,featuredAiProducts,priceCategories,publicPriceBoard,type AiPriceDelivery,type PricedInCny } from "@/lib/directory/price-board";
@@ -20,10 +20,19 @@ const rateYuan=new Intl.NumberFormat("zh-CN",{style:"currency",currency:"CNY",ma
 const localUpdate=new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
 
 export function HomePrices({input,visibility}:{input:Params;visibility:ContentVisibility}) {
-  const tabs=visiblePriorityCategoryTabs(visibility);
+  const generalTabs=visiblePriorityCategoryTabs(visibility);
+  const networkTabs=(["airport","vpn"] as const).filter(category=>visibility.categoryAllowed(category));
+  const networkDefault=networkTabs[0];
+  const networkTabIndex=generalTabs.findLastIndex(tab=>tab.key==="ai"||tab.key==="ai-relay")+1;
+  const tabs=networkDefault?[
+    ...generalTabs.slice(0,networkTabIndex),
+    {key:networkDefault,item:{label:"机场与 VPN"},Icon:Plane},
+    ...generalTabs.slice(networkTabIndex),
+  ]:generalTabs;
   if (!tabs.length) return null;
   const view=param(input.price);
-  const active=(tabs.find(tab=>tab.key===view)??tabs[0]).key;
+  const active=networkTabs.find(key=>key===view)??(tabs.find(tab=>tab.key===view)??tabs[0]).key;
+  const network=active==="airport"||active==="vpn";
   const {groups}=publicPriceBoard(undefined,undefined,false,visibility);
   const brands=[...new Set<string>([...featuredAiProducts,...groups.flatMap(group=>group.product?[group.product]:[]),codexVerificationProduct])];
   const product=brands.includes(param(input.product))?param(input.product):brands[0];
@@ -72,9 +81,12 @@ export function HomePrices({input,visibility}:{input:Params;visibility:ContentVi
     <div className="directory-section"><h2 id="price-title">公开报价区间<span className="price-unit">人民币</span></h2></div>
     <p className="section-note">{verification?"以下为明确标注单次计价的公开报价。":active==="ai"?"同一产品、等级和周期内，按交付方式计算报价区间。店铺标价采用近期原页核对或第三方有货观测。":relay?"按同一模型分别查看输入和输出单价。缓存、渠道及附加费请看商家的原始价目。":"金额按公开价目记录。"}</p>
     <nav className="filter-pills price-tabs" aria-label="报价分类">{tabs.map(({key,item:{label},Icon})=><Link key={key}
-      href={url(key)} scroll={false} aria-current={key===active?"page":undefined}>
+      href={url(key)} scroll={false} aria-current={key===active||(network&&key===networkDefault)?"page":undefined}>
       <Icon size={16} aria-hidden="true"/>{label}
     </Link>)}</nav>
+    {network&&networkTabs.length>1&&<nav className="filter-pills price-tabs" aria-label="机场与 VPN 子类">{networkTabs.map(key=><Link key={key}
+      href={url(key)} scroll={false} aria-current={key===active?"page":undefined}>{priceCategories[key]}</Link>)}
+    </nav>}
     {!!relayBrands.length&&<>
       <nav className="filter-pills price-tabs ai-product-tabs" aria-label="中转品牌">{relayBrands.map(({brand,versions})=><Link key={brand}
         href={url(active,{model:versions.includes(relayModel)?relayModel:versions[0]})} scroll={false} aria-current={brand===activeRelayBrand?.brand?"page":undefined}>
@@ -111,8 +123,8 @@ export function HomePrices({input,visibility}:{input:Params;visibility:ContentVi
     </Link>)}</nav>}
     {group&&low&&high?<>
       <div className="price-pair">
-        <QuoteTile title={list.length===1?"现有报价":"价格最低"} quote={low} showRegion={active==="ai"}/>
-        {list.length>1&&<QuoteTile title="价格最高" quote={high} showRegion={active==="ai"}/>}
+        <QuoteTile title={list.length===1?"现有报价":"价格最低"} quote={low} showRegion={active==="ai"||network}/>
+        {list.length>1&&<QuoteTile title="价格最高" quote={high} showRegion={active==="ai"||network}/>}
       </div>
       {list.length===1&&<p className="section-note">目前只有一项报价可比。</p>}
     </>:<p className="plain-empty boxed-empty">{group?.unconfirmedStorefronts?`${verification?codexVerificationProduct:aiScope} 暂无近期确认在售的报价。`:verification?`${codexVerificationProduct}暂无明确单次标价。`:active==="ai"?`${aiScope} 暂无可比报价。`:`${priceCategories[active]}暂无可比的公开报价。`}</p>}

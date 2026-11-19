@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { homeAds } from "../../lib/catalog/home-ads";
 import {
   editorialMarker, editorialSlug, hiddenArticle, hiddenGuide, hiddenSite, hiddenSiteName,
-  networkName, networkSite, offerMarker, proxyName, proxySite, residentialName, residentialSite, startGeoStaging,
+  airportOffer, networkName, networkSite, offerMarker, proxyName, proxySite, residentialName, residentialSite, startGeoStaging, vpnOffer,
 } from "../fixtures/geo-staging";
 
 const guide=`/guides/${hiddenGuide}`;
@@ -14,6 +14,7 @@ const network=`/services/${networkSite}`;
 const editorial=`/observations/${editorialSlug}`;
 const gate=homeAds.find(item=>item.id==="gate")!;
 const roogoo=homeAds.find(item=>item.id==="roogoo")!;
+const networkAds=homeAds.filter(ad=>ad.network);
 
 test("production standalone region policies through a trusted local proxy", {timeout:120_000}, async t=>{
   const fixture=await startGeoStaging();
@@ -81,6 +82,44 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.equal((await get(article)).response.status,404);
     assert.equal((await get(shop)).response.status,404);
     assert.ok((await get("/services/chatgpt")).body.includes("GeoCheckPromotionSource"));
+  });
+
+  await t.test("network home ads, quote subcategories and merchant counts follow regional rules",async ()=>{
+    const cardCount=(html:string,slug:string,count:number)=>{
+      const card=new RegExp(`<a[^>]*href="/categories/${slug}"[^>]*>([\\s\\S]*?)</a>`).exec(html)?.[1]??"";
+      assert.ok(card.replaceAll("<!-- -->","").includes(`公开档案 ${count} 家`),slug);
+    };
+    assert.deepEqual(networkAds.map(ad=>ad.id),["flowercloud","liangxin-yun"]);
+    setRegion("HK");
+    const airport=await get("/?price=airport");
+    assertNoStore(airport.response);
+    assert.ok(airport.body.includes("机场与 VPN")&&airport.body.includes('href="/?price=vpn#home-prices"'));
+    assert.ok(airport.body.includes(airportOffer+" Basic")&&airport.body.includes(airportOffer+" Plus"));
+    assert.ok(airport.body.includes("价格最低")&&airport.body.includes("价格最高"));
+    absent(airport.body,vpnOffer);
+    assert.equal((await get("/?price=vpn",{headers:{RSC:"1"}})).body.includes(vpnOffer),true);
+    for (const slug of ["vpn","airport"]) cardCount(airport.body,slug,1);
+    cardCount(airport.body,"proxy-services",2);
+    for (const ad of networkAds) assert.ok(airport.body.includes(`href="${ad.href}"`)&&airport.body.includes(ad.logo!));
+
+    setRegion("US");
+    const vpn=await get("/?price=vpn");
+    assert.ok(vpn.body.includes("机场与 VPN")&&vpn.body.includes(vpnOffer));
+    absent(vpn.body,'href="/?price=airport#home-prices"',airportOffer);
+    cardCount(vpn.body,"proxy-services",1);
+    for (const ad of networkAds) assert.ok(vpn.body.includes(`href="${ad.href}"`));
+
+    for (const country of ["CN","unknown"] as const) {
+      setRegion(country);
+      for (const path of ["/?price=airport","/?price=vpn"]) {
+        for (const headers of [undefined,{RSC:"1"}]) {
+          const denied=await get(path,{headers});
+          assertNoStore(denied.response);
+          absent(denied.body,"机场与 VPN",airportOffer,vpnOffer,"/categories/airport","/categories/vpn","/categories/proxy-services",
+            ...networkAds.flatMap(ad=>[ad.title,ad.href,ad.logo!]));
+        }
+      }
+    }
   });
 
   await t.test("Taiwan, Southeast Asia, Europe and generic regions share the overseas scope",async ()=>{

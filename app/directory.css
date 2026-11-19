@@ -127,6 +127,13 @@
     linear-gradient(115deg, #4e27c1, #754ce3 55%, #9c51ed);
 }
 .home-ad-card[data-brand="musepay"] .home-ad-card-network { justify-content: flex-end; }
+.home-ad-merchant-logo {
+  display: block;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
 .home-ad-controls { display: flex; justify-content: center; gap: 4px; margin-block-start: var(--home-ad-controls-offset); }
 .home-ad-controls button {
   display: grid;

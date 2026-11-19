@@ -28,6 +28,8 @@ export const hiddenSite="geo-vps-fixture";
 export const hiddenSiteName="GeoCheckPrivateCloud";
 export const networkSite="geo-network-fixture";
 export const networkName="GeoCheckNetworkService";
+export const vpnOffer="GeoCheckVpnPlan";
+export const airportOffer="GeoCheckAirportPlan";
 export const proxySite="geo-proxy-fixture";
 export const proxyName="GeoCheckProxyMerchant";
 export const residentialSite="geo-residential-fixture";
@@ -50,6 +52,7 @@ function installTestContent(file:string) {
   const date="2026-10-01";
   const insertSite=db.prepare("INSERT INTO sites(slug,name,website,category_slug,summary,publication,added_at,updated_at) VALUES (?,?,?,?,?,'published',?,?)");
   const insertDomain=db.prepare("INSERT INTO site_domains(domain,site_id,kind,registrable) VALUES (?,?,'primary',?)");
+  region("category","airport","countries","HK");
   region("category","vpn","overseas");
   region("category","proxy-services","countries","HK");
   region("category","residential","overseas");
@@ -64,12 +67,20 @@ function installTestContent(file:string) {
     publish.run(id);
     return id;
   }
-  addNetworkSite(networkSite,networkName,"vpn","geo-network.example.org");
+  const vpnDomain="geo-network.example.org";
+  const airportDomain="geo-airport.example.org";
+  const vpnId=addNetworkSite(networkSite,networkName,"vpn",vpnDomain);
+  const airportId=addNetworkSite("geo-airport-fixture","GeoCheckAirportMerchant","airport",airportDomain);
   addNetworkSite(proxySite,proxyName,"proxy-services","geo-proxy.example.org");
   const residentialDomain="geo-residential.example.org";
   const residentialId=addNetworkSite(residentialSite,residentialName,"residential",residentialDomain);
   const insertSource=db.prepare("INSERT INTO sources(site_id,title,url,accessed_at,kind,verified) VALUES (?,?,?,?,'official',1)");
   const insertPrice=db.prepare("INSERT INTO price_records(site_id,source_id,plan,amount_minor,currency,period,region,recorded_at,publication) VALUES (?,?,?,?,'CNY','月','香港',?,'published')");
+  const vpnSource=Number(insertSource.run(vpnId,"Fixture quotation",`https://${vpnDomain}/pricing`,date).lastInsertRowid);
+  const airportSource=Number(insertSource.run(airportId,"Fixture quotation",`https://${airportDomain}/pricing`,date).lastInsertRowid);
+  insertPrice.run(vpnId,vpnSource,vpnOffer,3200,date);
+  insertPrice.run(airportId,airportSource,airportOffer+" Basic",3900,date);
+  insertPrice.run(airportId,airportSource,airportOffer+" Plus",5800,date);
   const residentialSource=Number(insertSource.run(residentialId,"Fixture quotation",`https://${residentialDomain}/pricing`,date).lastInsertRowid);
   insertPrice.run(residentialId,residentialSource,"公示套餐",2600,date);
   const residentialProduct=productHref(publicPrices(residentialId,db)[0]);
