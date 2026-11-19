@@ -1,4 +1,4 @@
-import { Bot, Cloud, CreditCard, KeyRound, Layers, Network, Plane, Server, Shield, ShoppingBag } from "lucide-react";
+import { Bot, Cloud, CreditCard, Globe, KeyRound, Layers, Network, Plane, Server, Shield, ShoppingBag } from "lucide-react";
 
 export const categoryIcons = {
   "ai-topup": ShoppingBag,
@@ -8,8 +8,8 @@ export const categoryIcons = {
   "ai-platforms": Layers,
   airport: Plane,
   vpn: Shield,
-  "proxy-services": Network,
-  residential: Network,
+  "proxy-services": Globe,
+  residential: Globe,
   "network-infrastructure": Network,
   "u-card": CreditCard,
   "virtual-card": CreditCard,

@@ -246,10 +246,15 @@ test("production standalone region policies through a trusted local proxy", {tim
     const home=(await get("/")).body;
     const cards=/<nav id="home-categories"[\s\S]*?<\/nav>/.exec(home)?.[0]??"";
     assert.equal(cards.split(`href="${category}"`).length-1,1);
+    const proxyCard=/<a[^>]*href="\/categories\/proxy-services"[^>]*>[\s\S]*?<\/a>/.exec(cards)?.[0]??"";
+    const relayCard=/<a[^>]*href="\/categories\/ai-relay"[^>]*>[\s\S]*?<\/a>/.exec(cards)?.[0]??"";
+    assert.match(proxyCard,/\blucide-globe\b/);
+    assert.match(relayCard,/\blucide-network\b/);
     absent(cards,`href="${legacy}"`);
     const combined=await get(category+"?sort=name");
     assert.equal(combined.response.status,200);
     assert.match(combined.body,/<h1>代理 IP 服务<\/h1>/);
+    assert.match(combined.body,/\blucide-globe\b/);
     assert.ok(combined.body.replaceAll("<!-- -->","").includes("公开 2 家"));
     assert.ok(combined.body.includes("GeoCheckProxyCategoryNotes"));
     for (const href of [proxy,residential]) assert.ok(combined.body.includes(`href="${href}"`),href);
