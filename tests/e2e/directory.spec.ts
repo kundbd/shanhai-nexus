@@ -49,10 +49,11 @@ test("guests can read each public announcement and clear the unread badge",async
   await messages.click();
   await expect(page).toHaveURL(/\/messages$/);
   await expect(page.getByRole("heading",{name:"消息",exact:true})).toBeVisible();
-  await expect(page.locator("main summary")).toContainText(["第 1 条公告", "第 2 条公告"]);
+  await expect(page.locator("main summary")).toContainText(["第 1 条公告", "第 2 条公告", "第 3 条公告"]);
 
   const first=page.locator("main details").filter({hasText:"站点公告"});
   const second=page.locator("main details").filter({hasText:"注册验证码提醒"});
+  const third=page.locator("main details").filter({hasText:"网络代理信息服务地区公告"});
   await first.locator("summary").click();
   await expect(first.getByText("评论区严禁涉政",{exact:true})).toBeVisible();
   await expect(first).toContainText("当前可用");
@@ -66,6 +67,13 @@ test("guests can read each public announcement and clear the unread badge",async
   await expect(second.getByRole("img",{name:"未读"})).toBeVisible();
   await second.locator("summary").click();
   await expect(second.getByText("用户注册时未接收到验证码可以检查垃圾邮箱或者等待片刻",{exact:true})).toBeVisible();
+  await expect(messages).toHaveAccessibleName("消息，有未读公告");
+  await expect(third.getByRole("img",{name:"未读"})).toBeVisible();
+  const published=third.locator("summary time");
+  await expect(published).toHaveAttribute("datetime",/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+08:00$/);
+  await expect(published).toHaveText(/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}（北京时间）$/);
+  await third.locator("summary").click();
+  await expect(third.getByText("即日起，本站不再对中国大陆地区开放网络代理信息服务。中国大陆用户严禁使用 VPN 浏览此类内容，否则后果自负。",{exact:true})).toBeVisible();
   await expect(messages).toHaveAccessibleName("消息");
   await page.goto("/");
   await expect(messages).toHaveAccessibleName("消息");

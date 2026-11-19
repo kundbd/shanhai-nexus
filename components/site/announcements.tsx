@@ -10,6 +10,10 @@ type AnnouncementId = SiteAnnouncement["id"];
 const storagePrefix = "shanhai-nexus-announcement-read:";
 const readEvent = "shanhai-nexus-announcements-change";
 const storageFallback = new Set<AnnouncementId>();
+const publicationTime = new Intl.DateTimeFormat("zh-CN", {
+  timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+});
 
 function subscribe(listener: () => void) {
   function sync(event: StorageEvent) {
@@ -83,6 +87,11 @@ export function AnnouncementCard({ announcement, number, children }: {
           <span className="announcement-number">第 {number} 条公告</span>
           <span>{title}</span>
           {unread && <span className="announcement-unread" role="img" aria-label="未读" />}
+          {"publishedAt" in announcement && (
+            <time dateTime={announcement.publishedAt}>
+              {publicationTime.format(new Date(announcement.publishedAt))}（北京时间）
+            </time>
+          )}
         </span>
         <ChevronDown size={17} aria-hidden="true" />
       </summary>

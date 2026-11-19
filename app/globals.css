@@ -212,7 +212,7 @@ a:hover .card-arrow, button:hover .card-arrow { color: var(--accent); opacity: 1
 .announcement-card > summary > svg { flex: none; color: var(--muted); }
 .announcement-card[open] > summary > svg { transform: rotate(180deg); }
 .announcement-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
-.announcement-number { color: var(--muted); font-size: 12px; font-weight: 600; }
+.announcement-number, .announcement-heading time { color: var(--muted); font-size: 12px; font-weight: 600; }
 .announcement-unread { flex: none; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; }
 .announcement-body { padding: 13px 16px; border-top: 1px solid var(--line); color: var(--body); overflow-wrap: anywhere; }
 .announcement-body p + p { margin-top: 7px; }

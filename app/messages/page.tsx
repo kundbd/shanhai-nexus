@@ -19,6 +19,7 @@ const announcementContent: Record<SiteAnnouncement["id"], ReactNode> = {
     </>
   ),
   "registration-code": <p>用户注册时未接收到验证码可以检查垃圾邮箱或者等待片刻</p>,
+  "network-proxy-region": <p>即日起，本站不再对中国大陆地区开放网络代理信息服务。中国大陆用户严禁使用 VPN 浏览此类内容，否则后果自负。</p>,
 };
 
 export default function MessagesPage() {
