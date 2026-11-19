@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { siteConsentPath, siteConsentRequiredHeader } from "./lib/site-consent";
 
 const config: NextConfig = {
   output: "standalone",
@@ -6,6 +7,18 @@ const config: NextConfig = {
   poweredByHeader: false,
   logging: { incomingRequests: { ignore: [/^\/(?:search|api\/traffic)(?:[/?]|$)/] } },
   experimental: { cpus: 2 },
+  async rewrites() {
+    return {
+      beforeFiles: [{
+        source: "/((?!(?:api|admin|_next|welcome|ad-icons|ai-product-icons|contact-icons|region|\\.well-known)(?:/|$)|(?:robots\\.txt|sitemap\\.xml|favicon\\.ico)$).*)",
+        has: [{ type: "header", key: siteConsentRequiredHeader, value: "1" }],
+        // Use an internal path even when the public HTTPS connection ends at Nginx.
+        destination: siteConsentPath,
+      }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   async headers() {
     return [
       {

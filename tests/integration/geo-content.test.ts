@@ -27,7 +27,9 @@ test("production standalone region policies through a trusted local proxy", {tim
   });
   const accepted = await confirm(new URLSearchParams({agreement:siteConsentVersion,privacy:siteConsentVersion}));
   assert.equal(accepted.status,303);
-  const consent=accepted.headers.getSetCookie()[0]?.split(";",1)[0];
+  const cookie=accepted.headers.getSetCookie()[0]??"";
+  assert.match(cookie,/;\s*secure\b/i);
+  const consent=cookie.split(";",1)[0];
   assert.ok(consent);
   const fetchPage=(path:string,init?:RequestInit)=>{
     const headers=new Headers(init?.headers);

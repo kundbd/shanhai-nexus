@@ -133,7 +133,7 @@ export async function startGeoStaging(initial:TestRegion="CN") {
   let peer=testAddresses[initial];
   const proxy=createServer((incoming,response)=>{
     const supplied=incoming.headers["x-forwarded-for"];
-    const forwarded={...incoming.headers,"x-forwarded-for":supplied?`${supplied}, ${peer}`:peer,"x-forwarded-proto":"http"};
+    const forwarded={...incoming.headers,"x-forwarded-for":supplied?`${supplied}, ${peer}`:peer,"x-forwarded-proto":"https"};
     const upstream=request({host:"127.0.0.1",port:serverPort,path:incoming.url,method:incoming.method,headers:forwarded},result=>{
       if (response.destroyed) {
         result.destroy();

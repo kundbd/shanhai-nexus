@@ -4,7 +4,7 @@ import { siteConsentCookie, siteConsentPath, siteConsentRequiredHeader, siteCons
 const privateResponse = { "Cache-Control": "private, no-store" };
 
 export function proxy(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl;
+  const { pathname } = request.nextUrl;
   const isWelcome = pathname === siteConsentPath;
   if (request.cookies.get(siteConsentCookie)?.value === siteConsentVersion) {
     if (isWelcome) return new NextResponse(null, { status: 307, headers: { ...privateResponse, Location: "/" } });
@@ -16,14 +16,7 @@ export function proxy(request: NextRequest) {
 
   const headers = new Headers(request.headers);
   headers.set(siteConsentRequiredHeader, "1");
-  const welcome = request.nextUrl.clone();
-  welcome.pathname = siteConsentPath;
-  welcome.search = "";
-  const flightKey = searchParams.get("_rsc");
-  if (flightKey !== null) welcome.searchParams.set("_rsc", flightKey);
-  const response = isWelcome
-    ? NextResponse.next({ request: { headers } })
-    : NextResponse.rewrite(welcome, { request: { headers } });
+  const response = NextResponse.next({ request: { headers } });
   response.headers.set("Cache-Control", privateResponse["Cache-Control"]);
   return response;
 }
