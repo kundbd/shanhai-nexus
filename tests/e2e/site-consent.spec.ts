@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { siteConsentCookie, siteConsentVersion } from "../../lib/site-consent";
+import { siteConsentCookie, siteConsentVersion, siteServiceRegionClause } from "../../lib/site-consent";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -16,6 +16,9 @@ test("a new visitor can read both policies, leave, or consent and reopen the ori
   await expect(dialog).toBeVisible();
   await expect(page.locator(".site-header")).toHaveCount(0);
   await expect(dialog.getByText("不支持地区的用户禁止通过不法手段访问本站。")).toBeVisible();
+  const terms = dialog.locator(".site-consent-terms > li");
+  await expect(terms).toHaveCount(4);
+  await expect(terms.last()).toHaveText(siteServiceRegionClause);
   await expect(agreement).not.toBeChecked();
   await expect(privacy).not.toBeChecked();
   await expect(confirm).toBeDisabled();
@@ -46,4 +49,7 @@ test("a new visitor can read both policies, leave, or consent and reopen the ori
   await expect(dialog).toHaveCount(0);
   await page.goto("/");
   await expect(page.locator(".site-header")).toBeVisible();
+  await page.context().addCookies([{ name: siteConsentCookie, value: "2026-11-19", url: page.url(), httpOnly: true }]);
+  await page.reload();
+  await expect(dialog).toBeVisible();
 });

@@ -1,4 +1,5 @@
 import { expect,test,type Page } from "@playwright/test";
+import { siteServiceRegionClause } from "../../lib/site-consent";
 
 async function capture(page:Page,name:string,project:string) {
   const width=page.viewportSize()!.width;
@@ -74,6 +75,7 @@ test("guests can read each public announcement and clear the unread badge",async
   await expect(published).toHaveText(/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}（北京时间）$/);
   await third.locator("summary").click();
   await expect(third.getByText("即日起，本站不再对中国大陆地区开放网络代理信息服务。中国大陆用户严禁使用 VPN 浏览此类内容，否则后果自负。",{exact:true})).toBeVisible();
+  await expect(third.getByText(siteServiceRegionClause,{exact:true})).toBeVisible();
   await expect(messages).toHaveAccessibleName("消息");
   await page.goto("/");
   await expect(messages).toHaveAccessibleName("消息");
