@@ -1,3 +1,4 @@
+import type { SiteLanguage, Translate } from "@/lib/i18n/language";
 import type { ToolId } from "@/lib/catalog/types";
 import { decodeBase64, encodeBase64, formatJSON, fromDate, fromTimestamp, hashText, transformUrl } from "./functions";
 import { compareText, MAX_DIFF_LENGTH, type DiffBlock } from "./diff";
@@ -10,7 +11,7 @@ type Workspace = {
   option?: { label: string; values: readonly Option[]; mode?: string };
   extra?: { label: string; placeholder: string; example?: string; multiline?: boolean };
   limit?: number;
-  run(input: string, mode: string, option: string, extra: string): WorkspaceResult;
+  run(input: string, mode: string, option: string, extra: string, t: Translate, language: SiteLanguage): WorkspaceResult;
 };
 
 const jsonExample = '{"project":"Shanhai Nexus","version":"0.2","tools":["JSON","Base64","SHA-256"]}';
@@ -25,7 +26,7 @@ export const workspaces: Record<ToolId, Workspace> = {
       { value: "validate", label: "校验", placeholder: '{ "name": "山海知序" }', example: jsonExample, action: "校验 JSON", inputLabel: "JSON 输入" },
     ],
     option: { label: "缩进", mode: "pretty", values: [{ value: "2", label: "2 个空格" }, { value: "4", label: "4 个空格" }] },
-    run: (input, mode, indent) => ({ output: formatJSON(input, mode === "minify" || mode === "validate" ? mode : "pretty", Number(indent)) }),
+    run: (input, mode, indent, _extra, t) => ({ output: formatJSON(input, mode === "minify" || mode === "validate" ? mode : "pretty", Number(indent), t) }),
   },
   base64: {
     modes: [
@@ -41,22 +42,22 @@ export const workspaces: Record<ToolId, Workspace> = {
       { value: "date", label: "日期 → 时间戳", placeholder: isoExample, example: isoExample, action: "转换为时间戳", inputLabel: "带时区的日期" },
     ],
     option: { mode: "timestamp", label: "输入单位", values: [{ value: "seconds", label: "秒（s）" }, { value: "milliseconds", label: "毫秒（ms）" }] },
-    run: (input, mode, unit) => {
+    run: (input, mode, unit, _extra, t, language) => {
       if (mode === "date") {
         const value = fromDate(input).getTime();
-        return { output: `秒（s）：${value / 1000}\n毫秒（ms）：${value}` };
+        return { output: t("秒（s）：{seconds}\n毫秒（ms）：{milliseconds}", { seconds: value / 1000, milliseconds: value }) };
       }
       const date = fromTimestamp(input, unit === "milliseconds" ? "milliseconds" : "seconds");
-      const local = new Intl.DateTimeFormat("zh-CN", { dateStyle: "medium", timeStyle: "long", hour12: false }).format(date);
-      return { output: `UTC：${date.toISOString()}\n本地：${local}` };
+      const local = new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "long", hour12: false }).format(date);
+      return { output: t("UTC：{utc}\n本地：{local}", { utc: date.toISOString(), local }) };
     },
   },
   sha256: {
     modes: [{ value: "digest", label: "SHA-256", placeholder: "输入任意 UTF-8 文本，空文本也可计算", example: "abc", action: "生成 SHA-256", inputLabel: "原始文本" }],
     extra: { label: "预期摘要（可选）", placeholder: "输入 64 位十六进制摘要以比较" },
-    run: (input, _mode, _option, extra) => {
+    run: (input, _mode, _option, extra, t) => {
       const { digest, matches } = hashText(input, extra);
-      return { output: digest, note: matches === null ? undefined : matches ? "与预期摘要一致。" : "与预期摘要不一致。" };
+      return { output: digest, note: matches === null ? undefined : t(matches ? "与预期摘要一致。" : "与预期摘要不一致。") };
     },
   },
   url: {
@@ -71,6 +72,6 @@ export const workspaces: Record<ToolId, Workspace> = {
     modes: [{ value: "lines", label: "逐行对比", placeholder: "粘贴原始版本，最多 2,000 行", example: "标题：海图\n状态：草稿\n作者：小林\n", action: "比较文本", inputLabel: "原始文本" }],
     extra: { label: "修改后文本", placeholder: "粘贴修改后的内容", example: "标题：海图\n状态：发布\n作者：小林\n版本：2\n", multiline: true },
     limit: MAX_DIFF_LENGTH,
-    run: (input, _mode, _option, extra) => compareText(input, extra),
+    run: (input, _mode, _option, extra, t) => compareText(input, extra, t),
   },
 };

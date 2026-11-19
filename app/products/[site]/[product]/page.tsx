@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -34,30 +35,31 @@ export async function generateMetadata({params}:Props):Promise<Metadata> {
 }
 
 export default async function Product({params}:Props) {
+  const t = await getTranslations();
   const {site,product}=await params;
   const result=await details(site,product);
   if (!result) notFound();
   const {price,merchant}=result;
   const visibility=await contentVisibility();
-  const period=quoteDetailLabel(price.period);
-  const region=quoteDetailLabel(price.region);
+  const period=t(quoteDetailLabel(price.period));
+  const region=t(quoteDetailLabel(price.region));
   return <div className="frame page directory-page product-page">
-    <div className="crumbs"><Link href="/services">服务目录</Link><span>/</span><Link href={siteHref(merchant.slug)}>{merchant.name}</Link></div>
+    <div className="crumbs"><Link href="/services">{t("服务目录")}</Link><span>/</span><Link href={siteHref(merchant.slug)}>{merchant.name}</Link></div>
     <header className="catalog-heading">
       <div className="product-heading"><OfferIcon price={price} site={merchant}/><h1>{productName(price)}</h1></div>
-      <p>{merchant.category_label}</p>
+      <p>{t(merchant.category_label)}</p>
     </header>
     <dl className="fact-grid">
-      <div><dt>公开标价</dt><dd><strong>{priceLabel(price)}</strong></dd></div>
-      {period&&<div><dt>计费周期</dt><dd>{period}</dd></div>}
-      {region&&<div><dt>计价地区</dt><dd>{region}</dd></div>}
-      <div><dt>报价记录</dt><dd>{day(price.recorded_at)}</dd></div>
+      <div><dt>{t("公开标价")}</dt><dd><strong>{priceLabel(price)}</strong></dd></div>
+      {period&&<div><dt>{t("计费周期")}</dt><dd>{period}</dd></div>}
+      {region&&<div><dt>{t("计价地区")}</dt><dd>{region}</dd></div>}
+      <div><dt>{t("报价记录")}</dt><dd>{day(price.recorded_at)}</dd></div>
     </dl>
     {price.notes&&<p className="section-note">{visibility.filterText(price.notes)}</p>}
     <div className="product-sources">
-      <External href={price.source_url}>{price.reported_item_url?"第三方报价快照":"报价来源"}</External>
-      {price.reported_item_url&&<External href={price.reported_item_url}>原商品页</External>}
-      <Link className="text-link" href={`${siteHref(merchant.slug)}#prices`}>查看店铺其他商品</Link>
+      <External href={price.source_url}>{price.reported_item_url?t("第三方报价快照"):t("报价来源")}</External>
+      {price.reported_item_url&&<External href={price.reported_item_url}>{t("原商品页")}</External>}
+      <Link className="text-link" href={`${siteHref(merchant.slug)}#prices`}>{t("查看店铺其他商品")}</Link>
     </div>
   </div>;
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "@/components/site/language";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bookmark,Eye,Heart,MessageCircle,Repeat2,Trash2 } from "lucide-react";
@@ -16,6 +18,7 @@ const actions=[
 const number=new Intl.NumberFormat("zh-CN");
 
 export function PostActions({id,initial,replies,visitors,trackView,loginHref,signedIn,owner}:{id:number;initial:Reactions;replies:number;visitors:number;trackView?:boolean;loginHref:string;signedIn:boolean;owner:boolean}) {
+  const t = useTranslations();
   const router=useRouter();
   const liveVisitors=usePageVisitor(trackView?postHref(id):null);
   const [update,setUpdate]=useState<{before:Reactions;after:Reactions}>();
@@ -26,7 +29,7 @@ export function PostActions({id,initial,replies,visitors,trackView,loginHref,sig
 
   async function change(kind:ReactionKind|"remove",active=true) {
     if(busy)return;
-    if(kind==="remove"&&!window.confirm("确定删除这条帖子？"))return;
+    if(kind==="remove"&&!window.confirm(t("确定删除这条帖子？")))return;
     setBusy(kind);
     setNotice("");
     setExpired(false);
@@ -47,16 +50,16 @@ export function PostActions({id,initial,replies,visitors,trackView,loginHref,sig
     finally { setBusy(null); }
   }
 
-  return <><div className="social-actions" aria-label="帖子操作">
-    <Link className="social-action" href={`${postHref(id)}#reply`}><MessageCircle size={17} aria-hidden="true"/> 回复 <span>{replies}</span></Link>
+  return <><div className="social-actions" aria-label={t("帖子操作")}>
+    <Link className="social-action" href={`${postHref(id)}#reply`}><MessageCircle size={17} aria-hidden="true"/>{" "}{t("回复")}{" "}<span>{replies}</span></Link>
     {actions.map(({kind,label,Icon,flag,count})=>{
-      const contents=<><Icon size={17} aria-hidden="true"/> {label}{count&&<> <span>{reactions[count]}</span></>}</>;
+      const contents=<><Icon size={17} aria-hidden="true"/> {t(label)}{count&&<> <span>{reactions[count]}</span></>}</>;
       return signedIn?<button key={kind} type="button" className="social-action" aria-pressed={!!reactions[flag]} disabled={busy!==null}
         onClick={()=>void change(kind,!reactions[flag])}>{contents}</button>:
         <Link key={kind} className="social-action" prefetch={false} href={loginHref}>{contents}</Link>;
     })}
-    <span className="social-views" title="按浏览器去重"><Eye size={17} aria-hidden="true"/> 浏览人数 {number.format(Math.max(visitors,liveVisitors??0))}</span>
-    {owner&&<button className="social-action social-remove" type="button" aria-label="删除帖子" disabled={busy!==null} onClick={()=>void change("remove")}><Trash2 size={16} aria-hidden="true"/></button>}
+    <span className="social-views" title={t("按浏览器去重")}><Eye size={17} aria-hidden="true"/>{" "}{t("浏览人数")}{" "}{number.format(Math.max(visitors,liveVisitors??0))}</span>
+    {owner&&<button className="social-action social-remove" type="button" aria-label={t("删除帖子")} disabled={busy!==null} onClick={()=>void change("remove")}><Trash2 size={16} aria-hidden="true"/></button>}
   </div>
-  {notice&&<p className="form-error" role="alert">{notice}{expired&&<> <Link className="text-link" href={loginHref}>重新登录</Link></>}</p>}</>;
+  {notice&&<p className="form-error" role="alert">{t(notice)}{expired&&<> <Link className="text-link" href={loginHref}>{t("重新登录")}</Link></>}</p>}</>;
 }

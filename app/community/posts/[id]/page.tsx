@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,10 +12,14 @@ import { PostCard } from "@/components/community/post-card";
 import { PostComposer } from "@/components/community/composer";
 
 export const dynamic="force-dynamic";
-export const metadata:Metadata={title:"社区帖子"};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return {title:t("社区帖子")};
+}
 type Props={params:Promise<{id:string}>;searchParams:Promise<{page?:string}>};
 
 export default async function CommunityPostPage({params,searchParams}:Props) {
+  const t = await getTranslations();
   const id=discussionId((await params).id);
   if(!id)notFound();
   const member=await currentMember();
@@ -28,21 +33,21 @@ export default async function CommunityPostPage({params,searchParams}:Props) {
   const pagination=(value:number)=>`${postHref(id)}?page=${value}#replies`;
 
   return <div className="frame page narrow directory-page community-page">
-    <nav className="crumbs" aria-label="帖子位置"><Link href="/community">评论社区</Link>
-      {post.thread_id&&<Link href={postHref(post.thread_id)}>查看原帖</Link>}</nav>
-    <h1 className="social-thread-title">帖子</h1>
+    <nav className="crumbs" aria-label={t("帖子位置")}><Link href="/community">{t("评论社区")}</Link>
+      {post.thread_id&&<Link href={postHref(post.thread_id)}>{t("查看原帖")}</Link>}</nav>
+    <h1 className="social-thread-title">{t("帖子")}</h1>
     <PostCard post={post} viewer={member?.id} trackView/>
-    <section id="reply" aria-label="回复此贴">
+    <section id="reply" aria-label={t("回复此贴")}>
       {member?<PostComposer username={member.username} replyTo={id} loginHref={login}/>:
-        <p className="plain-empty boxed-empty"><Link className="text-link" href={login}>登录后回复</Link></p>}
+        <p className="plain-empty boxed-empty"><Link className="text-link" href={login}>{t("登录后回复")}</Link></p>}
     </section>
     <section id="replies" className="community-feed" aria-labelledby="social-replies">
-      <h2 id="social-replies">回复（{post.replies}）</h2>
-      {!replies.length&&<p className="plain-empty">暂无回复。</p>}
+      <h2 id="social-replies">{t("回复（{count}）", { count: post.replies })}</h2>
+      {!replies.length&&<p className="plain-empty">{t("暂无回复。")}</p>}
       {replies.slice(0,feedSize).map(reply=><PostCard key={reply.id} post={reply} viewer={member?.id}/>)}
-      {(page>1||replies.length>feedSize)&&<nav className="pagination" aria-label="帖子回复分页">
-        {page>1&&<Link href={pagination(page-1)}>上一页</Link>}
-        {replies.length>feedSize&&<Link href={pagination(page+1)}>下一页</Link>}
+      {(page>1||replies.length>feedSize)&&<nav className="pagination" aria-label={t("帖子回复分页")}>
+        {page>1&&<Link href={pagination(page-1)}>{t("上一页")}</Link>}
+        {replies.length>feedSize&&<Link href={pagination(page+1)}>{t("下一页")}</Link>}
       </nav>}
     </section>
   </div>;

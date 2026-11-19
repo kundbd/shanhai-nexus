@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { themeStorageKey } from "@/lib/brand";
+import { useTranslations } from "./language";
 
 const modes = [
   { value: "system", label: "跟随系统", Icon: Monitor },
@@ -37,6 +38,7 @@ function currentMode(): Mode {
 }
 
 export function ThemeSwitch() {
+  const t = useTranslations();
   const mode = useSyncExternalStore(subscribe, currentMode, (): Mode => "system");
 
   function toggle() {
@@ -50,5 +52,5 @@ export function ThemeSwitch() {
   }
 
   const { Icon, label } = modes.find((entry) => entry.value === mode)!;
-  return <button className="icon-button theme-button" aria-label={`切换主题，当前${label}`} title={`主题 · ${label}`} onClick={toggle}><Icon size={18} aria-hidden="true" /></button>;
+  return <button className="icon-button theme-button" aria-label={t("切换主题，当前{label}", { label: t(label) })} title={t("主题 · {label}", { label: t(label) })} onClick={toggle}><Icon size={18} aria-hidden="true" /></button>;
 }

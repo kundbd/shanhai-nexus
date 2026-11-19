@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CatalogPage, type Params } from "@/components/directory/catalog-page";
@@ -11,7 +12,8 @@ export async function generateMetadata({params}:Props):Promise<Metadata> {
   const visibility=await contentVisibility();
   const item=getCategory((await params).slug,undefined,visibility);
   if (!item) return {robots:{index:false,follow:false}};
-  return {title:item.label,description:visibility.filterText(item.description),alternates:{canonical:categoryHref(item.slug)},
+  const t = await getTranslations();
+  return {title:t(item.label),description:t(visibility.filterText(item.description)),alternates:{canonical:categoryHref(item.slug)},
     ...(!publicCategoryAllowed(item.slug,universalVisibility())&&{robots:{index:false,follow:false}})};
 }
 export default async function CategoryPage({params,searchParams}:Props) {

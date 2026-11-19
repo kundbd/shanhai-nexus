@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Search } from "lucide-react";
@@ -15,11 +16,15 @@ import { catalogLinkAllowed } from "@/lib/geo/catalog";
 import { contentVisibility } from "@/lib/geo/request";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "搜索", description: "搜索山海知序的服务商、观察及工具。", robots: { index: false, follow: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return { title: t("搜索"), description: t("搜索山海知序的服务商、观察及工具。"), robots: { index: false, follow: false } };
+}
 const labels = { service:"服务商", observation:"山海观察", ...resultLabels };
 type Kind = ResultKind | "service" | "observation";
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string | string[]; type?: string | string[];page?:string|string[] }> }) {
+  const t = await getTranslations();
   const { q, type,page } = await searchParams;
   const query = (typeof q === "string" ? q : q?.[0] ?? "").trim().slice(0, MAX_QUERY_LENGTH);
   const kinds: Kind[] = ["service","observation",...resultKinds];
@@ -50,30 +55,30 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   }
 
   return <div className="frame page narrow directory-page">
-    <div className="catalog-heading"><p className="print-label">检索</p><h1>搜索山海知序</h1></div>
+    <div className="catalog-heading"><p className="print-label">{t("检索")}</p><h1>{t("搜索山海知序")}</h1></div>
     <PublicSearch q={query} />
-    <nav className="filter-pills" aria-label="按结果类型筛选">
-      <Link href={href()} prefetch={false} aria-current={!active ? "page" : undefined}>全部 <span>{allTotal}</span></Link>
-      {kinds.map((kind) => <Link key={kind} href={href(kind)} prefetch={false} aria-current={active === kind ? "page" : undefined}>{labels[kind]} <span>{count(kind)}</span></Link>)}
+    <nav className="filter-pills" aria-label={t("按结果类型筛选")}>
+      <Link href={href()} prefetch={false} aria-current={!active ? "page" : undefined}>{t("全部")}{" "}<span>{allTotal}</span></Link>
+      {kinds.map((kind) => <Link key={kind} href={href(kind)} prefetch={false} aria-current={active === kind ? "page" : undefined}>{t(labels[kind])} <span>{count(kind)}</span></Link>)}
     </nav>
-    {query && <p className="results-count">找到 {total} 条结果</p>}
-    {showSites && !!sites.rows.length && <section className="search-group"><h2>服务商</h2><SiteTable sites={sites.rows} priceMatches={sites.priceMatches} query={query}/>
-      {sitePages>1 && (active==="service"?<nav className="pagination" aria-label="服务商搜索分页">
-        {sites.page>1&&<Link href={href("service",sites.page-1)} prefetch={false}>上一页</Link>}
-        <span>第 {sites.page} / {sitePages} 页</span>
-        {sites.page<sitePages&&<Link href={href("service",sites.page+1)} prefetch={false}>下一页</Link>}
-      </nav>:<Link className="text-link" href={href("service")} prefetch={false}>查看全部 {sites.total} 家匹配服务商</Link>)}
+    {query && <p className="results-count">{t("找到 {count} 条结果", { count: total })}</p>}
+    {showSites && !!sites.rows.length && <section className="search-group"><h2>{t("服务商")}</h2><SiteTable sites={sites.rows} priceMatches={sites.priceMatches} query={query}/>
+      {sitePages>1 && (active==="service"?<nav className="pagination" aria-label={t("服务商搜索分页")}>
+        {sites.page>1&&<Link href={href("service",sites.page-1)} prefetch={false}>{t("上一页")}</Link>}
+        <span>{t("第 {page} 页", { page: `${sites.page} / ${sitePages}` })}</span>
+        {sites.page<sitePages&&<Link href={href("service",sites.page+1)} prefetch={false}>{t("下一页")}</Link>}
+      </nav>:<Link className="text-link" href={href("service")} prefetch={false}>{t("查看全部 {count} 家匹配服务商", { count: sites.total })}</Link>)}
     </section>}
-    {showObservations && !!observations.length && <section className="search-group"><h2>山海观察</h2><div className="surface result-list">
+    {showObservations && !!observations.length && <section className="search-group"><h2>{t("山海观察")}</h2><div className="surface result-list">
       {observations.map(({entry})=><Link key={entry.id} className="result-card" href={observationHref(entry.slug)} prefetch={false}><div><h2><Highlight value={visibility.filterText(entry.title)} query={query}/></h2><p><Highlight value={visibility.filterText(entry.summary)} query={query}/></p></div><ArrowRight size={17} aria-hidden="true"/></Link>)}
     </div></section>}
     {results.length ? <div className="surface result-list">
       {results.map((item) => <Link className="result-card" key={item.id} href={item.href} prefetch={false}>
         <IconTile icon={item.kind === "tool" ? "tool" : item.kind === "diagnosis" ? "terminal" : "book"} tone={item.kind === "guide" ? "indigo" : "teal"} />
-        <div><span className="result-kind">{resultLabels[item.kind]} · {item.category}</span><h2><Highlight value={visibility.filterText(item.title)} query={query} /></h2><p><Highlight value={visibility.filterText(item.excerpt ?? item.description)} query={query} /></p></div>
+        <div><span className="result-kind">{t(resultLabels[item.kind])} · {t(item.category)}</span><h2><Highlight value={t(visibility.filterText(item.title))} query={query} /></h2><p><Highlight value={t(visibility.filterText(item.excerpt ?? item.description))} query={query} /></p></div>
         <ArrowRight size={18} className="card-arrow" aria-hidden="true" />
       </Link>)}
     </div> : null}
-    {!total && <div className="empty surface"><Search size={25} aria-hidden="true" /><h2>{query ? "没有找到匹配的内容" : "输入名称、域名或关键词"}</h2><p>{query ? "试试店名、域名、具体型号，或减少搜索条件。" : "可查找服务商、商品、山海观察及站内工具。"}</p>{query && active && <Link className="text-link" href={href()} prefetch={false}>查看全部类型 <ArrowRight size={16} /></Link>}</div>}
+    {!total && <div className="empty surface"><Search size={25} aria-hidden="true" /><h2>{query ? t("没有找到匹配的内容") : t("输入名称、域名或关键词")}</h2><p>{query ? t("试试店名、域名、具体型号，或减少搜索条件。") : t("可查找服务商、商品、山海观察及站内工具。")}</p>{query && active && <Link className="text-link" href={href()} prefetch={false}>{t("查看全部类型")}{" "}<ArrowRight size={16} /></Link>}</div>}
   </div>;
 }

@@ -1,3 +1,4 @@
+import { translator, type Translate } from "@/lib/i18n/language";
 import { format, printParseErrorCode, visit, type ParseError } from "jsonc-parser";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
@@ -8,6 +9,7 @@ function ensureLength(input: string) {
   if (input.length > MAX_TOOL_INPUT) throw new Error("输入不能超过 200,000 个字符。");
 }
 
+const sourceText = translator({});
 const jsonErrors: Record<string, string> = {
   InvalidSymbol: "发现无效字符",
   InvalidNumberFormat: "数字格式无效",
@@ -25,7 +27,7 @@ const jsonErrors: Record<string, string> = {
   InvalidCharacter: "字符串中有未转义的控制字符",
 };
 
-export function formatJSON(input: string, mode: "pretty" | "minify" | "validate", indent = 2): string {
+export function formatJSON(input: string, mode: "pretty" | "minify" | "validate", indent = 2, t: Translate = sourceText): string {
   ensureLength(input);
   if (!input.trim()) throw new Error("请输入要处理的 JSON。");
   // Lexical validation and edits preserve large integers and duplicate keys.
@@ -47,7 +49,7 @@ export function formatJSON(input: string, mode: "pretty" | "minify" | "validate"
   if (errors[0]) {
     const { error, offset } = errors[0];
     const lines = input.slice(0, offset).split(/\r\n|\r|\n/);
-    throw new Error(`第 ${lines.length} 行，第 ${lines.at(-1)!.length + 1} 列：${jsonErrors[printParseErrorCode(error)] ?? "JSON 语法错误"}。`);
+    throw new Error(t("第 {line} 行，第 {column} 列：{reason}。", { line: lines.length, column: lines.at(-1)!.length + 1, reason: t(jsonErrors[printParseErrorCode(error)] ?? "JSON 语法错误") }));
   }
   // Also enforce the browser's strict JSON grammar.
   try {
@@ -55,7 +57,7 @@ export function formatJSON(input: string, mode: "pretty" | "minify" | "validate"
   } catch {
     throw new Error("JSON 语法无效，请检查数字、空白与分隔符。");
   }
-  if (mode === "validate") return "JSON 语法有效。";
+  if (mode === "validate") return t("JSON 语法有效。");
   if (mode === "minify") return input.replace(/"(?:[^"\\]|\\[\s\S])*"|[\t\r\n ]+/g, (piece) => piece.startsWith('"') ? piece : "");
   const edits = format(input, undefined, { tabSize: indent, insertSpaces: true, eol: "\n" });
   const parts: string[] = [];

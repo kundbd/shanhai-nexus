@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,14 +19,15 @@ export async function generateMetadata({params}:Props):Promise<Metadata> {
     ...(!publicEditorial(entry.slug,undefined,universalVisibility())&&{robots:{index:false,follow:false}})};
 }
 export default async function Observation({params}:Props) {
+  const t = await getTranslations();
   const visibility=await contentVisibility();
   const entry = publicEditorial((await params).slug,undefined,visibility);
   if (!entry) notFound();
   return <article className="frame page article editorial-page">
-    <div className="crumbs"><Link href="/observations">山海观察</Link></div>
-    <header className="article-heading"><p className="print-label"><span />山海观察</p><h1>{visibility.filterText(entry.title)}</h1>{entry.origin==="third_party"&&<ThirdPartyReviewNote/>}<p>{visibility.filterText(entry.summary)}</p><div className="article-meta"><time dateTime={day(entry.updated_at)}>编辑于 {day(entry.updated_at)}</time></div></header>
+    <div className="crumbs"><Link href="/observations">{t("山海观察")}</Link></div>
+    <header className="article-heading"><p className="print-label"><span />{t("山海观察")}</p><h1>{visibility.filterText(entry.title)}</h1>{entry.origin==="third_party"&&<ThirdPartyReviewNote/>}<p>{visibility.filterText(entry.summary)}</p><div className="article-meta"><time dateTime={day(entry.updated_at)}>{t("编辑于")}{" "}{day(entry.updated_at)}</time></div></header>
     <div className="editorial-text">{visibility.filterText(entry.body)}</div>
-    <section><h2>判断与来源</h2><Evidence editorial={entry.id}/></section>
-    <Link className="text-link" href="/policy#evidence">了解内容与核实政策</Link>
+    <section><h2>{t("判断与来源")}</h2><Evidence editorial={entry.id}/></section>
+    <Link className="text-link" href="/policy#evidence">{t("了解内容与核实政策")}</Link>
   </article>;
 }

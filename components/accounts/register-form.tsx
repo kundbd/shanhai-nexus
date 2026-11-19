@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "@/components/site/language";
+
 import Link from "next/link";
 import { useEffect,useRef,useState,type FormEvent } from "react";
 
@@ -10,6 +12,7 @@ async function request(body:URLSearchParams) {
 }
 
 export function RegisterForm({next,verification}:{next:string;verification:boolean}) {
+  const t = useTranslations();
   const emailInput=useRef<HTMLInputElement>(null);
   const [challenge,setChallenge]=useState<{id:string;email:string}>();
   const [seconds,setSeconds]=useState(0);
@@ -72,17 +75,17 @@ export function RegisterForm({next,verification}:{next:string;verification:boole
   return <form className="field-stack account-form" action="/api/account" method="post" onSubmit={register}>
     <input type="hidden" name="action" value="register"/>
     <input type="hidden" name="next" value={next}/>
-    <label>用户名<input name="username" required minLength={3} maxLength={32} pattern="[a-zA-Z0-9_]{3,32}" autoComplete="username" autoCapitalize="none" spellCheck={false}/></label>
-    <label>邮箱<input type="email" ref={emailInput} name="email" required maxLength={254} autoComplete="email"/></label>
+    <label>{t("用户名")}<input name="username" required minLength={3} maxLength={32} pattern="[a-zA-Z0-9_]{3,32}" autoComplete="username" autoCapitalize="none" spellCheck={false}/></label>
+    <label>{t("邮箱")}<input type="email" ref={emailInput} name="email" required maxLength={254} autoComplete="email"/></label>
     {verification&&<div className="account-code">
-      <label>邮箱验证码<input name="code" required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}/></label>
-      <button className="button" type="button" disabled={busy!==null||seconds>0} onClick={sendCode}>{busy==="code"?"发送中…":seconds>0?`${seconds} 秒后重发`:"获取验证码"}</button>
+      <label>{t("邮箱验证码")}<input name="code" required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}/></label>
+      <button className="button" type="button" disabled={busy!==null||seconds>0} onClick={sendCode}>{busy==="code"?t("发送中…"):seconds>0?t("{seconds} 秒后重发", { seconds }):t("获取验证码")}</button>
     </div>}
-    <label>密码<input name="password" type="password" required minLength={12} maxLength={128} autoComplete="new-password"/></label>
-    <label>确认密码<input name="confirmation" type="password" required minLength={12} maxLength={128} autoComplete="new-password"/></label>
-    <p className="section-note">用户名使用 3–32 位英文字母、数字或下划线。密码至少 12 个字符。</p>
-    <p className="section-note">评论以匿名用户名义公开。<Link className="text-link" href="/policy#privacy">隐私说明</Link></p>
-    {notice&&<p role={notice.ok?"status":"alert"} className={notice.ok?"form-notice":"form-error"}>{notice.text}</p>}
-    <button type="submit" className="button primary" disabled={busy!==null}>{busy==="register"?"注册中…":"注册"}</button>
+    <label>{t("密码")}<input name="password" type="password" required minLength={12} maxLength={128} autoComplete="new-password"/></label>
+    <label>{t("确认密码")}<input name="confirmation" type="password" required minLength={12} maxLength={128} autoComplete="new-password"/></label>
+    <p className="section-note">{t("用户名使用 3–32 位英文字母、数字或下划线。密码至少 12 个字符。")}</p>
+    <p className="section-note">{t("评论以匿名用户名义公开。")}<Link className="text-link" href="/policy#privacy">{t("隐私说明")}</Link></p>
+    {notice&&<p role={notice.ok?"status":"alert"} className={notice.ok?"form-notice":"form-error"}>{t(notice.text)}</p>}
+    <button type="submit" className="button primary" disabled={busy!==null}>{busy==="register"?t("注册中…"):t("注册")}</button>
   </form>;
 }

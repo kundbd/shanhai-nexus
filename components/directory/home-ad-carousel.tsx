@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "@/components/site/language";
+
 import { ArrowUpRight, Nfc } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
@@ -27,6 +29,7 @@ function scrollToAd(track: HTMLDivElement | null, index: number) {
 }
 
 export function HomeAdCarousel({ ads }: { ads: readonly HomeAd[] }) {
+  const t = useTranslations();
   const track = useRef<HTMLDivElement>(null);
   const autoplayDirection = useRef<1 | -1>(1);
   const mouseStart = useRef<{ x: number; y: number } | null>(null);
@@ -69,8 +72,8 @@ export function HomeAdCarousel({ ads }: { ads: readonly HomeAd[] }) {
   return (
     <section
       className="home-ad-carousel"
-      aria-label="合作广告"
-      aria-roledescription="轮播"
+      aria-label={t("合作广告")}
+      aria-roledescription={t("轮播")}
       onPointerEnter={(event) => { if (event.pointerType === "mouse") setHovering(true); }}
       onPointerLeave={() => setHovering(false)}
       onFocusCapture={(event) => setKeyboardFocus(event.target.matches(":focus-visible"))}
@@ -114,7 +117,7 @@ export function HomeAdCarousel({ ads }: { ads: readonly HomeAd[] }) {
             <span className="home-ad-copy">
               <span className="home-ad-heading">
                 <strong>{ad.title}</strong>
-                <span className="home-ad-label">广告</span>
+                <span className="home-ad-label">{t("广告")}</span>
               </span>
               <span className="home-ad-description">{ad.description}</span>
               <span className="home-ad-action">{ad.action} <ArrowUpRight size={15} aria-hidden="true" /></span>
@@ -138,7 +141,7 @@ export function HomeAdCarousel({ ads }: { ads: readonly HomeAd[] }) {
             key={ad.id}
             type="button"
             className="home-ad-selector"
-            aria-label={`切换到 ${ad.title}`}
+            aria-label={t("切换到 {title}", { title: ad.title })}
             aria-current={index === active ? "true" : undefined}
             onClick={() => scrollToAd(track.current, index)}
           />

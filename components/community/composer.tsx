@@ -1,11 +1,14 @@
 "use client";
 
+import { useTranslations } from "@/components/site/language";
+
 import Link from "next/link";
 import { ImagePlus, X } from "lucide-react";
 import { useRef,useState,type FormEvent } from "react";
 import { maxPhotos,photoBytes,photoFormats,postLength,videoBytes,videoFormats } from "@/lib/community/limits";
 
 export function PostComposer({username,loginHref,replyTo}:{username:string;loginHref:string;replyTo?:number}) {
+  const t = useTranslations();
   const input=useRef<HTMLInputElement>(null);
   const [body,setBody]=useState("");
   const [files,setFiles]=useState<File[]>([]);
@@ -63,21 +66,21 @@ export function PostComposer({username,loginHref,replyTo}:{username:string;login
   }
 
   return <form className="social-composer field-stack" onSubmit={submit}>
-    <label>{replyTo?"写回复":"写帖子"}<textarea value={body} onChange={event=>setBody(event.target.value)}
-      placeholder={replyTo?"说说你的看法":"分享你的数字服务使用体验"} rows={3} maxLength={postLength*2} disabled={busy}/></label>
-    <p className="section-note">正文和附件审核通过后，将以 {username} 公开发布 · {length}/{postLength}</p>
+    <label>{replyTo?t("写回复"):t("写帖子")}<textarea value={body} onChange={event=>setBody(event.target.value)}
+      placeholder={replyTo?t("说说你的看法"):t("分享你的数字服务使用体验")} rows={3} maxLength={postLength*2} disabled={busy}/></label>
+    <p className="section-note">{t("正文和附件审核通过后，将以 {username} 公开发布 · {length}/{limit}", { username, length, limit: postLength })}</p>
     {!!files.length&&<ul className="social-attachments">{files.map((file,index)=><li key={`${index}-${file.name}`}>
-      <span>{file.name}</span><button type="button" className="social-action" aria-label={`移除 ${file.name}`} disabled={busy}
+      <span>{file.name}</span><button type="button" className="social-action" aria-label={t("移除 {name}", { name: file.name })} disabled={busy}
         onClick={()=>setFiles(files.filter((_,item)=>item!==index))}><X size={15} aria-hidden="true"/></button>
     </li>)}</ul>}
     <div className="social-composer-buttons">
       <input type="file" ref={input} hidden multiple accept={[...photoFormats,...videoFormats].join(",")}
         onChange={event=>{selectFiles(event.target.files);event.target.value="";}}/>
-      <button className="button" type="button" disabled={busy} onClick={()=>input.current?.click()}><ImagePlus size={16} aria-hidden="true"/> 照片或视频</button>
-      <button className="button primary" type="submit" disabled={busy||length>postLength||(!body.trim()&&!files.length)}>{busy?"提交中…":replyTo?"提交回复审核":"提交帖子审核"}</button>
+      <button className="button" type="button" disabled={busy} onClick={()=>input.current?.click()}><ImagePlus size={16} aria-hidden="true"/>{" "}{t("照片或视频")}</button>
+      <button className="button primary" type="submit" disabled={busy||length>postLength||(!body.trim()&&!files.length)}>{busy?t("提交中…"):replyTo?t("提交回复审核"):t("提交帖子审核")}</button>
     </div>
-    <p className="section-note">最多 4 张照片，每张 5 MB，或 1 段 24 MB 视频。</p>
-    {notice&&<p className="form-error" role="alert">{notice}{expired&&<> <Link className="text-link" href={loginHref}>重新登录</Link></>}</p>}
-    {confirmation&&<p className="section-note" role="status">{confirmation}</p>}
+    <p className="section-note">{t("最多 4 张照片，每张 5 MB，或 1 段 24 MB 视频。")}</p>
+    {notice&&<p className="form-error" role="alert">{t(notice)}{expired&&<> <Link className="text-link" href={loginHref}>{t("重新登录")}</Link></>}</p>}
+    {confirmation&&<p className="section-note" role="status">{t(confirmation)}</p>}
   </form>;
 }

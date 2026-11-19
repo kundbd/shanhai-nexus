@@ -3,6 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 import { homeAds } from "../../lib/catalog/home-ads";
 import { siteConsentAction, siteConsentVersion } from "../../lib/site-consent";
+import { languageCookie } from "../../lib/i18n/language";
 import {
   editorialMarker, editorialSlug, hiddenArticle, hiddenGuide, hiddenSite, hiddenSiteName,
   airportOffer, networkName, networkSite, offerMarker, proxyName, proxySite, residentialName, residentialSite, startGeoStaging, vpnOffer,
@@ -88,6 +89,50 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.ok((await get("/guides")).body.includes(article));
     absent((await get("/guides")).body,`href="${guide}"`);
     absent((await get("/services?group=all")).body,hiddenSiteName,networkName,"/categories/vpn");
+  });
+
+  await t.test("language preferences retain consent, region visibility and private cache behavior", async () => {
+    setRegion("CN");
+    const changeLanguage = (language: string, destination: string, originHeader = origin) => asGuest("/api/site-language", {
+      method: "POST",
+      body: new URLSearchParams({ language, destination }),
+      headers: { Origin: originHeader, "Sec-Fetch-Site": originHeader === origin ? "same-origin" : "cross-site" },
+      redirect: "manual",
+    });
+    const changed = await changeLanguage("en", "/search?q=DeepSeek#main");
+    assert.equal(changed.status, 303);
+    assert.equal(changed.headers.get("location"), "/search?q=DeepSeek#main");
+    assert.match(changed.headers.getSetCookie().join("; "), new RegExp(languageCookie + "=en;"));
+    assert.match(changed.headers.getSetCookie().join("; "), /;\s*secure\b/i);
+    assertNoStore(changed);
+    assert.equal((await changeLanguage("es", "/")).status, 400);
+    assert.equal((await changeLanguage("en", "/", "https://example.org")).status, 403);
+    assert.equal((await changeLanguage("zh-Hant", "//example.org/")).headers.get("location"), "/");
+
+    const english = { Cookie: languageCookie + "=en" };
+    const guest = await asGuest("/", { headers: english });
+    assert.match(await guest.text(), /Terms of Use/);
+    assertNoStore(guest);
+    const home = await get("/", { headers: english });
+    assert.match(home.body, /<html lang="en"/);
+    assert.match(home.body, /Content region: Mainland China/);
+    assert.match(home.body, /Public price ranges/);
+    assertNoStore(home.response);
+    absent(home.body, ...networkAds.map(ad => ad.href), hiddenSiteName, hiddenGuide);
+    const limited = await get(shop, { headers: english });
+    assert.equal(limited.response.status, 404);
+    absent(limited.body, hiddenSiteName, offerMarker);
+
+    setRegion("HK");
+    const traditional = await get("/", { headers: { Cookie: languageCookie + "=zh-Hant" } });
+    assert.match(traditional.body, /<html lang="zh-Hant"/);
+    assert.match(traditional.body, /當前內容地區：中國香港/);
+    assert.match(traditional.body, /公開報價區間/);
+    assert.ok(traditional.body.includes(networkAds[0].href));
+    assertNoStore(traditional.response);
+    const defaults = await get("/", { headers: { Cookie: languageCookie + "=es" } });
+    assert.match(defaults.body, /<html lang="zh-CN"/);
+    assert.match(defaults.body, /公开报价区间/);
   });
 
   await t.test("HK content and restricted category",async ()=>{

@@ -1,3 +1,4 @@
+import { getTranslations } from "@/lib/i18n/server";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { categoryHref, editorialOrigins, incidentLabels, natures, observationHref, siteHref, type Editorial, type Incident, type Price, type Site, type Source } from "@/lib/directory/types";
@@ -11,9 +12,10 @@ import { contentVisibility } from "@/lib/geo/request";
 import { MerchantAvatar } from "./merchant-avatar";
 import { OfferIcon } from "./offer-icon";
 
-export function CatalogBadge({site}:{site:Site}) {
+export async function CatalogBadge({site}:{site:Site}) {
+  const t = await getTranslations();
   const label=site.product_observed_at?"公开商品已收录":site.has_public_prices?"有公开报价":"已收录";
-  return <span className="category-tag">{label}</span>;
+  return <span className="category-tag">{t(label)}</span>;
 }
 
 export function quoteDetailLabel(value: string | null | undefined) {
@@ -39,14 +41,17 @@ export function priceLabel(price: Price) {
   }
 }
 
-export function StartingPriceLabel({price}:{price:StartingPrice|undefined}) {
-  if (!price) return <span>暂无可用报价</span>;
+export async function StartingPriceLabel({price}:{price:StartingPrice|undefined}) {
+  const t = await getTranslations();
+  if (!price) return <span>{t("暂无可用报价")}</span>;
   const period=quoteDetailLabel(price.period);
+  const formatted = startingYuan.format(price.cnyAmount);
+  const amount = price.converted ? t("约 {price}", { price: formatted }) : formatted;
   return <>
-    <span><strong>{price.converted&&"约 "}{startingYuan.format(price.cnyAmount)}</strong>{!price.referenceAt&&" 起"}</span>
+    <span><strong>{amount}</strong>{!price.referenceAt && " " + t("起")}</span>
     {price.referenceAt
-      ? <small>第三方标价 · {day(price.referenceAt)}</small>
-      : period&&<small>{period==="月"||period==="年"?`${period}付`:period}</small>}
+      ? <small>{t("第三方标价 ·")}{" "}{day(price.referenceAt)}</small>
+      : period&&<small>{t(period==="月"||period==="年"?`${period}付`:period)}</small>}
   </>;
 }
 
@@ -55,72 +60,79 @@ export async function External({ href, children }: { href: string; children: Rea
   return <a className="external-ref" href={href} rel="noreferrer" target="_blank">{children}<ArrowUpRight size={13} aria-hidden="true" /></a>;
 }
 
-export function ShopRatingBadge({href,summary}:{href:string;summary?:ReviewSummary}) {
+export async function ShopRatingBadge({href,summary}:{href:string;summary?:ReviewSummary}) {
+  const t = await getTranslations();
   const {average,ratings}=summary??{average:null,ratings:0};
   const scored=average!==null;
   return <Link className={`category-tag shop-rating${scored?" shop-rating-scored":""}`} href={href}>
-    {scored?`综合评分 ${average.toFixed(1)} / 5 · ${ratings} 个评分`:"评分暂无"}
+    {scored?t("综合评分 {average} / 5 · {ratings} 个评分", { average: average.toFixed(1), ratings }):t("评分暂无")}
   </Link>;
 }
 
 export async function SiteTable({ sites,priceMatches,startingPrices,query="" }: {
   sites: readonly Site[];priceMatches?:ReadonlyMap<number,SitePriceMatch>;startingPrices?:ReadonlyMap<number,StartingPrice>;query?:string;
 }) {
+  const t = await getTranslations();
   const ratings=reviewSummaries(directory(),sites.map(({id})=>id));
   const visibility=await contentVisibility();
-  return <div className={startingPrices?"records records-with-prices":"records"} role="table" aria-label="服务商档案">
-    <div className="record record-head" role="row"><span role="columnheader">服务商</span>{startingPrices&&<span role="columnheader">商品起价</span>}<span role="columnheader">分类</span><span role="columnheader">收录内容</span><span role="columnheader">最近更新</span><span role="columnheader" aria-label="查看档案" /></div>
+  return <div className={startingPrices?"records records-with-prices":"records"} role="table" aria-label={t("服务商档案")}>
+    <div className="record record-head" role="row"><span role="columnheader">{t("服务商")}</span>{startingPrices&&<span role="columnheader">{t("商品起价")}</span>}<span role="columnheader">{t("分类")}</span><span role="columnheader">{t("收录内容")}</span><span role="columnheader">{t("最近更新")}</span><span role="columnheader" aria-label={t("查看档案")} /></div>
     {sites.map((site) => {
       const match=priceMatches?.get(site.id);
       return <div className="record" key={site.id} role="row">
       <div className="record-name" role="cell"><MerchantAvatar site={site}/><div><Link href={siteHref(site.slug)} prefetch={false}>{site.name}</Link><span className="record-domain">{site.hosted_storefront&&visibility.linkAllowed(site.website)?site.domain+new URL(site.website).pathname:site.domain}</span>{site.summary && <p>{visibility.filterText(site.summary)}</p>}
-        {match&&<p className="record-price-match"><OfferIcon price={match} site={site}/><span>{match.storefront?"匹配商品":"匹配报价"} · <Link href={`${siteHref(site.slug)}#prices`} prefetch={false}><Highlight value={visibility.filterText(match.label)} query={query}/></Link></span></p>}
+        {match&&<p className="record-price-match"><OfferIcon price={match} site={site}/><span>{match.storefront?t("匹配商品"):t("匹配报价")} · <Link href={`${siteHref(site.slug)}#prices`} prefetch={false}><Highlight value={visibility.filterText(match.label)} query={query}/></Link></span></p>}
       </div></div>
       {startingPrices&&<div className="record-start-price" role="cell"><StartingPriceLabel price={startingPrices.get(site.id)}/></div>}
-      <div className="record-category" role="cell"><Link className="category-tag" href={categoryHref(site.category_slug)}>{site.category_label}</Link><ShopRatingBadge href={`${siteHref(site.slug)}#reviews`} summary={ratings.get(site.id)}/></div>
-      <div role="cell"><CatalogBadge site={site}/><small className="record-date block">{publicLifecycleLabels[site.lifecycle]}</small></div>
-      <div role="cell" className="record-date">{day(site.updated_at)}<small className="block">{publicWebsiteLabel}</small>{site.operator_kind!=="unknown" && <small className="block">{operators[site.operator_kind]}</small>}</div>
-      <div role="cell" className="record-open"><Link href={siteHref(site.slug)} aria-label={`查看 ${site.name} 档案`}><ArrowRight size={17} aria-hidden="true" /></Link></div>
+      <div className="record-category" role="cell"><Link className="category-tag" href={categoryHref(site.category_slug)}>{t(site.category_label)}</Link><ShopRatingBadge href={`${siteHref(site.slug)}#reviews`} summary={ratings.get(site.id)}/></div>
+      <div role="cell"><CatalogBadge site={site}/><small className="record-date block">{t(publicLifecycleLabels[site.lifecycle])}</small></div>
+      <div role="cell" className="record-date">{day(site.updated_at)}<small className="block">{t(publicWebsiteLabel)}</small>{site.operator_kind!=="unknown" && <small className="block">{t(operators[site.operator_kind])}</small>}</div>
+      <div role="cell" className="record-open"><Link href={siteHref(site.slug)} aria-label={t("查看 {name} 档案", { name: site.name })}><ArrowRight size={17} aria-hidden="true" /></Link></div>
     </div>})}
   </div>;
 }
 
 export async function EventList({ events, compact = false }: { events: readonly Incident[]; compact?: boolean }) {
-  if (!events.length) return <p className="plain-empty">暂无公开事件记录。</p>;
+  const t = await getTranslations();
+  if (!events.length) return <p className="plain-empty">{t("暂无公开事件记录。")}</p>;
   const visibility=await contentVisibility();
   return <ul className={`event-list${compact ? " event-compact" : ""}`}>{events.map((event) => <li key={event.id}>
     <time dateTime={event.occurred_at}>{day(event.occurred_at)}</time>
-    <div><span className="category-tag">{incidentLabels[event.kind]}</span><h3>{visibility.filterText(event.title)}</h3><p>{visibility.filterText(event.summary)}</p>
-      <div className="event-actions"><Link href={`${siteHref(event.site_slug)}#incidents`}>{event.site_name}</Link><External href={event.source_url}>原始记录</External></div>
+    <div><span className="category-tag">{t(incidentLabels[event.kind])}</span><h3>{visibility.filterText(event.title)}</h3><p>{visibility.filterText(event.summary)}</p>
+      <div className="event-actions"><Link href={`${siteHref(event.site_slug)}#incidents`}>{event.site_name}</Link><External href={event.source_url}>{t("原始记录")}</External></div>
     </div>
   </li>)}</ul>;
 }
 
 export async function Evidence({ editorial }: { editorial: number }) {
+  const t = await getTranslations();
   const claims = publicClaims(editorial);
   const visibility=await contentVisibility();
-  return <ul className="claims">{claims.map((claim) => <li key={claim.id}><span className="category-tag">{natures[claim.nature]}</span>
-    <strong>{visibility.filterText(claim.label)}</strong><p>{visibility.filterText(claim.statement)}</p>{claim.url && <External href={claim.url}>{claim.source_title ?? "查看来源"}</External>}
+  return <ul className="claims">{claims.map((claim) => <li key={claim.id}><span className="category-tag">{t(natures[claim.nature])}</span>
+    <strong>{visibility.filterText(claim.label)}</strong><p>{visibility.filterText(claim.statement)}</p>{claim.url && <External href={claim.url}>{claim.source_title ?? t("查看来源")}</External>}
   </li>)}</ul>;
 }
 
 export async function SourcesList({ sources }: { sources: readonly Source[] }) {
+  const t = await getTranslations();
   const visibility=await contentVisibility();
   const visible=sources.filter(source=>visibility.linkAllowed(source.url));
-  if (!visible.length) return <p className="plain-empty">暂无公开资料来源。</p>;
+  if (!visible.length) return <p className="plain-empty">{t("暂无公开资料来源。")}</p>;
   return <ul className="source-list">{visible.map((source) => <li key={source.id}>
-    <External href={source.url}>{source.kind==="official" || source.verified ? source.title : source.attribution || "发现来源"}</External><span>{day(source.accessed_at)} · {source.verified ? natures[source.kind] : source.kind==="official" ? "商家公开资料" : "发现来源"}</span>
-    {source.license_url && <External href={source.license_url}>数据许可</External>}
+    <External href={source.url}>{source.kind==="official" || source.verified ? source.title : source.attribution || t("发现来源")}</External><span>{day(source.accessed_at)} · {source.verified ? t(natures[source.kind]) : source.kind==="official" ? t("商家公开资料") : t("发现来源")}</span>
+    {source.license_url && <External href={source.license_url}>{t("数据许可")}</External>}
     {!!source.verified && source.excerpt && <p>{visibility.filterText(source.excerpt)}</p>}
   </li>)}</ul>;
 }
 
-export function ThirdPartyReviewNote() {
-  return <p className="third-party-note"><span className="category-tag">{editorialOrigins.third_party}</span> 内容观点仅代表原作者，不代表山海知序立场。</p>;
+export async function ThirdPartyReviewNote() {
+  const t = await getTranslations();
+  return <p className="third-party-note"><span className="category-tag">{t(editorialOrigins.third_party)}</span>{" "}{t("内容观点仅代表原作者，不代表山海知序立场。")}</p>;
 }
 
 export async function ObservationLink({ entry }: { entry: Editorial }) {
+  const t = await getTranslations();
   const visibility=await contentVisibility();
   const { slug,title,summary,updated_at,origin }=entry;
-  return <article className="observation-row"><time dateTime={day(updated_at)}>{day(updated_at)} · {editorialOrigins[origin]}</time><h3><Link href={observationHref(slug)} prefetch={false}>{visibility.filterText(title)}</Link></h3><p>{visibility.filterText(summary)}</p></article>;
+  return <article className="observation-row"><time dateTime={day(updated_at)}>{day(updated_at)} · {t(editorialOrigins[origin])}</time><h3><Link href={observationHref(slug)} prefetch={false}>{visibility.filterText(title)}</Link></h3><p>{visibility.filterText(summary)}</p></article>;
 }
