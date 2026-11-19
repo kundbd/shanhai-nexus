@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
+import { RegionIndicator } from "@/components/site/region-indicator";
 import { PageTraffic } from "@/components/site/page-traffic";
 import { siteDescription, siteUrl } from "@/lib/site";
 import { brand, legacyThemeStorageKey, themeStorageKey } from "@/lib/brand";
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
     <body>
       <a className="skip-link" href="#main">跳到主要内容</a>
-      <Header />
+      <Header region={<RegionIndicator />} />
       <main id="main" tabIndex={-1}>{children}</main>
       <Footer />
       <PageTraffic />

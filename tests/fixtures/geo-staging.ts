@@ -17,7 +17,10 @@ import { publicPrices } from "../../lib/directory/read";
 import { recordPageVisitor } from "../../lib/directory/traffic";
 import { saveVisibility } from "../../lib/geo/admin";
 
-export const testAddresses={CN:"114.114.114.114",HK:"203.198.23.1",US:"8.8.8.8",unknown:"127.0.0.1"} as const;
+export const testAddresses={
+  CN:"114.114.114.114",HK:"203.198.23.1",TW:"168.95.1.1",SG:"165.21.83.88",
+  US:"8.8.8.8",DE:"194.25.2.129",AU:"139.130.4.5",unknown:"127.0.0.1",
+} as const;
 export type TestRegion=keyof typeof testAddresses;
 export const hiddenSite="geo-vps-fixture";
 export const hiddenSiteName="GeoCheckPrivateCloud";
@@ -83,8 +86,8 @@ function installTestContent(file:string) {
 export async function startGeoStaging(initial:TestRegion="CN") {
   const countryFile=resolve(process.env.GEO_TEST_MMDB || "data/geoip/country.mmdb");
   const testDb=await maxmind.open<CountryResponse>(countryFile);
-  for (const country of ["CN","HK","US"] as const) {
-    assert.equal(testDb.get(testAddresses[country])?.country?.iso_code,country,`fixture address for ${country} in the supplied MMDB`);
+  for (const [country,address] of Object.entries(testAddresses)) {
+    if (country !== "unknown") assert.equal(testDb.get(address)?.country?.iso_code,country,`fixture address for ${country} in the supplied MMDB`);
   }
   const directory=resolve("output/geo-tests");
   await mkdir(directory,{recursive:true});
@@ -121,7 +124,7 @@ export async function startGeoStaging(initial:TestRegion="CN") {
   const app=spawn(process.execPath,[resolve(".next/standalone/server.js")],{
     windowsHide:true,
     env:{...process.env,NODE_ENV:"production",NEXT_TELEMETRY_DISABLED:"1",PORT:String(serverPort),HOSTNAME:"127.0.0.1",
-      DB_PATH:dbFile,SITE_URL:"https://shanhainexus.com",GEO_IP_MODE:"nginx-direct",GEO_IP_DB:countryFile,GEO_ALLOWED_OVERSEAS:"US",
+      DB_PATH:dbFile,SITE_URL:"https://shanhainexus.com",GEO_IP_MODE:"nginx-direct",GEO_IP_DB:countryFile,
       ADMIN_USERNAME:username,ADMIN_PASSWORD:password,ADMIN_SESSION_SECRET:randomBytes(32).toString("hex"),ADMIN_ORIGIN:origin,
       FILEBOX_ACCOUNT_ORIGIN:"http://127.0.0.1:9",MEMBER_SESSION_KEY:randomBytes(32).toString("hex"),DSH_MODERATION_ENABLED:"0"},
     stdio:["ignore","pipe","pipe"],

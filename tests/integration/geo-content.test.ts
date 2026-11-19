@@ -31,16 +31,20 @@ test("production standalone region policies through a trusted local proxy", {tim
   const absent=(body:string,...values:string[])=>{
     for (const value of values) assert.ok(!body.includes(value),`Restricted text found: ${value}`);
   };
-  const regionLabel=(body:string,label:string)=>{
+  const regionLabel=(body:string,label:string,flag?:string)=>{
+    const header=/<header class="site-header"[\s\S]*?<\/header>/.exec(body)?.[0]??"";
     const footer=/<footer[\s\S]*?<\/footer>/.exec(body)?.[0]??"";
-    assert.ok(footer.replace(/<!--[\s\S]*?-->/g,"").includes("当前内容地区："+label),`Expected the footer region ${label}`);
+    assert.ok(header.replace(/<!--[\s\S]*?-->/g,"").includes("当前内容地区："+label),`Expected the header region ${label}`);
+    assert.equal(/data-flag="([^"]+)"/.exec(header)?.[1],flag);
+    assert.ok(header.includes("地区数据由 DB-IP 提供"));
+    absent(footer,"当前内容地区","地区数据由 DB-IP 提供");
   };
 
   await t.test("CN home, categories, guides and navigation",async ()=>{
     setRegion("CN");
     const home=await get("/");
     assert.equal(home.response.status,200);
-    regionLabel(home.body,"中国大陆");
+    regionLabel(home.body,"中国大陆","cn");
     absent(home.body,hiddenSiteName,networkName,"/categories/vpn",gate.href,content.promotion);
     assert.ok(home.body.includes(roogoo.href));
     assert.ok((await get("/guides")).body.includes(article));
@@ -51,7 +55,7 @@ test("production standalone region policies through a trusted local proxy", {tim
   await t.test("HK content and restricted category",async ()=>{
     setRegion("HK");
     const home=await get("/");
-    regionLabel(home.body,"香港");
+    regionLabel(home.body,"中国香港","hk");
     assert.ok(home.body.includes("/categories/vpn"));
     assert.ok(home.body.includes(hiddenSiteName));
     assert.ok(home.body.includes(gate.href.replaceAll("&","&amp;")));
@@ -64,10 +68,10 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.equal((await get("/services/mullvad")).response.status,404);
   });
 
-  await t.test("US per-country inclusion and the configured overseas preset",async ()=>{
+  await t.test("US per-country inclusion and the overseas preset",async ()=>{
     setRegion("US");
     const home=await get("/");
-    regionLabel(home.body,"其他地区");
+    regionLabel(home.body,"美国","us");
     assert.ok(home.body.includes(content.promotion.replaceAll("&","&amp;")));
     assert.equal((await get(network)).response.status,200);
     const approved=await get(editorial);
@@ -79,13 +83,32 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.ok((await get("/services/chatgpt")).body.includes("GeoCheckPromotionSource"));
   });
 
+  await t.test("Taiwan, Southeast Asia, Europe and generic regions share the overseas scope",async ()=>{
+    const cases = [
+      ["TW","中国台湾","cn"],["SG","新加坡","sg"],["DE","德国","de"],["AU","其他区域",undefined],
+    ] as const;
+    for (const [country,label,flag] of cases) {
+      setRegion(country);
+      const home=await get("/");
+      regionLabel(home.body,label,flag);
+      assert.ok(home.body.includes(gate.href.replaceAll("&","&amp;")));
+      assert.ok(home.body.includes("/categories/vpn"));
+      assert.equal((await get(network)).response.status,200);
+      assert.equal((await get(editorial)).response.status,404);
+    }
+    const sprites=await fetchPage("/region/flags.webp");
+    assert.equal(sprites.status,200);
+    assert.match(sprites.headers.get("content-type")??"",/image\/webp/);
+    assert.equal(Buffer.from(await sprites.arrayBuffer()).subarray(8,12).toString(),"WEBP");
+  });
+
   await t.test("unknown IP falls back to CN and public headers do not choose a region",async ()=>{
     const claimed={"CF-IPCountry":"HK","CF-Connecting-IP":"203.198.23.1",
       "X-Real-IP":"203.198.23.1","X-Forwarded-For":"203.198.23.1, 8.8.8.8","Forwarded":"for=203.198.23.1"};
     for (const country of ["CN","unknown"] as const) {
       setRegion(country);
       const home=await get("/",{headers:claimed});
-      regionLabel(home.body,"中国大陆");
+      regionLabel(home.body,"中国大陆","cn");
       absent(home.body,hiddenSiteName,gate.href,content.promotion);
       const denied=await get(shop+"?region=HK&country=US",{headers:claimed});
       assert.equal(denied.response.status,404);
@@ -139,7 +162,7 @@ test("production standalone region policies through a trusted local proxy", {tim
 
   await t.test("one conservative sitemap for every country",async ()=>{
     const sitemaps=[];
-    for (const country of ["CN","HK","US","unknown"] as const) {
+    for (const country of ["CN","HK","TW","US","AU","unknown"] as const) {
       setRegion(country);
       const result=await get("/sitemap.xml");
       assert.equal(result.response.status,200);
@@ -192,6 +215,7 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.ok(cookie);
     const admin=await get(`/admin/visibility?kind=ad&key=${roogoo.id}`,{headers:{Cookie:cookie}});
     assert.match(admin.body,/保存地区可见性/);
+    assert.match(admin.body,/仅中国大陆以外地区可见/);
     assert.match(admin.body,/指定国家或地区可见/);
     assert.equal((await fetchPage(route,{method:"POST",headers:{Cookie:cookie,Origin:"https://invalid.example"},body})).status,403);
     const saved=await fetchPage(route,{method:"POST",headers:{Cookie:cookie,Origin:origin},body,redirect:"manual"});

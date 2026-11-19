@@ -35,11 +35,12 @@ function ContactLinks({inMenu=false}:{inMenu?:boolean}) {
   </div>;
 }
 
-export function Header() {
+export function Header({ region }: { region: React.ReactNode }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   return (
     <header className="site-header">
+      {region}
       <div className="frame header-inner">
         <div className="header-brand"><Brand /><ContactLinks /></div>
         <nav id="main-navigation" aria-label="主导航" className={open ? "main-nav open" : "main-nav"}>

@@ -1,12 +1,12 @@
 export const visibilityModes = {
   all: "所有地区可见",
   cn: "仅中国大陆可见",
-  overseas: "仅香港及已允许的海外地区可见",
+  overseas: "仅中国大陆以外地区可见",
   countries: "指定国家或地区可见",
 } as const;
 export type VisibilityMode = keyof typeof visibilityModes;
 export type VisibilityRule = { mode: VisibilityMode; countries: readonly string[] };
-export type Audience = { country: string; label: string; overseas: boolean };
+export type Audience = { country: string; overseas: boolean };
 
 const codes = new Set((
   "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ " +
@@ -22,13 +22,9 @@ export function countryCode(value: string | undefined) {
   return code && codes.has(code) ? code : undefined;
 }
 
-export function makeAudience(identified: string | undefined, extra = process.env.GEO_ALLOWED_OVERSEAS ?? ""): Audience {
+export function makeAudience(identified: string | undefined): Audience {
   const country = countryCode(identified) ?? "CN";
-  return {
-    country,
-    label: country === "CN" ? "中国大陆" : country === "HK" ? "香港" : "其他地区",
-    overseas: country !== "CN" && (country === "HK" || extra.split(/[,，\s]+/).some(code => countryCode(code) === country)),
-  };
+  return { country, overseas: country !== "CN" };
 }
 
 export function allowsRegion(rule: VisibilityRule | undefined, audience: Audience | "universal") {

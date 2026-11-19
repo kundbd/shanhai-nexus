@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { mkdtemp, rmdir, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,20 +9,33 @@ import { getCategory, getSite, listSites, publicEditorials } from "../../lib/dir
 import { saveVisibility } from "../../lib/geo/admin";
 import { identifyAudience, nginxVisitorAddress } from "../../lib/geo/lookup";
 import { allowsRegion, makeAudience } from "../../lib/geo/policy";
+import { regionDisplay } from "../../lib/geo/region-display";
 import { loadVisibility } from "../../lib/geo/visibility";
 
-test("country matching uses the effective CN fallback and an explicit overseas allowlist", () => {
-  const hk=makeAudience("HK","");
-  const us=makeAudience("US","");
-  const cn=makeAudience("CN","US,CN");
+test("any identified location outside mainland China uses the overseas preset", () => {
+  const cn=makeAudience("CN");
   const overseas={mode:"overseas",countries:[]} as const;
-  assert.equal(allowsRegion(overseas,hk),true);
-  assert.equal(allowsRegion(overseas,us),false);
-  assert.equal(allowsRegion(overseas,makeAudience("US","US")),true);
+  for (const country of ["HK","MO","TW","US","SG","DE","AU","BR","ZA"]) {
+    assert.equal(allowsRegion(overseas,makeAudience(country)),true);
+  }
   assert.equal(allowsRegion(overseas,cn),false);
-  assert.deepEqual(makeAudience("XX","US"),cn);
-  assert.equal(allowsRegion({mode:"countries",countries:["US"]},us),true);
+  assert.deepEqual(makeAudience(undefined),cn);
+  assert.deepEqual(makeAudience("XX"),cn);
+  assert.equal(allowsRegion({mode:"countries",countries:["US"]},makeAudience("US")),true);
+  assert.equal(allowsRegion({mode:"countries",countries:["US"]},makeAudience("HK")),false);
   assert.equal(allowsRegion(overseas,"universal"),false);
+});
+
+test("header labels include the requested flags and keep other areas generic", () => {
+  for (const [country,label,flag] of [
+    ["CN","中国大陆","cn"],["HK","中国香港","hk"],["TW","中国台湾","cn"],["MO","中国澳门","mo"],
+    ["SG","新加坡","sg"],["DE","德国","de"],["US","美国","us"],["CA","加拿大","ca"],["MX","墨西哥","mx"],
+  ]) {
+    assert.equal(regionDisplay(country).label,label);
+    assert.equal(regionDisplay(country).flag?.code,flag);
+  }
+  assert.deepEqual(regionDisplay("TW").flag,regionDisplay("CN").flag);
+  for (const country of ["AU","ZA","BR"]) assert.deepEqual(regionDisplay(country),{label:"其他区域"});
 });
 
 test("direct Nginx mode reads the connection appended on the right", () => {
@@ -73,9 +87,9 @@ test("explicit category and site rules permit regional publication without reviv
   assert.throws(()=>publish.run("proton-vpn"),/无法发布/);
   set("site","proton-vpn","countries","HK");
   publish.run("proton-vpn");
-  const hk=loadVisibility(db,makeAudience("HK","US"));
-  const us=loadVisibility(db,makeAudience("US","US"));
-  const cn=loadVisibility(db,makeAudience("CN","US"));
+  const hk=loadVisibility(db,makeAudience("HK"));
+  const us=loadVisibility(db,makeAudience("US"));
+  const cn=loadVisibility(db,makeAudience("CN"));
   assert.ok(getCategory("vpn",db,hk));
   assert.equal(getCategory("vpn",db,cn),undefined);
   assert.ok(getSite("proton-vpn",db,hk));
@@ -87,6 +101,37 @@ test("explicit category and site rules permit regional publication without reviv
   set("category","vpn","all");
   assert.equal(getSite("proton-vpn",db,loadVisibility(db,makeAudience("HK"))),undefined);
   assert.equal(db.prepare("SELECT publication FROM sites WHERE slug='proton-vpn'").get()?.publication,"published");
+});
+
+test("the overseas rollout restores only records archived by the original retirement", () => {
+  using db=openDirectory(":memory:");
+  const recordRetirement=db.prepare(`INSERT INTO audit_log(actor,action,entity,entity_id,before_json,after_json,created_at)
+    SELECT '目录维护','archive','sites',CAST(id AS TEXT),json_object('slug',slug,'publication','published'),
+      json_object('slug',slug,'publication','archived'),'2026-11-18' FROM sites WHERE slug=?`);
+  for (const slug of ["proton-vpn","mullvad","tailscale"]) assert.equal(recordRetirement.run(slug).changes,1);
+  db.exec(`INSERT INTO audit_log(actor,action,entity,entity_id,after_json,created_at)
+    SELECT 'editor','archive','sites',CAST(id AS TEXT),json_object('publication','archived'),'2026-11-19' FROM sites WHERE slug='mullvad';
+    INSERT INTO sites(slug,name,website,category_slug,summary,publication,added_at,updated_at)
+    VALUES ('network-never-published','Never Published','https://example.net/','vpn','Sample archive','archived','2026-11-19','2026-11-19');`);
+  const migration=readFileSync("lib/directory/migrations/044-overseas-network-publication.sql","utf8");
+  db.exec(migration);
+  db.exec(migration);
+  const reopened=db.prepare("SELECT s.slug FROM sites s JOIN audit_log a ON a.entity_id=CAST(s.id AS TEXT) WHERE a.actor='地区设置' AND a.entity='sites' ORDER BY s.slug").all();
+  assert.deepEqual(reopened.map(row=>row.slug),["proton-vpn","tailscale"]);
+  assert.equal(db.prepare("SELECT count(*) AS n FROM content_region_rules").get()?.n,3);
+  for (const country of ["HK","TW","US","SG","DE","AU"]) {
+    const visibility=loadVisibility(db,makeAudience(country));
+    assert.ok(getCategory("vpn",db,visibility));
+    assert.ok(getSite("proton-vpn",db,visibility));
+    assert.ok(getSite("tailscale",db,visibility));
+    assert.equal(getSite("mullvad",db,visibility),undefined);
+    assert.equal(getSite("network-never-published",db,visibility),undefined);
+  }
+  for (const audience of [makeAudience("CN"),makeAudience(undefined),"universal"] as const) {
+    const visibility=loadVisibility(db,audience);
+    assert.equal(getSite("proton-vpn",db,visibility),undefined);
+    assert.equal(getSite("tailscale",db,visibility),undefined);
+  }
 });
 
 test("child content obeys parent regions and promotion rules use a stable URL key", () => {

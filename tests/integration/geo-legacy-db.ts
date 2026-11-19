@@ -21,14 +21,15 @@ async function upgrade() {
   assert.ok(old >= "002" && old < "043", "Supply a pre-GeoIP database with the existing directory schema");
   const migrationDir=resolve("lib/directory/migrations");
   const next=(await readdir(migrationDir)).filter(name=>/^\d{3}-.+\.sql$/.test(name)&&name<"043").sort();
-  for (const name of next) {
-    if (one(db,"SELECT 1 FROM migrations WHERE name=?",name)) continue;
+  async function apply(name:string) {
+    if (one(db,"SELECT 1 FROM migrations WHERE name=?",name)) return;
     const source=await readFile(join(migrationDir,name),"utf8");
     transaction(db,()=>{
       db.exec(source);
       db.prepare("INSERT INTO migrations VALUES (?,?)").run(name,new Date().toISOString());
     });
   }
+  for (const name of next) await apply(name);
   const baseline=join(scratch,"pre-043.sqlite");
   await backup(db,baseline);
   using backupCheck=new DatabaseSync(baseline,{readOnly:true});
@@ -50,15 +51,36 @@ async function upgrade() {
     }));
   }
   const before=snapshot();
-  migrate(db);
-  migrate(db);
+  await apply("043-content-regions.sql");
   assert.deepEqual(snapshot(),before);
-  assert.deepEqual(all(db,"PRAGMA foreign_key_check"),[]);
   assert.equal(one<{n:number}>(db,"SELECT count(*) n FROM content_region_rules")!.n,0);
+  const beforeOverseas=join(scratch,"pre-044.sqlite");
+  await backup(db,beforeOverseas);
+  const siteRows=()=>all<{id:number;slug:string;publication:string}>(db,"SELECT * FROM sites ORDER BY id").map(row=>({...row}));
+  const sitesBefore=siteRows();
+  const oldAuditEnd=one<{n:number}>(db,"SELECT coalesce(max(id),0) n FROM audit_log")!.n;
+  migrate(db);
+  const after=snapshot();
+  const reopened=all<{site_id:number}>(db,`SELECT CAST(entity_id AS INTEGER) site_id FROM audit_log
+    WHERE id>? AND actor='地区设置' AND action='publish' AND entity='sites'`,oldAuditEnd);
+  const restoredIds=new Set(reopened.map(row=>row.site_id));
+  assert.equal(restoredIds.size,reopened.length);
+  assert.deepEqual(siteRows(),sitesBefore.map(row=>
+    restoredIds.has(row.id)?{...row,publication:"published"}:row));
+  for (const name of Object.keys(before)) {
+    if (name !== "sites" && name !== "audit_log") assert.deepEqual(after[name],before[name],name);
+  }
+  assert.equal(after.audit_log.rows,before.audit_log.rows+reopened.length);
+  const rules=all(db,"SELECT * FROM content_region_rules ORDER BY kind,content_key");
+  migrate(db);
+  assert.deepEqual(snapshot(),after);
+  assert.deepEqual(all(db,"SELECT * FROM content_region_rules ORDER BY kind,content_key"),rules);
+  assert.deepEqual(all(db,"PRAGMA foreign_key_check"),[]);
   assert.equal(one<{integrity_check:string}>(db,"PRAGMA integrity_check")!.integrity_check,"ok");
   console.log(JSON.stringify({inputMigration:old,baselineMigration:next.at(-1),preservedTables:names.length,
     preservedRows:Object.values(before).reduce((total,item)=>total+item.rows,0),sites:before.sites.rows,priceRecords:before.price_records.rows,
-    applied:"043-content-regions.sql",integrity:"ok",baselineBackup:baseline}));
+    applied:"043-content-regions.sql and 044-overseas-network-publication.sql",restoredSites:reopened.length,visibilityRules:rules.length,
+    integrity:"ok",baselineBackup:baseline,prePublicationBackup:beforeOverseas}));
 }
 
 void upgrade().catch(error=>{console.error(error);process.exitCode=1;});
