@@ -32,14 +32,14 @@ test("relay import groups the same exact model and direction and preserves origi
 test("public pages are published without merchant verification and pricing follows its evidence",()=>{
   using db=openDirectory(":memory:");
   const batch={observed:"2026-01-02",merchants:[
-    {name:"无公开价格",slug:"example-vpn",website:"https://example-vpn.net/",summary:"公开 VPN 产品页面。",category:"vpn",
-      sources:[{url:"https://example-vpn.net/",note:"有服务介绍。"}]},
+    {name:"无公开价格",slug:"example-host",website:"https://example-host.net/",summary:"公开 VPS 产品页面。",category:"vps",
+      sources:[{url:"https://example-host.net/",note:"有服务介绍。"}]},
     {name:"有公开价格",slug:"price-vps",website:"https://price-vps.net/",summary:"公开服务器价目。",category:"vps",
       sources:[{url:"https://price-vps.net/plans",note:"公开价格表。",plans:[["基础套餐","CNY","16","月付"]]}]},
   ]} as const;
   assert.equal(importRelayPricing(db,batch).added,2);
   assert.equal(importRelayPricing(db,batch).quotes,0);
-  const plain=listSites({q:"example-vpn.net",status:"unpriced"},db).rows[0]!;
+  const plain=listSites({q:"example-host.net",status:"unpriced"},db).rows[0]!;
   const priced=listSites({q:"price-vps.net",status:"priced"},db).rows[0]!;
   assert.equal(plain.status,"listed");
   assert.equal(priced.status,"listed");

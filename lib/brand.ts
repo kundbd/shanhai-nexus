@@ -3,6 +3,8 @@ export const brand = {
   english: "Shanhai Nexus",
   motto: "了解清楚，再做选择。",
   domain: "shanhainexus.com",
+  repositoryUrl: "https://github.com/kundbd/shanhai-nexus",
+  telegramUrl: "https://t.me/kun1991",
   cooperationEmail: "beachwayt@gmail.com",
   version: "V0.4",
 };

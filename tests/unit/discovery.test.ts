@@ -139,7 +139,10 @@ test("DeepSeek jobs deduplicate and retain sources, enforce shared budget, and r
   process.env.DEEPSEEK_DISCOVERY_DAILY_LIMIT="2";
   try {
     const first=saveDiscoverySource(db,{...source,key:"ds-ai",kind:"deepseek",url:deepSeekSearchReference},"tester");
-    const second=saveDiscoverySource(db,{...first,key:"ds-network",pipeline:"connections"},"tester");
+    const second=saveDiscoverySource(db,{...first,key:"ds-cloud",pipeline:"vps"},"tester");
+    const retired=saveDiscoverySource(db,{...first,key:"ds-network",pipeline:"connections",enabled:1},"tester");
+    assert.equal(retired.enabled,0);
+    assert.throws(()=>queueDiscovery(db,retired.id,"tester"),/不可自动入队/);
     const result=await runDiscovery(db,{jobId:queueDiscovery(db,first.id,"tester"),read:mockRead,fetcher:async()=>Response.json({results:[
       {url:"https://ds-merchant.net/plans"},{url:"https://ds-merchant.net/products"},
     ]})});

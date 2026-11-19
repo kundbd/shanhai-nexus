@@ -1,0 +1,62 @@
+{
+  "observed":"2026-11-16",
+  "merchants":[
+    {"name":"GPTPlus.CV","slug":"gptplus-cv","website":"https://gptplus.cv/","category":"ai-topup","summary":"代充及卡密兑换站点，公开列出 ChatGPT、Claude、Cursor 和 Perplexity 套餐。",
+      "sources":[{"url":"https://gptplus.cv/plans","note":"人民币公开标价，套餐与交付条件以商家商品页为准。Pro 的倍率保留商品名称中的口径。","plans":[
+        ["ChatGPT Plus · 卡密代充","CNY","178"],["ChatGPT Plus · 卡密代充","CNY","1899","年付"],["ChatGPT Go · 卡密代充","CNY","89"],
+        ["ChatGPT Pro 5X · 代充","CNY","890"],["ChatGPT Pro 10X · 代充","CNY","1799"],["ChatGPT Pro 25X · 代充","CNY","3999"],
+        ["Codex 2000 额度充值","CNY","598","每份额度"],["Codex 2500 额度充值","CNY","798","每份额度"],
+        ["Claude Pro · 代充","CNY","219"],["Claude Max 5× · 代充","CNY","1099"],["Claude Max 20× · 代充","CNY","1999"],
+        ["Cursor Plus · 代充","CNY","119"],["Cursor Premium · 代充","CNY","319"],["Cursor Super · 代充","CNY","819"],["Cursor Ultra · 代充","CNY","1998"],
+        ["Perplexity Pro · 代充","CNY","139"]]}]},
+    {"name":"扭蛋 AI 代充","slug":"niudan-ai","website":"https://shop.niudan.cc/shop","category":"ai-card","summary":"公开陈列多品牌 AI 会员月付代充套餐。",
+      "sources":[{"url":"https://shop.niudan.cc/shop","note":"商家人民币月付标价。本批记录页面中周期和金额明确的在售套餐。","plans":[
+        ["ChatGPT Plus · 代充","CNY","138"],["ChatGPT Pro 100 · 代充","CNY","859"],["ChatGPT Pro 200 · 代充","CNY","1569"],["ChatGPT Pro 500 · 代充","CNY","3889"],
+        ["Claude Pro · 代充","CNY","256"],["Gemini AI Plus · 代充","CNY","80"],["Gemini AI Pro · 代充","CNY","180"],["Gemini AI Ultra · 代充","CNY","2000"]]}]},
+    {"name":"二水 AI 订阅管家","slug":"ershui-ai","website":"https://ai.ershuiai.com/","category":"ai-card","summary":"展示 AI 会员卡密商品、售价和库存。",
+      "sources":[{"url":"https://ai.ershuiai.com/","note":"记录公开货架的人民币活动标价。周期和库存以商品详情为准。","plans":[
+        ["ChatGPT Plus · 卡密","CNY","139","周期未注明"],["ChatGPT Go · 卡密","CNY","35","周期未注明"],["ChatGPT Pro 100 · 卡密","CNY","749","周期未注明"],
+        ["ChatGPT Pro 200 · 卡密","CNY","1350","周期未注明"],["ChatGPT Pro 500 · 卡密","CNY","3398","周期未注明"]]}]},
+    {"name":"API易","slug":"apiyi-com","website":"https://index.apiyi.com/","category":"ai-relay","summary":"提供多家模型的 API 接入，官网公开说明充值和用量计费方式。",
+      "sources":[{"url":"https://index.apiyi.com/quick-start","note":"官网指南标示人民币 35 元起充，兑换 5 美元账户额度。金额属于充值门槛。","plans":[["最低充值金额","CNY","35","每次充值"]]}]},
+    {"name":"OpenLux","slug":"openlux-ai","website":"https://www.openlux.ai/","category":"ai-relay","summary":"公开页面介绍多模型统一 API 和按量计费入口。",
+      "sources":[{"url":"https://www.openlux.ai/","note":"公开产品页面展示统一 API、支持的模型系列及计费入口。"}]},
+    {"name":"Featherless AI","slug":"featherless-ai","website":"https://featherless.ai/","category":"ai-relay","summary":"提供开源模型推理服务。聊天订阅和面向应用的 API 额度分别计费。",
+      "sources":[{"url":"https://featherless.ai/docs/billing","note":"开发者月度额度从 50 美元起，实际 API 用量扣除额度。独立 Chat 套餐是交互式聊天，不含生产 API。","plans":[["Developer 月度额度起价","USD","50","月度额度起价"],["Chat 个人交互订阅","USD","25","月付"]]}]},
+    {"name":"Just My Socks","slug":"justmysocks-net","website":"https://justmysocks.net/","category":"airport","summary":"按线路和月度流量提供不同节点订阅套餐。",
+      "sources":[{"url":"https://www.justmysocks.net/members/cart.php","note":"公开套餐目录的美元月付标价，流量档位见套餐名称。各地区和线路单独列出。","plans":[
+        ["LA 500 · 500GB","USD","5.88","月付","洛杉矶"],["LA 1000 · 1TB","USD","9.88","月付","洛杉矶"],["LA 5000 · 5TB","USD","48.99","月付","洛杉矶"],["LA 10000 · 10TB","USD","93.99","月付","洛杉矶"],
+        ["London 500 · 500GB","USD","6.80","月付","伦敦"],["London 1000 · 1TB","USD","11.29","月付","伦敦"],["London 5000 · 5TB","USD","59.99","月付","伦敦"],
+        ["HK China Mobile 500 · 500GB","USD","8.99","月付","香港 · 移动线路"],["HK China Mobile 1000 · 1TB","USD","14.90","月付","香港 · 移动线路"],["HK China Mobile 5000 · 5TB","USD","59.99","月付","香港 · 移动线路"],
+        ["Tokyo 100 · 100GB","USD","29.99","月付","东京"],["Tokyo 500 · 500GB","USD","135.99","月付","东京"],["Tokyo 1000 · 1TB","USD","239","月付","东京"],["Tokyo 5000 · 5TB","USD","1135","月付","东京"],
+        ["Premium Hong Kong 100 · 100GB","USD","34.99","月付","香港 · 三网线路"],["Premium Hong Kong 500 · 500GB","USD","149.99","月付","香港 · 三网线路"],["Premium Hong Kong 1000 · 1TB","USD","279.99","月付","香港 · 三网线路"]]}]},
+    {"name":"Windscribe","slug":"windscribe-com","website":"https://windscribe.com/","category":"vpn","summary":"提供免费和 Pro 商用 VPN 套餐。",
+      "sources":[{"url":"https://windscribe.com/upgrade","note":"Pro 订阅的月付和年付分别按各期实收金额记录。","plans":[["Pro","USD","9","月付"],["Pro","USD","69","年付"]]}]},
+    {"name":"AzireVPN","slug":"azirevpn-com","website":"https://www.azirevpn.com/","category":"vpn","summary":"提供单月、三个月和一年期的 VPN 订阅。",
+      "sources":[{"url":"https://www.azirevpn.com/pricing","note":"按每个订阅期的付款总额记录。","plans":[["VPN 订阅","EUR","5","月付"],["VPN 订阅","EUR","12","3 个月"],["VPN 订阅","EUR","45","年付"]]}]},
+    {"name":"IVPN","slug":"ivpn-net","website":"https://www.ivpn.net/","category":"vpn","summary":"提供 Standard、Plus、Pro Suite 等 VPN 订阅。",
+      "sources":[{"url":"https://www.ivpn.net//pricing","note":"官网以美元按周、月、年分开列价。不同档位附带其他隐私功能。","plans":[
+        ["Standard","USD","2","周付"],["Standard","USD","6","月付"],["Standard","USD","60","年付"],
+        ["Plus","USD","3","周付"],["Plus","USD","8","月付"],["Plus","USD","80","年付"],
+        ["Pro Suite","USD","4","周付"],["Pro Suite","USD","10","月付"],["Pro Suite","USD","100","年付"]]}]},
+    {"name":"Privacy.com","slug":"privacy-com","website":"https://www.privacy.com/","category":"virtual-card","summary":"面向美国用户的虚拟卡、限额管理和订阅方案。",
+      "sources":[{"url":"https://www.privacy.com/pricing","note":"美国计划的订阅费。外币交易费用随档位而变，另看官网。","plans":[
+        ["Personal","USD","0","月付","美国"],["Plus","USD","5","月付","美国"],["Pro","USD","10","月付","美国"],["Premium","USD","25","月付","美国"],
+        ["Plus","USD","60","年付","美国"],["Pro","USD","120","年付","美国"],["Premium","USD","300","年付","美国"]]}]},
+    {"name":"Bitrefill Card","slug":"bitrefill-card","website":"https://www.bitrefill.com/card/","category":"u-card","summary":"使用加密资产充值的实体和虚拟支付卡，卡片的适用地区和费用见官网。",
+      "sources":[{"url":"https://www.bitrefill.com/card/limits?hl=en","note":"连续 12 个月无消费或提现并且余额足够才按月收不活跃费。充值汇差和实体卡 ATM 另计。","plans":[["不活跃费","EUR","10","连续12个月不活跃后每月","适用发卡地区"]]}]},
+    {"name":"Payoneer","slug":"payoneer","website":"https://payoneer.com/","category":"payment-accounts","summary":"跨境收款、提款和支付卡服务。",
+      "sources":[{"url":"https://www.payoneer.com/pricing/","note":"公开费用表中的卡年费。各地账户要求和定价可能不同。","plans":[["支付卡年费","USD","29.95","卡年费","费用表默认口径"]]}]},
+    {"name":"netcup","slug":"netcup-com","website":"https://www.netcup.com/","category":"vps","summary":"提供 x86 VPS 与其他服务器产品，多档规格按合同期计费。",
+      "sources":[{"url":"https://www.netcup.com/en/server/vps","note":"源页为 12 个月合同、每月起价，采用含 19% VAT 的价格。","plans":[
+        ["VPS 500 G12.5 · 2核4GB","EUR","9.50","12 个月合约 · 每月起价","含 19% VAT"],["VPS 1000 G12.5 · 4核8GB","EUR","16.68","12 个月合约 · 每月起价","含 19% VAT"],
+        ["VPS 2000 G12.5 · 8核16GB","EUR","30.96","12 个月合约 · 每月起价","含 19% VAT"],["VPS 4000 G12.5 · 12核32GB","EUR","52.16","12 个月合约 · 每月起价","含 19% VAT"],
+        ["VPS 8000 G12.5 · 16核64GB","EUR","77.16","12 个月合约 · 每月起价","含 19% VAT"]]}]},
+    {"name":"Hostinger","slug":"hostinger-vps","website":"https://www.hostinger.com/vps-hosting","category":"vps","summary":"经营 KVM VPS，公开列出首期总额和续费费率。",
+      "sources":[{"url":"https://www.hostinger.com/vps-hosting","note":"美国美元页面。首期报价是 24 个月预付总额，续费报价是同期限下的月均价。","plans":[
+        ["KVM 1 · 1核4GB","USD","155.76","首期 24 个月总额","美元官网"],["KVM 2 · 2核8GB","USD","210.96","首期 24 个月总额","美元官网"],
+        ["KVM 4 · 4核16GB","USD","311.76","首期 24 个月总额","美元官网"],["KVM 8 · 8核32GB","USD","623.76","首期 24 个月总额","美元官网"],
+        ["KVM 1 · 1核4GB","USD","11.99","续费 24 个月 · 月均","美元官网"],["KVM 2 · 2核8GB","USD","14.99","续费 24 个月 · 月均","美元官网"],
+        ["KVM 4 · 4核16GB","USD","28.99","续费 24 个月 · 月均","美元官网"],["KVM 8 · 8核32GB","USD","49.99","续费 24 个月 · 月均","美元官网"]]}]}
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "observed": "2026-11-16",
+  "merchants": [
+    {"slug":"openrouter","name":"OpenRouter","website":"https://openrouter.ai/","summary":"通过统一接口接入不同提供商的模型。",
+      "sources":[{"url":"https://openrouter.ai/api/v1/models","note":"OpenRouter 公开模型目录当次返回的按量价。路由与提供商可能改变费率，充值手续费另见平台定价。",
+        "rates":[["DeepSeek V3.2","USD","0.26","0.38"],["Claude Sonnet 4.6","USD","3","15"],["GPT-5.5","USD","5","30"],["Kimi K2.5","USD","0.5","2.5"],["MiniMax M3","USD","0.3","1.2"]]}]},
+    {"slug":"vercel-ai-gateway","name":"Vercel AI Gateway","website":"https://vercel.com/ai-gateway","summary":"Vercel 的多厂商模型网关，提供统一接口和模型路由。",
+      "sources":[
+        {"url":"https://vercel.com/ai-gateway/models/deepseek-v3.2","note":"模型公开起价，选用其他提供商时可能不同。","rates":[["DeepSeek V3.2","USD","0.26","0.38"]]},
+        {"url":"https://vercel.com/ai-gateway/models/claude-sonnet-4.6","note":"模型公开起价，选用其他提供商时可能不同。","rates":[["Claude Sonnet 4.6","USD","3","15"]]},
+        {"url":"https://vercel.com/ai-gateway/models/gpt-5.5","note":"模型公开起价，选用其他提供商时可能不同。","rates":[["GPT-5.5","USD","5","30"]]}]},
+    {"slug":"aihubmix","name":"AIHubMix","website":"https://aihubmix.com/","summary":"统一接入 OpenAI、Anthropic、Google 和其他模型供应商的 API 平台。",
+      "sources":[
+        {"url":"https://aihubmix.com/model/claude-sonnet-4-6","note":"模型页面基础输入、输出标价，缓存费用另计。","rates":[["Claude Sonnet 4.6","USD","3","15"]]},
+        {"url":"https://aihubmix.com/model/deepseek-v3.2","note":"模型页面基础输入、输出标价，缓存费用另计。","rates":[["DeepSeek V3.2","USD","0.58","1.68"]]},
+        {"url":"https://aihubmix.com/model/gpt-5.5","note":"资料按模型页面公开标价记录，长上下文和缓存另看原价目。","rates":[["GPT-5.5","USD","5","30"]]}]},
+    {"slug":"siliconflow","name":"硅基流动 SiliconFlow","website":"https://www.siliconflow.cn/","summary":"面向中文开发者的多模型推理 API 平台，提供人民币价目表。",
+      "sources":[{"url":"https://www.siliconflow.cn/pricing","note":"国内平台对话模型价目，记录普通版本的输入、输出基础费率，缓存不计入。",
+        "rates":[["DeepSeek V3.2","CNY","4","6"],["DeepSeek V4 Pro","CNY","12","24"],["GLM-5.3","CNY","8","28"],["GLM-5.3-Flash","CNY","0.8","2.8"],["GLM-5.2","CNY","8","28"]]}]},
+    {"slug":"ppio-model-api","name":"PPIO 派欧云模型服务","website":"https://ppio.com/","summary":"提供多家模型的按量推理 API，语言模型与图像等服务分开计费。",
+      "sources":[{"url":"https://ppio.com/pricing?from=ppinfra&gpu=1","note":"取公开语言模型表的输入、输出单价，缓存列另列。",
+        "rates":[["DeepSeek V4 Pro","CNY","9","27"],["DeepSeek V4 Pro 0813","CNY","9","27"],["DeepSeek V4 Flash 0731","CNY","3","9"],["DeepSeek V4.1 Flash 1017","CNY","2","8"],["Kimi K2.5","CNY","4","21"]]}]},
+    {"slug":"deepinfra-com","name":"DeepInfra","website":"https://deepinfra.com/","summary":"通过模型 API 提供多品牌开源模型的推理服务。",
+      "sources":[{"url":"https://deepinfra.com/pricing","note":"只取标准按量输入、输出价。Flex、缓存与专用端点另计。",
+        "rates":[["DeepSeek V3.2","USD","0.26","0.38"],["DeepSeek V4 Pro","USD","1.3","2.6"],["DeepSeek V4 Flash 0731","USD","0.06","0.18"],["DeepSeek V3.1","USD","0.25","0.95"]]}]},
+    {"slug":"together-ai","name":"Together AI","website":"https://www.together.ai/","summary":"提供开源和第三方模型的无服务器推理 API 及按需端点。",
+      "sources":[{"url":"https://www.together.ai/pricing","note":"只取 Serverless Inference 在线调用的基础输入、输出单价。",
+        "rates":[["DeepSeek V4 Pro 0813","USD","1.32","3.96"],["DeepSeek V4 Flash 0731","USD","0.14","0.28"],["DeepSeek V4.1 Flash 1017","USD","0.3","1.2"],["MiniMax M3","USD","0.3","1.2"],["GLM-5.3","USD","1.4","4.4"],["GLM-5.2","USD","1.4","4.4"],["GLM-5.3-Flash","USD","0.15","0.5"],["GPT-OSS 120B","USD","0.15","0.6"]]}]},
+    {"slug":"fireworks-ai","name":"Fireworks AI","website":"https://fireworks.ai/inference","summary":"提供多模型推理服务，包括无服务器 API 及专用部署。",
+      "sources":[{"url":"https://fireworks.ai/pricing","note":"公开标准无服务器费率，排除缓存命中价和美国限定线路溢价。",
+        "rates":[["DeepSeek V4.1 Flash 1017","USD","0.3","1.2"],["MiniMax M3","USD","0.3","1.2"],["GLM-5.3-Flash","USD","0.15","0.5"],["GPT-OSS 120B","USD","0.15","0.6"]]}]},
+    {"slug":"novita-ai","name":"Novita AI","website":"https://novita.ai/","summary":"提供多种大模型的按量服务与 OpenAI 兼容推理接口。",
+      "sources":[{"url":"https://novita.ai/ja/console/pricing-console","note":"官网控制台的公开美元价目，取非缓存输入和输出报价。",
+        "rates":[["DeepSeek V3.2","USD","0.269","0.4"],["DeepSeek V4 Pro","USD","1.6","3.2"],["DeepSeek V4 Pro 0813","USD","1.32","3.96"],["DeepSeek V4 Flash 0731","USD","0.44","1.32"],["DeepSeek V3.1","USD","0.27","1"]]}]},
+    {"slug":"zenmux","name":"ZenMux","website":"https://zenmux.ai/","summary":"多模型 API 聚合平台，提供按量调用和 Builder Plan 订阅。",
+      "sources":[{"url":"https://zenmux.ai/docs/zh/guide/subscription","note":"订阅含 API 调用。Flows 配额及可用模型依套餐变化，免费版仅有网页体验。",
+        "plans":[["Builder Plan Starter","USD","20"],["Builder Plan Max","USD","100"],["Builder Plan Ultra","USD","200"]]}]},
+    {"slug":"302-ai","name":"302.AI","website":"https://302.ai/","summary":"按量提供语言、图像和其他模型 API 的聚合服务。",
+      "sources":[{"url":"https://302.ai/?product_type=api","note":"公开 API 超市的常规档报价，排除限时促销渠道。",
+        "rates":[["Claude Fable 5.2","USD","8","40"]]}]}
+  ]
+}

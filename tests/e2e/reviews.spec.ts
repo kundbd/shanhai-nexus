@@ -82,6 +82,7 @@ test("members can review privately by account and admins can publish or block co
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
     await page.goto(merchant);
 
+    await editor.getByText("评论屏蔽词",{exact:true}).click();
     const words=editor.getByRole("textbox",{name:"屏蔽词清单"});
     await editor.getByRole("button",{name:"加入参考词"}).click();
     await expect(words).toHaveValue(/加微信进福利群/);
@@ -118,8 +119,10 @@ test("members can review privately by account and admins can publish or block co
     const postURL=page.url();
 
     await editor.goto("/admin/reviews");
-    await editor.getByRole("link",{name:"管理社区帖子"}).click();
-    await expect(editor.getByRole("heading",{name:"社区帖子管理"})).toBeVisible();
+    await editor.getByRole("navigation",{name:"后台栏目"}).getByText("更多管理",{exact:true}).click();
+    await editor.getByRole("link",{name:"已发布帖子",exact:true}).click();
+    await expect(editor.getByRole("heading",{name:"已发布帖子",exact:true})).toBeVisible();
+    await editor.getByText("社区屏蔽词",{exact:true}).click();
     await expect(words).toHaveValue(/操作很顺手/);
     await words.fill(`${await words.inputValue()}\n社区测试短语`);
     await editor.getByRole("button",{name:"保存屏蔽词"}).click();
@@ -127,6 +130,7 @@ test("members can review privately by account and admins can publish or block co
     await expect(editor.getByRole("status")).toContainText("已保存屏蔽词");
     await expect(editor.locator("article").filter({hasText:published})).toContainText("命中屏蔽词 · 社区测试短语");
     await editor.goto("/admin/reviews");
+    await editor.getByText("评论屏蔽词",{exact:true}).click();
     await expect(words).toHaveValue(/社区测试短语/);
 
     const draft="带空格的社区 测试短语";

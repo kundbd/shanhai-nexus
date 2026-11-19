@@ -12,6 +12,7 @@ import { publicLifecycleLabels,operators,publicWebsiteLabel,merchantFields,deliv
 import { directory,one } from "@/lib/directory/db";
 import { reviewSummary } from "@/lib/directory/reviews";
 import { storefrontTierNeedsReview } from "@/lib/directory/price-board";
+import { productHref,productName } from "@/lib/directory/products";
 
 export const dynamic = "force-dynamic";
 type Props = {params:Promise<{slug:string}>;searchParams:Promise<Params>};
@@ -33,8 +34,6 @@ export default async function Profile({params,searchParams}:Props) {
   const details = JSON.parse(site.merchant_details) as Record<string,string>;
   const showDetails=site.status!=="listed";
   const productAdmission=site.product_observed_at;
-  const recordLabel=productAdmission?"报价观察日期":"档案更新";
-  const recordDate=day(productAdmission||site.updated_at);
   const reachableOn=site.reachability==="reachable"?site.checked_at:null;
   const prices = publicPrices(site.id);
   const current = latestPrices(prices);
@@ -69,10 +68,6 @@ export default async function Profile({params,searchParams}:Props) {
         </div>
         <div className="profile-merchant-name"><MerchantAvatar site={site} size={56}/><h1>{site.name}</h1></div>
         {site.summary&&<p>{site.summary}</p>}
-        <dl className="profile-summary">
-          <div><dt>运营状态</dt><dd>{publicLifecycleLabels[site.lifecycle]}</dd></div>
-          <div><dt>{recordLabel}</dt><dd>{recordDate}</dd></div>
-        </dl>
       </div>
       <div className="profile-actions">
         <a className="button" href={site.website} rel="noreferrer" target="_blank">{site.hosted_storefront?"访问店铺":"访问官网"}</a>
@@ -83,8 +78,9 @@ export default async function Profile({params,searchParams}:Props) {
       <div className="profile-content">
         <section id="basics"><h2>基本信息</h2><dl className="fact-grid">
           <div><dt>分类</dt><dd>{site.category_label}</dd></div><div><dt>公开联系方式</dt><dd>{(showDetails&&site.contact)||noData}</dd></div>
-          <div><dt>收录日期</dt><dd>{day(site.added_at)}</dd></div><div><dt>{recordLabel}</dt><dd>{recordDate}</dd></div>
-          <div><dt>运营性质</dt><dd>{operators[site.operator_kind]}</dd></div><div><dt>运营状态</dt><dd>{publicLifecycleLabels[site.lifecycle]}</dd></div>
+          <div><dt>收录日期</dt><dd>{day(site.added_at)}</dd></div>
+          {productAdmission&&<div><dt>报价观察日期</dt><dd>{day(productAdmission)}</dd></div>}
+          <div><dt>运营性质</dt><dd>{operators[site.operator_kind]}</dd></div>
           <div><dt>官网可达性</dt><dd>{publicWebsiteLabel}{reachableOn?` · ${day(reachableOn)}`:""}</dd></div>
           {site.website_language&&<div><dt>官网语言</dt><dd>{site.website_language}</dd></div>}
           {!!tags.length&&<div><dt>服务标签</dt><dd>{tags.join("、")}</dd></div>}
@@ -93,7 +89,7 @@ export default async function Profile({params,searchParams}:Props) {
           {storefronts.filter(({url})=>url!==site.website).map(({url,host})=><div key={url}><dt>关联店铺</dt><dd><External href={url}>{host+new URL(url).pathname}</External></dd></div>)}
         </dl>{reachableOn&&<p className="section-note">可达性日期对应公开网页检查记录。节点速度、接口质量和服务稳定性需另行实测。</p>}</section>
         <section id="prices"><h2>{sections.prices}</h2>
-          {current.length ? <><p className="section-note">{productCount?`已收录 ${productCount} 项商品标价。实际金额、库存和交付条件以原商品页及结算页为准。`:"公开报价按所示日期记录。实际金额以商家对应地区、服务周期和结算页为准。"}</p><CurrentPrices rows={current} site={site} collapse={productCount>6}/></> : <p className="plain-empty">暂无公开报价。</p>}
+          {current.length ? <><p className="section-note">{productCount?`已收录 ${productCount} 项商品标价。实际金额、库存和交付条件以原商品页及结算页为准。`:"公开报价按所示日期记录。实际金额以商家对应地区、服务周期和结算页为准。"}</p><CurrentPrices rows={current} site={site} collapse={productCount>6} linkProducts={site.lifecycle!=="closed"}/></> : <p className="plain-empty">暂无公开报价。</p>}
           {!!history.length && <details className="historical"><summary>历史价格记录</summary><PriceList rows={history} site={site}/></details>}
         </section>
         <section id="observation"><h2>山海观察</h2>{editorials.length ? editorials.map((entry)=><article className="inline-observation" key={entry.id}><h3><Link href={observationHref(entry.slug)}>{entry.title}</Link></h3>{entry.origin==="third_party"&&<ThirdPartyReviewNote/>}<p>{entry.summary}</p><div className="editorial-text">{entry.body}</div><Evidence editorial={entry.id}/><small>编辑日期 · {day(entry.updated_at)}</small></article>) : <p className="plain-empty">暂无编辑观察。</p>}</section>
@@ -112,27 +108,29 @@ export default async function Profile({params,searchParams}:Props) {
   </div>;
 }
 
-type PriceListProps = {rows:ReturnType<typeof publicPrices>;site:Pick<Site,"category_slug"|"slug">};
+type PriceListProps = {rows:ReturnType<typeof publicPrices>;site:Pick<Site,"category_slug"|"slug">;linkProducts?:boolean};
 
-function CurrentPrices({rows,site,collapse}:PriceListProps&{collapse:boolean}) {
-  if (!collapse) return <PriceList rows={rows} site={site}/>;
+function CurrentPrices({rows,site,collapse,linkProducts}:PriceListProps&{collapse:boolean}) {
+  if (!collapse) return <PriceList rows={rows} site={site} linkProducts={linkProducts}/>;
   const previewSize=6;
   return <>
-    <PriceList rows={rows.slice(0,previewSize)} site={site}/>
+    <PriceList rows={rows.slice(0,previewSize)} site={site} linkProducts={linkProducts}/>
     <details className="product-overflow">
       <summary><span className="product-expand">展开其余 {rows.length-previewSize} 项</span><span className="product-collapse">收起其余商品</span></summary>
-      <PriceList rows={rows.slice(previewSize)} site={site}/>
+      <PriceList rows={rows.slice(previewSize)} site={site} linkProducts={linkProducts}/>
     </details>
   </>;
 }
 
-function PriceList({rows,site}:PriceListProps) {
+function PriceList({rows,site,linkProducts}:PriceListProps) {
   return <ul className="price-list">{rows.map((price)=>{
     const period=quoteDetailLabel(price.period);
     const context=[quoteDetailLabel(price.region),day(price.recorded_at)].filter(Boolean).join(" · ");
     return <li key={price.id}>
       <div className="profile-price-details">
-        <div className="profile-price-name"><OfferIcon price={price} site={site}/><strong>{price.product_title||price.plan}</strong></div>
+        <div className="profile-price-name"><OfferIcon price={price} site={site}/><strong>
+          {linkProducts?<Link href={productHref(price)} prefetch={false}>{productName(price)}</Link>:productName(price)}
+        </strong></div>
         {price.product_title&&price.product_title!==price.plan&&<span>{storefrontTierNeedsReview(price)?"套餐归类待核对":price.plan}</span>}
         <span>{context}</span>
         {price.notes && <p>{price.notes}</p>}

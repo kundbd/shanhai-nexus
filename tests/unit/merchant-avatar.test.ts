@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createHash } from "node:crypto";
 import { openDirectory } from "../../lib/directory/db";
-import { declaredAvatarUrls,prepareAvatar } from "../../lib/directory/merchant-avatar-collection";
+import { avatarCollector,declaredAvatarUrls,prepareAvatar } from "../../lib/directory/merchant-avatar-collection";
 import { findMerchantAvatar,saveMerchantAvatar } from "../../lib/directory/merchant-avatar";
 import { getSite } from "../../lib/directory/read";
 
@@ -14,6 +14,15 @@ test("hosted shops require a logo explicitly bound to their own shop URL",()=>{
   assert.deepEqual(declaredAvatarUrls(platform+organization("/store/two"),page,true),[]);
   assert.deepEqual(declaredAvatarUrls(platform+organization("/store/one"),page,true),["https://shop.example.com/logos/one.png"]);
   assert.deepEqual(declaredAvatarUrls(platform,page,false),["https://shop.example.com/platform.png","https://shop.example.com/favicon.ico"]);
+  assert.deepEqual(declaredAvatarUrls('<link rel="apple-touch-icon-precomposed" href="/touch.png">',page,false),
+    ["https://shop.example.com/touch.png","https://shop.example.com/favicon.ico"]);
+});
+
+test("a restricted storefront is skipped before reading its page or robots.txt",async()=>{
+  const collect=avatarCollector(async()=>assert.fail("restricted source"),{restricted:()=>true});
+  const result=await collect({id:1,name:"Test",slug:"test",website:"https://shop.example.com/store/one",hosted_storefront:1});
+  assert.equal(result.avatar,null);
+  assert.match(result.reason,/来源限制/);
 });
 
 test("avatar output is rasterized, saved with provenance, and isolated from drafts and stale websites",async()=>{

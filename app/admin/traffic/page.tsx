@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminNav,requireAdmin } from "@/components/directory/admin";
+import { requireAdmin } from "@/components/directory/admin";
 import { directory } from "@/lib/directory/db";
 import { trafficReport } from "@/lib/directory/traffic";
 
@@ -18,7 +18,6 @@ export default async function TrafficAdmin() {
     <div className="catalog-heading admin-dashboard-heading"><div><h1>访问统计</h1><p>截至北京时间 {timestamp.format(asOf)}</p></div>
       <form action="/admin/traffic" method="get"><button className="button secondary" type="submit">刷新数据</button></form>
     </div>
-    <AdminNav/>
     <section className="traffic-summary" aria-labelledby="traffic-total-label">
       <h2 id="traffic-total-label">最近 24 小时浏览人数</h2>
       <strong data-traffic-total={total}>{number.format(total)}</strong>

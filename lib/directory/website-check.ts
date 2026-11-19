@@ -53,7 +53,7 @@ export function robotsPermits(text:string,path:string) {
   return permitted;
 }
 
-export const websiteVisit=(proxy?:ProxyRoute):Visit=>(url,signal,maxBytes)=>requestPublicNetwork(url,{signal,maxBytes,proxy,
+export const websiteVisit=(proxy?:ProxyRoute,options:{compressed?:boolean}={}):Visit=>(url,signal,maxBytes)=>requestPublicNetwork(url,{signal,maxBytes,proxy,compressed:options.compressed,
   headers:{"user-agent":userAgent,accept:"text/html,text/plain,application/xhtml+xml,application/json,application/xml,text/xml,text/csv"}});
 const visit:Visit=(url,signal,maxBytes)=>websiteVisit(parseProxy(process.env.MERCHANT_PROXY))(url,signal,maxBytes);
 

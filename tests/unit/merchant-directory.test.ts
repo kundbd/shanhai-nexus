@@ -101,9 +101,9 @@ test("licensed intake is idempotent, keeps restricted sources out and publishes 
 
 test("official intake requires same registrable source and merchant submissions need recorded consent",()=>{
   using db=openDirectory(":memory:");
-  const source={pipeline:"connections",access:"official",source_name:"依法查阅官网",source_url:"https://example.org/",
+  const source={pipeline:"vps",access:"official",source_name:"依法查阅官网",source_url:"https://example.org/",
     evidence_url:"https://example.org/"};
-  const row={name:"测试网络商家",url:"https://example-shop.net",category:"airport",summary:"公开节点订阅说明",
+  const row={name:"测试云服务商家",url:"https://example-shop.net",category:"vps",summary:"公开云服务器服务说明",
     source_kind:"official",source_url:"https://example.org/about",excerpt:"编辑说明"};
   const run=recordCoverage(db,source,JSON.stringify([row]),"json","test");
   const id=getBatch(run.batch_id!,db)[0].id;

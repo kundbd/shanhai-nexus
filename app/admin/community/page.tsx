@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminNav,Notice,requireAdmin } from "@/components/directory/admin";
+import { Notice,requireAdmin } from "@/components/directory/admin";
 import { param,type Params } from "@/components/directory/catalog-page";
 import { day } from "@/components/directory/display";
 import { ReviewWordsEditor } from "@/components/directory/review-words-editor";
@@ -22,11 +22,10 @@ export default async function CommunityAdmin({searchParams}:{searchParams:Promis
   const words=reviewBlockedWords(db);
   const aiEnabled=moderationConfig().enabled;
   return <div className="frame page admin-page">
-    <div className="catalog-heading"><h1>社区帖子管理</h1></div><AdminNav/><Notice input={input}/>
-    <p><Link className="text-link" href="/admin/moderation">审核待发布的帖子和附件</Link></p>
-    <details className="admin-import-row" open>
+    <div className="catalog-heading"><h1>已发布帖子</h1></div><Notice input={input}/>
+    <details id="blocked-words" className="admin-fold">
       <summary>社区屏蔽词</summary>
-      <ReviewWordsEditor initialWords={words.map(({word})=>word).join("\n")} savedCount={words.length} community/>
+      <div className="admin-fold-body"><ReviewWordsEditor initialWords={words.map(({word})=>word).join("\n")} savedCount={words.length} community/></div>
     </details>
     {!rows.length&&<p className="plain-empty">暂无公开帖子。</p>}
     {rows.slice(0,feedSize).map(row=>{

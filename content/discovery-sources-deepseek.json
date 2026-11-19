@@ -1,0 +1,62 @@
+[
+  {
+    "key": "deepseek-ai-retail",
+    "name": "DeepSeek Search · AI 代充与卡网",
+    "pipeline": "ai-retail",
+    "kind": "deepseek",
+    "access": "leads",
+    "url": "https://api-docs.deepseek.com/zh-cn/api/search/",
+    "evidence_url": "https://cdn.deepseek.com/policies/zh-CN/deepseek-open-platform-terms-of-service.html",
+    "notes": "按官方 API 返回的公开网址发现线索。商家资料从官网独立核验。",
+    "enabled": false,
+    "interval_hours": 24
+  },
+  {
+    "key": "deepseek-connections",
+    "name": "DeepSeek Search · 机场与 VPN",
+    "pipeline": "connections",
+    "kind": "deepseek",
+    "access": "leads",
+    "url": "https://api-docs.deepseek.com/zh-cn/api/search/",
+    "evidence_url": "https://cdn.deepseek.com/policies/zh-CN/deepseek-open-platform-terms-of-service.html",
+    "notes": "按官方 API 返回的公开网址发现线索。商家资料从官网独立核验。",
+    "enabled": false,
+    "interval_hours": 24
+  },
+  {
+    "key": "deepseek-payments",
+    "name": "DeepSeek Search · U 卡与跨境支付",
+    "pipeline": "payments",
+    "kind": "deepseek",
+    "access": "leads",
+    "url": "https://api-docs.deepseek.com/zh-cn/api/search/",
+    "evidence_url": "https://cdn.deepseek.com/policies/zh-CN/deepseek-open-platform-terms-of-service.html",
+    "notes": "按官方 API 返回的公开网址发现线索。商家资料从官网独立核验。",
+    "enabled": false,
+    "interval_hours": 72
+  },
+  {
+    "key": "deepseek-ai-relay",
+    "name": "DeepSeek Search · AI API 中转",
+    "pipeline": "ai-relay",
+    "kind": "deepseek",
+    "access": "leads",
+    "url": "https://api-docs.deepseek.com/zh-cn/api/search/",
+    "evidence_url": "https://cdn.deepseek.com/policies/zh-CN/deepseek-open-platform-terms-of-service.html",
+    "notes": "按官方 API 返回的公开网址发现线索。商家资料从官网独立核验。",
+    "enabled": false,
+    "interval_hours": 72
+  },
+  {
+    "key": "deepseek-vps",
+    "name": "DeepSeek Search · VPS 与云服务",
+    "pipeline": "vps",
+    "kind": "deepseek",
+    "access": "leads",
+    "url": "https://api-docs.deepseek.com/zh-cn/api/search/",
+    "evidence_url": "https://cdn.deepseek.com/policies/zh-CN/deepseek-open-platform-terms-of-service.html",
+    "notes": "按官方 API 返回的公开网址发现线索。商家资料从官网独立核验。",
+    "enabled": false,
+    "interval_hours": 168
+  }
+]

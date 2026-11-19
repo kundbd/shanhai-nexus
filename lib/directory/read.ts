@@ -1,8 +1,8 @@
 import type { SQLInputValue } from "node:sqlite";
 import { all, directory, one } from "./db";
 import type { Category, Claim, Editorial, Incident, Price, Site, Source, Status } from "./types";
-import { categoryGroups } from "./taxonomy";
-import { priceRecordedTime,storefrontTierNeedsReview } from "./price-board";
+import { categoryGroups,isRetiredCategory } from "./taxonomy";
+import { catalogStartingPrices,priceRecordedTime,storefrontTierNeedsReview } from "./price-board";
 import { publicPriceEvidence,storefrontPriceEvidence } from "./public-quote-policy";
 import { directoryCategoryTerms,directorySearch } from "./search-query";
 
@@ -24,11 +24,17 @@ const siteSelect = `SELECT s.*, a.digest avatar_digest, coalesce(d.domain,
 
 export const listCategories = (db = directory()) =>
   all<Category>(db, "SELECT * FROM categories ORDER BY parent_slug IS NOT NULL, parent_slug, position, label");
+export const listPublicCategories = (db = directory()) =>
+  listCategories(db).filter(({slug}) => !isRetiredCategory(slug));
 export const getCategory = (slug: string, db = directory()) =>
-  one<Category>(db, "SELECT * FROM categories WHERE slug=?", slug);
+  isRetiredCategory(slug) ? undefined : one<Category>(db, "SELECT * FROM categories WHERE slug=?", slug);
 
 export function getSite(slug: string, db = directory()) {
   return one<Site>(db, `${siteSelect} WHERE s.slug=? AND s.publication='published'`, slug.slice(0,90));
+}
+
+export function getSiteById(id:number, db=directory()) {
+  return one<Site>(db,`${siteSelect} WHERE s.id=? AND s.publication='published'`,id);
 }
 
 export function getDomains(site: number, db = directory()) {
@@ -56,7 +62,7 @@ export function publicPrices(site: number, db = directory()) {
 }
 
 type PriceIdentity=Pick<Price,"reported_item_url"|"plan"|"currency"|"region"|"period"|"storefront_observed"|"source_url">;
-const priceIdentity=(price:PriceIdentity)=>price.reported_item_url||
+export const priceIdentity=(price:PriceIdentity)=>price.reported_item_url||
   JSON.stringify([price.plan,price.currency,price.region,price.period,price.storefront_observed?price.source_url:undefined]);
 
 export function latestPrices(prices: readonly Price[]) {
@@ -87,7 +93,8 @@ export function publicClaims(editorial: number, db = directory()) {
     LEFT JOIN sources s ON c.source_id=s.id AND s.verified=1 WHERE editorial_id=? AND (c.nature='pending' OR s.id IS NOT NULL) ORDER BY c.id`, editorial);
 }
 
-export type DirectoryFilter = { q?: string; category?: string; group?:string; status?: string; reachability?:string; lifecycle?:string; operator?:string; official?:string; sort?: string; page?: number; size?: number; showAll?: boolean };
+export type DirectoryFilter = { q?: string; category?: string; group?:string; status?: string; reachability?:string; lifecycle?:string; operator?:string; official?:string;
+  sort?: string; page?: number; size?: number; showAll?: boolean; includeStartingPrices?:boolean };
 
 function filters(input: DirectoryFilter) {
   const clauses = ["s.publication='published'"];
@@ -123,7 +130,7 @@ function filters(input: DirectoryFilter) {
   return { where: clauses.join(" AND "), params };
 }
 
-export type SitePriceMatch={label:string;storefront:boolean};
+export type SitePriceMatch=Pick<Price,"plan"|"product_title">&{label:string;storefront:boolean};
 type SearchPrice=PriceIdentity&Pick<Price,"site_id"|"product_title"|"amount_minor">&{ category_label:string;category_slug:string };
 const subscriptionCategories=new Set(["ai-card","ai-topup","ai-platforms","ai-subscriptions"]);
 
@@ -161,7 +168,7 @@ function matchingPublicPrices(db:ReturnType<typeof directory>,where:string,param
     const categoryScore=search.hasQuoteFilter?scoreText(row.category_label,row)*4:0;
     const score=Math.max(titleScore,usablePlanScore,categoryScore);
     if (score>(matches.get(row.site_id)?.score??0)) {
-      matches.set(row.site_id,{label:title&&titleScore>=usablePlanScore?title:row.plan,storefront:row.storefront_observed===1,score});
+      matches.set(row.site_id,{label:title&&titleScore>=usablePlanScore?title:row.plan,plan:row.plan,product_title:row.product_title,storefront:row.storefront_observed===1,score});
     }
   }
   return matches;
@@ -170,14 +177,30 @@ function matchingPublicPrices(db:ReturnType<typeof directory>,where:string,param
 export function listSites(input: DirectoryFilter = {}, db = directory()) {
   const { where, params } = filters(input);
   const order = input.sort === "name" ? "s.name COLLATE NOCASE, s.id" : "s.updated_at DESC, s.id DESC";
+  const priceDirection=input.sort==="price-asc"?1:input.sort==="price-desc"?-1:0;
   const size = Number.isInteger(input.size) ? Math.min(100, Math.max(1, input.size!)) : 12;
   const requestPage = Number.isInteger(input.page) ? Math.max(1,input.page!) : 1;
+  function pageRows(rows:Site[],page:number,paginate:boolean) {
+    const rankedPrices=priceDirection?catalogStartingPrices(db,rows.map(({id})=>id)):undefined;
+    if (rankedPrices) rows.sort((a,b)=>{
+      const first=rankedPrices.get(a.id);
+      const second=rankedPrices.get(b.id);
+      const left=first?.referenceAt?undefined:first?.cnyAmount;
+      const right=second?.referenceAt?undefined:second?.cnyAmount;
+      if (left===undefined||right===undefined) return Number(left===undefined)-Number(right===undefined);
+      return priceDirection*(left-right);
+    });
+    const visible=paginate&&!input.showAll?rows.slice((page-1)*size,page*size):rows;
+    const startingPrices=rankedPrices??(input.includeStartingPrices?catalogStartingPrices(db,visible.map(({id})=>id)):undefined);
+    return {rows:visible,startingPrices};
+  }
   if (!input.q?.trim()) {
     const total = one<{ n: number }>(db, `SELECT count(*) n FROM sites s WHERE ${where}`, ...params)!.n;
     const page = Math.min(requestPage, Math.max(1, Math.ceil(total / size)));
-    const rows = all<Site>(db, `${siteSelect} WHERE ${where} ORDER BY ${order}${input.showAll ? "" : " LIMIT ? OFFSET ?"}`,
-      ...params, ...(input.showAll ? [] : [size, (page - 1) * size]));
-    return { rows, total, page, size, priceMatches:new Map<number,SitePriceMatch>() };
+    const limit=!input.showAll&&!priceDirection;
+    const rows = all<Site>(db, `${siteSelect} WHERE ${where} ORDER BY ${order}${limit ? " LIMIT ? OFFSET ?" : ""}`,
+      ...params, ...(limit ? [size, (page - 1) * size] : []));
+    return { ...pageRows(rows,page,Boolean(priceDirection)), total, page, size, priceMatches:new Map<number,SitePriceMatch>() };
   }
   const search=directorySearch(input.q);
   const priceMatches=matchingPublicPrices(db,where,params,search);
@@ -215,7 +238,7 @@ export function listSites(input: DirectoryFilter = {}, db = directory()) {
   }).filter(({ score }) => score > 0);
   if (!input.sort || input.sort === "relevance") matches.sort((a, b) => b.score - a.score);
   const page = Math.min(requestPage, Math.max(1, Math.ceil(matches.length / size)));
-  return { rows: (input.showAll ? matches : matches.slice((page - 1) * size, page * size)).map(({ site }) => site), total: matches.length, page, size, priceMatches };
+  return { ...pageRows(matches.map(({ site })=>site),page,true), total: matches.length, page, size, priceMatches };
 }
 
 export function countPublicSites(input:DirectoryFilter,db=directory()) {

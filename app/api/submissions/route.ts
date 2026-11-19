@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { boundedText } from "@/lib/directory/imports";
 import { directory,one } from "@/lib/directory/db";
 import { choice,now,textValue,websiteUrl } from "@/lib/directory/validation";
-import { pipelineForCategory } from "@/lib/directory/taxonomy";
+import { isRetiredCategory,pipelineForCategory } from "@/lib/directory/taxonomy";
 
 export async function POST(request: NextRequest) {
   if (!request.headers.get("content-type")?.startsWith("application/x-www-form-urlencoded") || request.headers.get("sec-fetch-site") === "cross-site") {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const contact=merchant?textValue(form.get("merchant_contact"),180,"联系方式",false)||null:null;
     const offers=merchant?textValue(form.get("merchant_offers"),800,"套餐信息",false)||null:null;
     const operations=merchant?textValue(form.get("merchant_operations"),300,"运营说明",false)||null:null;
-    if (merchant&&(!pipelineForCategory(category!)||form.get("publication_consent")!=="1")) throw new Error("商家分类或授权无效");
+    if (merchant&&(!pipelineForCategory(category!)||isRetiredCategory(category!)||form.get("publication_consent")!=="1")) throw new Error("商家分类或授权无效");
     const body = textValue(form.get("body"),1600,"说明");
     if (body.length < 15) throw new Error("正文过短");
     const raw = textValue(form.get("url"),1500,"来源网址",kind === "site");

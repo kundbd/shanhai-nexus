@@ -1,0 +1,144 @@
+[
+  {
+    "pipeline": "ai-retail",
+    "source_name": "AI 零售公开域名待复核",
+    "source_url": "https://aibibi.app/shops",
+    "evidence_url": "https://aibibi.app/shops",
+    "access": "official",
+    "reason": "独立抽查发现，商家站缺可核验商品正文或受限，暂不公开，目录中任何报价与平台状态均未引用。",
+    "rows": [
+      {
+        "name": "AICC 数卡商城",
+        "url": "https://aicc98.xyz/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_aicc98_xyz",
+        "source_kind": "pending"
+      },
+      {
+        "name": "BurstPro 智选商城",
+        "url": "https://burstpro-ai.online/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_burstpro_ai_online",
+        "source_kind": "pending"
+      },
+      {
+        "name": "Hale AI",
+        "url": "https://hale.chat/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_hale_chat",
+        "source_kind": "pending"
+      },
+      {
+        "name": "HuaBF AI 软件商城",
+        "url": "https://c.huabfoo.store/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_c_huabfoo_store",
+        "source_kind": "pending"
+      },
+      {
+        "name": "刘能 AI",
+        "url": "https://liunenglabs.xyz/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_liunenglabs_xyz",
+        "source_kind": "pending"
+      },
+      {
+        "name": "秋九一卡网",
+        "url": "https://autnine.com/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_autnine_com",
+        "source_kind": "pending"
+      },
+      {
+        "name": "沐风小铺",
+        "url": "https://mfhubs.com/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_mfhubs_com",
+        "source_kind": "pending"
+      },
+      {
+        "name": "Morimm",
+        "url": "https://morimm.com/",
+        "category": "ai-card",
+        "source_url": "https://aibibi.app/shops/A_morimm_com",
+        "source_kind": "pending"
+      }
+    ]
+  },
+  {
+    "pipeline": "connections",
+    "source_name": "机场开放品牌的入口待复核",
+    "source_url": "https://jichangcloud.blog/dataset/",
+    "evidence_url": "https://jichangcloud.blog/dataset/",
+    "access": "official",
+    "reason": "仅使用开放许可品牌事实作为线索。商家入口的当前归属未确认，暂不公开。",
+    "rows": [
+      {
+        "name": "飞猫云",
+        "url": "https://guangs.flycataff.com/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/feimaoyun/",
+        "source_kind": "pending"
+      },
+      {
+        "name": "唯兔云",
+        "url": "https://guangs.v2yunvipaff.com/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/weituyun/",
+        "source_kind": "pending"
+      },
+      {
+        "name": "二猫云",
+        "url": "https://guangs.2maoyunaff.cc/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/ermaoyun/",
+        "source_kind": "pending"
+      },
+      {
+        "name": "可信云",
+        "url": "https://work.kosingaff.com/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/kosing/",
+        "source_kind": "pending"
+      },
+      {
+        "name": "极连云",
+        "url": "https://kdjhao.jlyvipaff.com/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/jilianyun/",
+        "source_kind": "pending"
+      },
+      {
+        "name": "速界",
+        "url": "https://guangs.speedworldaff.cc/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/speedworld/",
+        "source_kind": "pending"
+      }
+    ]
+  },
+  {
+    "pipeline": "ai-retail",
+    "source_name": "此前已入库商家复核",
+    "source_url": "https://bei-bei.shop/",
+    "evidence_url": "https://bei-bei.shop/",
+    "access": "official",
+    "reason": "编辑确认同一官网早已登记，仍记录该次发现用于来源及去重审计。",
+    "rows": [
+      {
+        "name": "贝贝商店",
+        "url": "https://bei-bei.shop/",
+        "category": "ai-card",
+        "source_url": "https://bei-bei.shop/",
+        "source_kind": "official"
+      },
+      {
+        "name": "星星小店",
+        "url": "https://xingbao-ai.shop/",
+        "category": "ai-card",
+        "source_url": "https://xingbao-ai.shop/",
+        "source_kind": "official"
+      }
+    ]
+  }
+]

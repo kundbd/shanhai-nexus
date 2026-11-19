@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { param,type Params } from "@/components/directory/catalog-page";
 import { brand } from "@/lib/brand";
 import { getSite } from "@/lib/directory/read";
-import { pipelines } from "@/lib/directory/taxonomy";
+import { isRetiredCategory,pipelines,publicPipelines } from "@/lib/directory/taxonomy";
 
-const merchantLabels:Record<string,string>={"ai-topup":"AI 会员代充","ai-card":"AI 卡网 / 发卡站","ai-relay":"API 中转",airport:"机场 / 节点订阅",vpn:"商业 VPN",
+const merchantLabels:Record<string,string>={"ai-topup":"AI 会员代充","ai-card":"AI 卡网 / 发卡站","ai-relay":"API 中转",
   "u-card":"U 卡","virtual-card":"虚拟信用卡","payment-accounts":"跨境支付","subscription-payment":"订阅支付",vps:"VPS / 云服务器"};
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export default async function Contact({searchParams}:{searchParams:Promise<Param
             <input type="hidden" name="kind" value="site"/><input type="hidden" name="merchant" value="1"/>
             <label>商家名称<input name="merchant_name" maxLength={100} required/></label>
             <label>所属分类<select name="merchant_category" required><option value="">请选择</option>
-              {Object.entries(pipelines).map(([key,pipeline])=><optgroup key={key} label={pipeline.label}>{pipeline.categories.map(category=><option key={category} value={category}>{merchantLabels[category]}</option>)}</optgroup>)}
+              {publicPipelines.map(key=><optgroup key={key} label={pipelines[key].label}>{pipelines[key].categories.filter(category=>!isRetiredCategory(category)).map(category=><option key={category} value={category}>{merchantLabels[category]}</option>)}</optgroup>)}
             </select></label>
             <label>商家官网<input name="url" type="url" maxLength={1500} required/></label>
             <label>公开资料说明<textarea name="body" required minLength={15} maxLength={1600} rows={3} placeholder="请说明服务类别和如何通过公开资料确认归属。"/></label>

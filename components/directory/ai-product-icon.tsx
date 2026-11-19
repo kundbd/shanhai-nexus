@@ -15,6 +15,15 @@ const brandIcons = new Map([
   ["GLM", "zai.svg"],
   ["MiniMax", "minimax-color.svg"],
   ["Kimi", "kimi-color.svg"],
+  ["Windsurf", "windsurf.svg"],
+  ["GitHub Copilot", "githubcopilot.svg"],
+  ["Microsoft Copilot", "copilot-color.svg"],
+  ["Suno", "suno.svg"],
+  ["Midjourney", "midjourney.svg"],
+  ["Notion AI", "notion.svg"],
+  ["Qwen", "qwen-color.svg"],
+  ["Doubao", "doubao-color.svg"],
+  ["Antigravity", "antigravity-color.svg"],
 ]);
 
 export function AiProductIcon({ product, fallback = null }: { product: string; fallback?: ReactNode }) {

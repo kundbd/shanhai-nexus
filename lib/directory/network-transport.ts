@@ -3,6 +3,7 @@ import { Agent as HttpAgent, request as http } from "node:http";
 import { Agent as HttpsAgent, request as https } from "node:https";
 import { createConnection, type Socket } from "node:net";
 import { connect as tls } from "node:tls";
+import { createGunzip } from "node:zlib";
 import ipaddr from "ipaddr.js";
 import { SocksClient } from "socks";
 
@@ -129,7 +130,7 @@ async function connectOrigin(url:URL,address:string,proxy:ProxyRoute|undefined,o
   catch (error) { throw phaseError(error,"connect",overall,phase); }
 }
 
-type Options={method?:"GET"|"POST";body?:string;headers?:Record<string,string>;maxBytes:number;signal:AbortSignal;proxy?:ProxyRoute};
+type Options={method?:"GET"|"POST";body?:string;headers?:Record<string,string>;maxBytes:number;signal:AbortSignal;proxy?:ProxyRoute;compressed?:boolean};
 type NetworkResponse<T> = {status:number;location?:string;body:T;contentType:string;truncated:boolean};
 export function requestPublicNetwork(url:URL,options:Options&{binary:true}):Promise<NetworkResponse<Buffer>>;
 export function requestPublicNetwork(url:URL,options:Options&{binary?:false}):Promise<NetworkResponse<string>>;
@@ -160,21 +161,27 @@ export async function requestPublicNetwork(url:URL,options:Options&{binary?:bool
       timer.unref();
     };
     const req=(secure?https:http)(url,{agent,signal:overall,method:options.method??"GET",
-      headers:{...options.headers,"Accept-Encoding":"identity",...(options.body?{"Content-Length":String(Buffer.byteLength(options.body))}:{})}},res=>{
+      headers:{...options.headers,"Accept-Encoding":options.compressed?"gzip":"identity",...(options.body?{"Content-Length":String(Buffer.byteLength(options.body))}:{})}},res=>{
       const info={status:res.statusCode??0,location:res.headers.location,contentType:res.headers["content-type"]??""};
       if (info.status<200||info.status>=300) {finish(undefined,{...info,body:decode(Buffer.alloc(0)),truncated:false});return;}
       stage="read";arm();
+      const decoder=options.compressed&&res.headers["content-encoding"]==="gzip"?createGunzip():null;
+      const body=decoder?res.pipe(decoder):res;
       const chunks:Buffer[]=[];
       let bytes=0;
-      res.on("data",(data:Buffer)=>{
-        arm();
+      res.on("data",arm);
+      body.on("data",(data:Buffer)=>{
         const chunk=data.subarray(0,maxBytes-bytes);
         chunks.push(chunk);bytes+=chunk.length;
-        if (chunk.length<data.length) finish(undefined,{...info,body:decode(Buffer.concat(chunks)),truncated:true});
+        if (chunk.length<data.length) {
+          finish(undefined,{...info,body:decode(Buffer.concat(chunks)),truncated:true});
+          decoder?.destroy();
+        }
       });
-      res.once("end",()=>finish(undefined,{...info,body:decode(Buffer.concat(chunks)),truncated:false}));
-      res.once("error",finish);
-      res.once("aborted",()=>finish(new NetworkFailure("reset","read")));
+      body.once("end",()=>finish(undefined,{...info,body:decode(Buffer.concat(chunks)),truncated:false}));
+      decoder?.once("error",finish);
+      res.once("error",error=>{decoder?.destroy();finish(error);});
+      res.once("aborted",()=>{decoder?.destroy();finish(new NetworkFailure("reset","read"));});
     });
     req.once("error",finish);
     arm();

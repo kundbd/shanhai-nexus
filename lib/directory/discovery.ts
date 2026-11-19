@@ -29,7 +29,7 @@ export function saveDiscoverySource(db:DatabaseSync,input:Fields,actor:string) {
   const notes=textValue(input.notes,800,"访问与复用说明");
   const interval=Number(input.interval_hours??168);
   if (!Number.isSafeInteger(interval)||interval<1||interval>720) throw new Error("运行间隔须为 1 至 720 小时。");
-  const enabled=Number((input.enabled===true||input.enabled==="1"||input.enabled===1)&&access!=="restricted"&&kind!=="manual");
+  const enabled=Number(pipeline!=="connections"&&(input.enabled===true||input.enabled==="1"||input.enabled===1)&&access!=="restricted"&&kind!=="manual");
   if (kind==="dataset"&&access!=="licensed"&&access!=="restricted") throw new Error("远程数据集必须记录复用许可。");
   if (kind==="sitemap"&&access!=="official"&&access!=="restricted") throw new Error("站点地图必须来自商家官网。");
   if ((kind==="brave"||kind==="deepseek")&&!["leads","restricted"].includes(access)) throw new Error("搜索 API 结果仅作发现线索。");
@@ -59,7 +59,7 @@ function insertJob(db:DatabaseSync,source:DiscoverySource) {
 export function queueDiscovery(db:DatabaseSync,id:number,actor:string,manual=false) {
   return transaction(db,()=>{
     const source=one<DiscoverySource>(db,"SELECT * FROM discovery_sources WHERE id=?",id);
-    if (!source || source.access==="restricted" || (source.kind==="manual"&&!manual)) throw new Error("此来源不可自动入队。");
+    if (!source || source.pipeline==="connections" || source.access==="restricted" || (source.kind==="manual"&&!manual)) throw new Error("此来源不可自动入队。");
     const job=insertJob(db,source);
     audit(db,actor,"enqueue","discovery_jobs",job,null,{source:id});
     return job;
@@ -72,8 +72,8 @@ export function retryDiscovery(db:DatabaseSync,id:number,actor:string) {
 }
 export function queueDue(db:DatabaseSync) {
   return transaction(db,()=>{
-    const ready=all<DiscoverySource>(db,`SELECT * FROM discovery_sources WHERE enabled=1 AND access<>'restricted'
-      AND kind<>'manual' AND next_run_at<=? ORDER BY CASE pipeline WHEN 'ai-retail' THEN 0 WHEN 'connections' THEN 1
+    const ready=all<DiscoverySource>(db,`SELECT * FROM discovery_sources WHERE enabled=1 AND pipeline<>'connections' AND access<>'restricted'
+      AND kind<>'manual' AND next_run_at<=? ORDER BY CASE pipeline WHEN 'ai-retail' THEN 0
       WHEN 'payments' THEN 2 WHEN 'ai-relay' THEN 3 ELSE 4 END,next_run_at LIMIT 25`,now());
     for (const source of ready) {
       insertJob(db,source);
@@ -211,6 +211,6 @@ export async function runDiscovery(db:DatabaseSync,options:RunOptions={}) {
 
 function sourceApplicable(db:DatabaseSync,source:DiscoverySource) {
   const current=one<DiscoverySource>(db,"SELECT * FROM discovery_sources WHERE id=?",source.id);
-  return current&&current.access!=="restricted"&&current.access===source.access&&current.url===source.url&&
+  return current&&current.pipeline!=="connections"&&current.access!=="restricted"&&current.access===source.access&&current.url===source.url&&
     current.evidence_url===source.evidence_url&&current.kind===source.kind&&current.pipeline===source.pipeline;
 }

@@ -30,6 +30,8 @@ function visible(fragment:string) {
     .replace(/&(?:nbsp|amp|quot|lt|gt);/gi," ").replace(/[\u0000-\u001f\u007f]/g," "));
 }
 
+export const publicMerchantText=(page:LeadPage)=>visible(page.body).slice(0,5600);
+
 function sameSiteLinks(page:LeadPage) {
   const domain=websiteUrl(page.url).registrable;
   const result:{url:string;path:string;label:string}[]=[];

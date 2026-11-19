@@ -2,14 +2,24 @@ import { existsSync } from "node:fs";
 import { loadEnvFile } from "node:process";
 import { setTimeout as delay } from "node:timers/promises";
 import { directory } from "../lib/directory/db";
+import { enrichPublishedMerchant } from "../lib/directory/merchant-enrichment";
+import { reviewNextMerchantSubmission } from "../lib/directory/merchant-submission-review";
+import { parseProxy } from "../lib/directory/network-transport";
+import { refreshAccessRule } from "../lib/directory/refresh-discovery";
 import { directoryRefreshStatus } from "../lib/directory/refresh-state";
-import { runDirectoryRefresh } from "../lib/directory/run-refresh";
+import { checkStorefrontQuotes,runDirectoryRefresh } from "../lib/directory/run-refresh";
+import { refreshStorefrontFeed } from "../lib/directory/storefront-feed";
+import { websiteVisit } from "../lib/directory/website-check";
 
 for (const file of [".env.local",".env"]) if (existsSync(file)) loadEnvFile(file);
-const [command="--once",limitArg]=process.argv.slice(2);
-const limit=limitArg==null?null:Number(limitArg);
-if (!["--once","--watch","--status"].includes(command)||limit!==null&&(!Number.isInteger(limit)||limit<1||limit>250||command!=="--once")) {
-  throw new Error("用法：directory:refresh -- --once [1–250] | --watch | --status");
+const [command="--once",limitArg,plan=""]=process.argv.slice(2);
+const enrichment=command==="--enrich-merchant";
+const limit=limitArg==null||enrichment?null:Number(limitArg);
+const maxLimit=command==="--check-storefronts"?30:command==="--once"?250:0;
+if (!["--once","--watch","--status","--check-storefronts","--refresh-price-feed","--enrich-merchant"].includes(command)||
+    (limit!==null&&(!Number.isInteger(limit)||limit<1||limit>maxLimit))||
+    (enrichment&&(!limitArg||!/^[-a-z\d]{1,90}$/.test(limitArg)||plan))) {
+  throw new Error("用法：directory:refresh -- --once [1–250] | --watch | --status | --check-storefronts [1–30] [商品关键词] | --refresh-price-feed | --enrich-merchant 商家slug");
 }
 
 async function main() {
@@ -20,6 +30,25 @@ async function main() {
   process.once("SIGTERM",stop);
   try {
     if (command==="--status") { console.log(JSON.stringify(directoryRefreshStatus(db),null,2));return; }
+    if (enrichment) {
+      console.log(JSON.stringify(await enrichPublishedMerchant(db,limitArg,{stop:controller.signal})));
+      return;
+    }
+    if (command==="--refresh-price-feed") {
+      const restricted=refreshAccessRule(db);
+      const visit=websiteVisit(parseProxy(process.env.MERCHANT_PROXY),{compressed:true});
+      const report=await refreshStorefrontFeed(db,(url,signal,bytes)=>{
+        if (restricted(url.href)) throw new Error("来源限制，暂停读取公开快照");
+        return visit(url,AbortSignal.any([signal,controller.signal]),bytes);
+      });
+      console.log(JSON.stringify(report));
+      if (report.state==="unavailable") process.exitCode=1;
+      return;
+    }
+    if (command==="--check-storefronts") {
+      console.log(JSON.stringify(await checkStorefrontQuotes(db,limit??12,plan,{signal:controller.signal}),null,2));
+      return;
+    }
     if (command==="--watch"&&process.env.DIRECTORY_REFRESH_ENABLED==="0") {
       console.log("目录定时刷新已关闭");
       while (!controller.signal.aborted) await delay(30_000,undefined,{signal:controller.signal}).catch(()=>{});
@@ -27,6 +56,9 @@ async function main() {
     }
     while (!controller.signal.aborted) {
       try {
+        const reviewed=await reviewNextMerchantSubmission(db,{stop:controller.signal});
+        if (reviewed) console.log(JSON.stringify(reviewed));
+        if (controller.signal.aborted) break;
         const report=await runDirectoryRefresh(db,{batch:limit??120,signal:controller.signal});
         if (command!=="--watch"||report.claimed) console.log(JSON.stringify(report));
         if (command==="--once"&&(limit!==null||!report.claimed||report.latest?.finishedAt||report.latest?.error)) break;

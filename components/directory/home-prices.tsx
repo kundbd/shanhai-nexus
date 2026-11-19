@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Cpu, Wallet } from "lucide-react";
-import { exchangeRateReference } from "@/lib/directory/exchange-rates";
 import { canonicalAiTier,orderAiTiers } from "@/lib/directory/ai-subscription-tier";
 import { codexVerificationProduct } from "@/lib/directory/ai-product";
-import { featuredAiProducts,priceCategories,publicPriceBoard,type PricedInCny } from "@/lib/directory/price-board";
+import { aiPriceDeliveryLabels,featuredAiProducts,priceCategories,publicPriceBoard,type AiPriceDelivery,type PricedInCny } from "@/lib/directory/price-board";
 import { directoryRefreshStatus } from "@/lib/directory/refresh-state";
 import { groupRelayModels, relayModelKey, relayVersionLabel } from "@/lib/directory/relay-models";
 import { isRelayTokenPeriod,relayTokenPeriods } from "@/lib/directory/relay-quote-units";
@@ -11,18 +10,18 @@ import { siteHref } from "@/lib/directory/types";
 import { External,day,priceLabel,quoteDetailLabel } from "./display";
 import { param,type Params } from "./catalog-page";
 import { AiProductIcon } from "./ai-product-icon";
+import { MerchantAvatar } from "./merchant-avatar";
+import { OfferIcon } from "./offer-icon";
 import { priorityCategoryTabs } from "./priority-category-tabs";
 
 const yuan=new Intl.NumberFormat("zh-CN",{style:"currency",currency:"CNY"});
 const rateYuan=new Intl.NumberFormat("zh-CN",{style:"currency",currency:"CNY",maximumFractionDigits:4});
 const localUpdate=new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
-const networkTabs=["airport","vpn"] as const;
 
 export function HomePrices({input}:{input:Params}) {
   const view=param(input.price);
   const active=Object.hasOwn(priceCategories,view)?view as keyof typeof priceCategories:"ai";
-  const {groups,rateDay,missingExchange}=publicPriceBoard();
-  const network=active==="airport"||active==="vpn";
+  const {groups}=publicPriceBoard();
   const brands=[...new Set<string>([...featuredAiProducts,...groups.flatMap(group=>group.product?[group.product]:[]),codexVerificationProduct])];
   const product=brands.includes(param(input.product))?param(input.product):brands[0];
   const verification=active==="ai"&&product===codexVerificationProduct;
@@ -46,12 +45,21 @@ export function HomePrices({input}:{input:Params}) {
   const billingFilter=requestedBilling==="month"||requestedBilling==="year"?requestedBilling:undefined;
   const billing=billingFilter??(plans.some(item=>item.period==="月")?"month":"year");
   const period=billing==="month"?"月":"年";
-  const group=active==="ai"&&!verification?plans.find(item=>item.period===period):visible.find(item=>item.key===param(input.range))??visible[0];
-  const {latest,completed}=directoryRefreshStatus();
+  const aiSubscription=active==="ai"&&!verification;
+  const requestedDelivery=param(input.delivery);
+  const deliveryFilter=aiSubscription&&Object.hasOwn(aiPriceDeliveryLabels,requestedDelivery)
+    ?requestedDelivery as AiPriceDelivery:undefined;
+  const periodGroups=plans.filter(item=>item.period===period);
+  const deliveries=(Object.keys(aiPriceDeliveryLabels) as AiPriceDelivery[])
+    .filter(kind=>kind===deliveryFilter||periodGroups.some(item=>item.delivery===kind));
+  const delivery=deliveryFilter??deliveries.find(kind=>periodGroups.some(item=>item.delivery===kind&&item.quotes.length))??deliveries[0];
+  const group=aiSubscription?periodGroups.find(item=>item.delivery===delivery):visible.find(item=>item.key===param(input.range))??visible[0];
+  const deliveryParams:Record<string,string>=deliveryFilter?{delivery:deliveryFilter}:{};
+  const aiScope=tier?[`${product} ${tier}`,`${period}付`,delivery&&aiPriceDeliveryLabels[delivery]].filter(Boolean).join(" · "):`${product} AI 订阅`;
+  const {completed}=directoryRefreshStatus();
+  const updatedAt=completed?.finishedAt;
   const list=group?.quotes??[];
   const low=list[0], high=list.at(-1);
-  const storefrontQuotes=list.filter(quote=>quote.storefront_observed).length;
-  const localTime=completed?.finishedAt ? localUpdate.format(new Date(completed.finishedAt)) : null;
   function url(category:string,filters:Record<string,string>={}) {
     const params=new URLSearchParams({price:category,...filters});
     return `/?${params}#home-prices`;
@@ -59,13 +67,11 @@ export function HomePrices({input}:{input:Params}) {
 
   return <section id="home-prices" className="home-prices" aria-labelledby="price-title">
     <div className="directory-section"><h2 id="price-title">公开报价区间<span className="price-unit">人民币</span></h2></div>
-    <p className="section-note">{verification?"以下为明确标注单次计价的公开报价。":active==="ai"?"比较同产品、同等级、同周期的公开标价。交付方式和地区请看报价详情。":relay?"按同一模型分别查看输入和输出单价。缓存、渠道及附加费请看商家的原始价目。":"金额按公开价目记录。"}</p>
+    <p className="section-note">{verification?"以下为明确标注单次计价的公开报价。":active==="ai"?"同一产品、等级和周期内，按交付方式计算报价区间。店铺标价采用近期原页核对或第三方有货观测。":relay?"按同一模型分别查看输入和输出单价。缓存、渠道及附加费请看商家的原始价目。":"金额按公开价目记录。"}</p>
     <nav className="filter-pills price-tabs" aria-label="报价分类">{priorityCategoryTabs.map(({key,item:{label},Icon})=><Link key={key}
-      href={url(key)} scroll={false} aria-current={(key===active||(key==="airport"&&network))?"page":undefined}>
+      href={url(key)} scroll={false} aria-current={key===active?"page":undefined}>
       <Icon size={16} aria-hidden="true"/>{label}
     </Link>)}</nav>
-    {network&&<nav className="filter-pills price-tabs" aria-label="机场与 VPN 子类">{networkTabs.map(key=><Link key={key}
-      href={url(key)} scroll={false} aria-current={key===active?"page":undefined}>{priceCategories[key]}</Link>)}</nav>}
     {!!relayBrands.length&&<>
       <nav className="filter-pills price-tabs ai-product-tabs" aria-label="中转品牌">{relayBrands.map(({brand,versions})=><Link key={brand}
         href={url(active,{model:versions.includes(relayModel)?relayModel:versions[0]})} scroll={false} aria-current={brand===activeRelayBrand?.brand?"page":undefined}>
@@ -83,47 +89,48 @@ export function HomePrices({input}:{input:Params}) {
       </nav>}
     </>}
     {active==="ai"?<>
-      <nav className="filter-pills price-tabs ai-product-tabs" aria-label="AI 产品">{brands.map(name=><Link key={name} href={url(active,{product:name})} scroll={false} aria-current={name===product?"page":undefined}>
+      <nav className="filter-pills price-tabs ai-product-tabs" aria-label="AI 产品">{brands.map(name=><Link key={name} href={url(active,{product:name,...(name!==codexVerificationProduct?deliveryParams:{})})} scroll={false} aria-current={name===product?"page":undefined}>
         <AiProductIcon product={name}/>{name}
       </Link>)}</nav>
       {!!tiers.length&&<>
-        <nav className="filter-pills price-tabs" aria-label="订阅等级"><span className="price-filter-label">订阅等级</span>{tiers.map(name=><Link key={name} href={url(active,{product,tier:name,...(billingFilter?{billing:billingFilter}:{})})} scroll={false} aria-current={name===tier?"page":undefined}>{name}</Link>)}</nav>
-        <nav className="filter-pills price-tabs" aria-label="订阅周期"><span className="price-filter-label">订阅周期</span>{[["month","月付"],["year","年付"]].map(([key,label])=><Link key={key} href={url(active,{product,tier,billing:key})} scroll={false} aria-current={key===billing?"page":undefined}>{label}</Link>)}</nav>
+        <nav className="filter-pills price-tabs" aria-label="订阅等级"><span className="price-filter-label">订阅等级</span>{tiers.map(name=><Link key={name} href={url(active,{product,tier:name,...(billingFilter?{billing:billingFilter}:{}),...deliveryParams})} scroll={false} aria-current={name===tier?"page":undefined}>{name}</Link>)}</nav>
+        <nav className="filter-pills price-tabs" aria-label="订阅周期"><span className="price-filter-label">订阅周期</span>{[["month","月付"],["year","年付"]].map(([key,label])=><Link key={key} href={url(active,{product,tier,billing:key,...deliveryParams})} scroll={false} aria-current={key===billing?"page":undefined}>{label}</Link>)}</nav>
       </>}
+      {aiSubscription&&!!deliveries.length&&<nav className="filter-pills price-tabs" aria-label="交付方式">
+        <span className="price-filter-label">交付方式</span>
+        {deliveries.map(kind=><Link key={kind} href={url(active,{product,tier,billing,delivery:kind})} scroll={false} prefetch={false}
+          aria-current={kind===delivery?"page":undefined}>{aiPriceDeliveryLabels[kind]}</Link>)}
+      </nav>}
     </>:visible.length>1&&<nav className="filter-pills price-tabs" aria-label={relay&&relayModel!=="other"?"Token 计费方向":"计费周期与地区"}>{visible.map(item=><Link key={item.key}
       href={url(active,{range:item.key,...(relay&&{model:relayModel})})} scroll={false} aria-current={group?.key===item.key?"page":undefined}>
       {relay&&relayModel!=="other"?item.period:
         [item.subcategory,quoteDetailLabel(item.period),quoteDetailLabel(item.region)].filter(Boolean).join(" · ")||"其他报价"}
     </Link>)}</nav>}
     {group&&low&&high?<>
-      <p className="section-note price-scope">{verification?`${codexVerificationProduct} · 每次`:group.product?`${group.product} ${group.tier} · ${group.period}付`:
-        [relay&&group.subcategory?priceCategories[active]:null,group.subcategory??priceCategories[active],
-          quoteDetailLabel(group.period),quoteDetailLabel(group.region)].filter(Boolean).join(" · ")} · {group.quotes.length} 项报价，{group.merchants} 家商家</p>
-      {storefrontQuotes>0&&<p className="section-note">含 {storefrontQuotes} 项店铺公开标价。</p>}
       <div className="price-pair">
         <QuoteTile title={list.length===1?"现有报价":"价格最低"} quote={low} showRegion={active==="ai"}/>
         {list.length>1&&<QuoteTile title="价格最高" quote={high} showRegion={active==="ai"}/>}
       </div>
       {list.length===1&&<p className="section-note">目前只有一项报价可比。</p>}
-    </>:<p className="plain-empty boxed-empty">{verification?`${codexVerificationProduct}暂无明确单次标价。`:active==="ai"?`${tier?`${product} ${tier} · ${period}付`:`${product} AI 订阅`}暂无可比报价。`:`${priceCategories[active]}暂无可比的公开报价。`}</p>}
-    <p className="section-note price-updated">{relay?"模型和套餐报价以各条的记录日期为准。":"每 5 小时核查一轮。"}{!relay&&localTime&&<>{`最近一轮 ${localTime} 完成，核实 ${completed!.quotesChecked} 项报价。`}</>}
-      {latest&&!latest.finishedAt&&`正在核查 ${latest.done}/${latest.targets} 个档案或报价来源。`}
-      {storefrontQuotes>0&&"店铺标价以各自的观察日期为准。"}
-      {rateDay&&<>外币按 <External href={exchangeRateReference}>欧洲央行 {rateDay} 参考汇率</External> 折算。 </>}
-      {!!missingExchange&&"缺少参考汇率的外币报价暂未纳入。"}
-    </p>
+    </>:<p className="plain-empty boxed-empty">{group?.unconfirmedStorefronts?`${verification?codexVerificationProduct:aiScope} 暂无近期确认在售的报价。`:verification?`${codexVerificationProduct}暂无明确单次标价。`:active==="ai"?`${aiScope} 暂无可比报价。`:`${priceCategories[active]}暂无可比的公开报价。`}</p>}
+    <p className="section-note price-updated">每 5 小时更新一次{updatedAt&&<> · 最近更新 <time dateTime={updatedAt}>{localUpdate.format(new Date(updatedAt))}</time></>}</p>
   </section>;
 }
 
 function QuoteTile({title,quote,showRegion}:{title:string;quote:PricedInCny;showRegion:boolean}) {
+  const site={slug:quote.site_slug,category_slug:quote.category_slug,avatar_digest:quote.avatar_digest};
   const foreign=quote.currency!=="CNY";
   const billing=[foreign?priceLabel(quote):"",foreign||showRegion?quoteDetailLabel(quote.period):""].filter(Boolean).join(" / ");
   const context=[billing,showRegion?quoteDetailLabel(quote.region):"",
-    `${quote.storefront_observed?"观察日期 ":""}${day(quote.recorded_at)}`].filter(Boolean).join(" · ");
+    quote.feed_observed_at?`有货观测 ${localUpdate.format(new Date(quote.feed_observed_at))}`:
+      quote.stock_checked_at?`在售核对 ${localUpdate.format(new Date(quote.stock_checked_at))}`:day(quote.recorded_at)].filter(Boolean).join(" · ");
   return <article className="quote-tile">
     <h3>{title}</h3>
     <p className="quote-amount">{quote.currency!=="CNY"&&quote.cny_amount!==0&&"约 "}{isRelayTokenPeriod(quote.period)?rateYuan.format(quote.cny_amount):yuan.format(quote.cny_minor/100)}</p>
-    <p><Link href={`${siteHref(quote.site_slug)}#prices`}>{quote.site_name}</Link> · {quote.plan}</p>
-    <p className="section-note">{context} · <External href={quote.source_url}>{quote.reported_item_url?"第三方报价快照":"报价来源"}</External>{quote.reported_item_url&&<> · <External href={quote.reported_item_url}>原商品页</External></>}</p>
+    <p className="quote-offer">
+      <Link href={`${siteHref(site.slug)}#prices`} className="quote-offer-label"><MerchantAvatar site={site} size={20}/><span>{quote.site_name}</span></Link>
+      <span className="quote-offer-label"><OfferIcon price={quote} site={site}/><span>{quote.plan}</span></span>
+    </p>
+    <p className="section-note">{context} · <External href={quote.source_url}>{quote.feed_observed_at?"第三方观测来源":"报价来源"}</External>{quote.reported_item_url&&<> · <External href={quote.reported_item_url}>原商品页</External></>}</p>
   </article>;
 }

@@ -122,10 +122,20 @@ export async function POST(request: NextRequest) {
       return returnTo(request,path,"已更新导入项。",true);
     }
     const entity = choice(form.entity,entities,"管理类型");
-    path = `/admin/${entity}`;
-    if (form.action !== "delete" && form.id) path += `?id=${encodeURIComponent(form.id)}`;
-    const saved = writeEntity(db,entity,form,actor,choice(form.action,["save","delete"],"操作"));
-    return returnTo(request,form.action === "delete" ? `/admin/${entity}` : `/admin/${entity}?id=${saved}`,"已保存。",true);
+    const action=choice(form.action,["save","delete"],"操作");
+    const query=new URLSearchParams();
+    if (form.return_q) query.set("q",form.return_q.slice(0,100));
+    if (/^\d{1,5}$/.test(form.return_page??"")&&Number(form.return_page)>1) query.set("page",form.return_page);
+    if (entity==="submissions"&&["all","pending","accepted","rejected"].includes(form.return_state)) query.set("state",form.return_state);
+    const destination=()=>query.size?`/admin/${entity}?${query}`:`/admin/${entity}`;
+    if (form.id) query.set("id",form.id);
+    else if (action==="save") query.set("new","1");
+    path=destination();
+    const saved=writeEntity(db,entity,form,actor,action);
+    query.delete("new");
+    if (action==="delete") query.delete("id");
+    else query.set("id",String(saved));
+    return returnTo(request,destination(),"已保存。",true);
   } catch (error) {
     return returnTo(request,path,safeError(error));
   }

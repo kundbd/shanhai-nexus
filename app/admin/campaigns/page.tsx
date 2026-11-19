@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminNav,Notice,requireAdmin } from "@/components/directory/admin";
+import { Notice,requireAdmin } from "@/components/directory/admin";
 import { CampaignRefresh } from "@/components/directory/campaign-refresh";
 import { param,type Params } from "@/components/directory/catalog-page";
 import { all,directory,one } from "@/lib/directory/db";
@@ -18,6 +18,7 @@ const labels:Record<string,string>={running:"运行中",paused:"已暂停",block
   checking:"核查中",known:"已有档案",filtered:"已筛除",unverified:"核查失败",manual:"需人工核查",ready:"有官网证据",rejected:"已拒绝",
   approved:"已批准",duplicate:"重复",published:"已发布"};
 const price=(milli:number)=>`¥${(milli/1000).toFixed(3)}`;
+const refreshTime=(stamp:string)=>new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}).format(new Date(stamp));
 const outcomes:Record<string,string>={verified:"已核实",basic:"资料待核实",duplicate:"归并已有档案",conflict:"待人工复核",excluded:"本轮排除",lead:"尚待处理",
   unavailable:"本轮未连接 · 已留档",restricted:"访问受限 · 已留档",insufficient:"公开证据不足 · 已留档",redirected:"入口转发 · 已留档"};
 
@@ -25,7 +26,11 @@ export default async function Campaigns({searchParams}:{searchParams:Promise<Par
   await requireAdmin();
   const input=await searchParams;
   const db=directory();
-  const refresh=directoryRefreshStatus(db).latest;
+  const {latest:refresh,nextDue}=directoryRefreshStatus(db);
+  const recentDiscoveries=refresh?all<{url:string;source_url:string;result:string;reason:string;evidence_url:string|null}>(db,`SELECT url,source_url,result,reason,evidence_url
+    FROM directory_refresh_leads WHERE run_id=? AND result IS NOT NULL ORDER BY result NOT IN ('published','updated'),id DESC LIMIT 20`,refresh.id):[];
+  const refreshSourceNotes=refresh?all<{name:string;state:string;error:string}>(db,`SELECT sources.name,jobs.state,jobs.error FROM directory_refresh_sources jobs
+    JOIN discovery_sources sources ON sources.id=jobs.source_id WHERE jobs.run_id=? AND jobs.error<>'' ORDER BY jobs.source_id`,refresh.id):[];
   const campaigns=all<{id:number;name:string}>(db,"SELECT id,name FROM merchant_campaigns ORDER BY id DESC LIMIT 30");
   const id=Number(param(input.id))||campaigns[0]?.id;
   const selected=campaigns.some(row=>row.id===id)?merchantCampaignReport(db,id!):null;
@@ -52,19 +57,29 @@ export default async function Campaigns({searchParams}:{searchParams:Promise<Par
   const sourceIssues=selected?all<{id:number;name:string;state:string;error:string}>(db,`SELECT id,json_extract(source_snapshot,'$.name') name,state,error
     FROM merchant_source_runs WHERE campaign_id=? AND error<>'' ORDER BY id DESC LIMIT 40`,selected.campaign.id):[];
   return <div className="frame page admin-page"><div className="catalog-heading"><h1>批量商家采集</h1><p>搜索请求、官网证据和发布结果均来自数据库。</p></div>
-    <AdminNav/><Notice input={input}/><div className="child-categories"><Link href="/admin/discovery">发现来源</Link><Link href="/admin/imports">批量审核</Link>{campaigns.map(row=><Link key={row.id} href={`/admin/campaigns?id=${row.id}`}>{row.name}</Link>)}</div>
+    <Notice input={input}/><div className="child-categories"><Link href="/admin/discovery">发现来源</Link><Link href="/admin/imports">批量审核</Link>{campaigns.map(row=><Link key={row.id} href={`/admin/campaigns?id=${row.id}`}>{row.name}</Link>)}</div>
     <section aria-labelledby="refresh-status"><h2 id="refresh-status">五小时目录刷新</h2>{refresh?<>
       <p>第 {refresh.id} 轮 · {refresh.done}/{refresh.targets} 个档案或报价来源 · 核实报价 {refresh.quotesChecked} 项 · 价格变更 {refresh.quotesChanged} 项</p>
-      <p>DeepSeek {refresh.search} · 预留 {price(refresh.reservedMilli)} · 预计计费 {price(refresh.billableMilli)}{refresh.searchError&&` · ${refresh.searchError}`}</p>
+      <p>{refresh.finishedAt?`完成于 ${refreshTime(refresh.finishedAt)}`:`开始于 ${refreshTime(refresh.startedAt)}`}{nextDue&&` · 下一轮计划 ${refreshTime(nextDue)}（北京时间）`}</p>
+      {refresh.automaticDiscovery&&<>
+        <p>候选 {refresh.leads.total} 条 · 新增商家 {refresh.leads.published} 家 · 已有商家补录报价 {refresh.leads.updated} 家 · 留档 {refresh.leads.held} 条 · 待处理 {refresh.leads.pending} 条</p>
+        <p>公开来源已读取 {refresh.sources.collected} 个 · 待处理 {refresh.sources.pending} 个 · 未完成 {refresh.sources.failed} 个</p>
+      </>}
+      <p>DeepSeek {refresh.search} · 已占用 {Number(refresh.reservedMilli>0)} 次请求 · 预计计费 {Number(refresh.billableMilli>0)} 次{refresh.searchError&&` · ${refresh.searchError}`}</p>
       {refresh.rateDay&&<p>参考汇率日期 {refresh.rateDay}</p>}{(refresh.error||refresh.rateError)&&<p>{refresh.error||refresh.rateError}</p>}
+      {refreshSourceNotes.length>0&&<details><summary>来源读取记录</summary><ul>{refreshSourceNotes.map(row=><li key={row.name}>{row.name} · {row.error}</li>)}</ul></details>}
+      {recentDiscoveries.length>0&&<details><summary>最近处理的候选</summary><ul>{recentDiscoveries.map(row=><li key={row.url}>
+        {new URL(row.url).hostname} · {row.reason} <a href={row.source_url} target="_blank" rel="noreferrer">发现来源</a>
+        {row.evidence_url&&<> · <a href={row.evidence_url} target="_blank" rel="noreferrer">官网证据</a></>}
+      </li>)}</ul></details>}
     </>:<p>暂无刷新记录</p>}</section>
+    {(refresh&&!refresh.finishedAt||selected?.campaign.state==="running"||(reviewProgress?.active??0)>0)&&<CampaignRefresh/>}
     <form className="admin-form" method="post" action="/api/admin/manage">
       <label>采集任务名称<input name="name" maxLength={100} required/></label>
       <label>费用上限（元）<input name="budget" type="number" min="0.005" max="10" step="0.005" defaultValue="10" required/></label>
       <button name="action" value="campaign-create" className="button secondary">创建采集任务</button>
     </form>
     {selected&&<section><h2>{selected.campaign.name}</h2>
-      {(selected.campaign.state==="running"||(reviewProgress?.active??0)>0)&&<CampaignRefresh/>}
       <p>{labels[selected.campaign.state]}{selected.campaign.pause_reason&&` · ${selected.campaign.pause_reason}`}</p>
       <p>公开目录 {publicCounts?.reduce((sum,row)=>sum+row.count,0)} 家 · 搜索请求 {requests?.reduce((sum,row)=>sum+row.count,0)} 次 · 
         估算已计费 {price(requests?.find(row=>row.state==="billable")?.reserved_milli??0)} · 已保守预留 {price(requests?.reduce((sum,row)=>sum+row.reserved_milli,0)??0)} / {price(selected.campaign.budget_milli)}</p>

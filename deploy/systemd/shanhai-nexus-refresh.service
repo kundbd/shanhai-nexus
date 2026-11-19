@@ -1,0 +1,26 @@
+[Unit]
+Description=Shanhai Nexus directory and quote refresh
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=shanhai-nexus
+Group=shanhai-nexus
+WorkingDirectory=/opt/shanhai-nexus/current/.next/standalone
+Environment=NODE_ENV=production DB_PATH=/var/lib/shanhai-nexus/directory.sqlite
+Environment=NODE_PATH=/opt/shanhai-nexus/current/.next/standalone/node_modules
+EnvironmentFile=-/etc/shanhai-nexus/refresh.env
+ExecStart=/opt/shanhai-nexus/node/bin/node /opt/shanhai-nexus/maintenance/directory-refresh.cjs --watch
+Restart=on-failure
+RestartSec=15s
+TimeoutStopSec=45s
+UMask=0027
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/shanhai-nexus
+
+[Install]
+WantedBy=multi-user.target

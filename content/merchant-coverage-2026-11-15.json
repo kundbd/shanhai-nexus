@@ -1,0 +1,643 @@
+[
+  {
+    "pipeline": "ai-retail",
+    "access": "restricted",
+    "source_name": "AI 价网",
+    "source_url": "https://aiprice.club/",
+    "evidence_url": "https://aiprice.club/llms.txt",
+    "reason": "本次获取的公开说明声称 1,677 家，允许索引与引用，明确要求勿整库镜像。未逐条验计受限数量。",
+    "advertised": 1677
+  },
+  {
+    "pipeline": "ai-retail",
+    "access": "restricted",
+    "source_name": "AI CardNav",
+    "source_url": "https://github.com/bnlbnf/ai-cardnav",
+    "evidence_url": "https://github.com/bnlbnf/ai-cardnav",
+    "reason": "MIT 代码仓库的数据目录只有 .gitkeep，未获独立商家数据清单的再分发授权。"
+  },
+  {
+    "pipeline": "ai-retail",
+    "access": "restricted",
+    "source_name": "PriceAI",
+    "source_url": "https://github.com/dimthink/priceai",
+    "evidence_url": "https://github.com/dimthink/priceai/blob/main/DATA_LICENSE.md",
+    "reason": "数据许可单列，并限制同类比价、导航及聚合复用。没有批量导入。"
+  },
+  {
+    "pipeline": "ai-retail",
+    "access": "restricted",
+    "source_name": "AI 比比",
+    "source_url": "https://aibibi.app/shops",
+    "evidence_url": "https://aibibi.app/shops",
+    "reason": "用于单条发现。未获店铺目录批量再分发许可，公开记录只能由独立官网核对后进入另一批。"
+  },
+  {
+    "pipeline": "ai-relay",
+    "access": "restricted",
+    "source_name": "AiTest123",
+    "source_url": "https://aitest123.com/sites/all",
+    "evidence_url": "https://aitest123.com/robots.txt",
+    "reason": "页面声称 7,161 个，规则排除 API、跳转和分页加载端点，未找到可再分发授权。",
+    "advertised": 7161
+  },
+  {
+    "pipeline": "connections",
+    "access": "restricted",
+    "source_name": "加速 Wiki",
+    "source_url": "https://jiasu.wiki/",
+    "evidence_url": "https://jiasu.wiki/robots.txt",
+    "reason": "首页 403，robots.txt 请求超时；用户所述约 5,180 条含离线，未独立验计。",
+    "advertised": 5180
+  },
+  {
+    "pipeline": "connections",
+    "access": "restricted",
+    "source_name": "机场云：缺可识别商家入口",
+    "source_url": "https://jichangcloud.blog/dataset/",
+    "evidence_url": "https://jichangcloud.blog/dataset/",
+    "reason": "16 条具备 CC BY 4.0 许可，12 条仅有评测页、推广域或可访问性不明；这些是证据不足，不是许可受限。",
+    "advertised": 16,
+    "blocked": 0
+  },
+  {
+    "pipeline": "connections",
+    "access": "restricted",
+    "source_name": "翻墙达人：缺可识别商家入口",
+    "source_url": "https://fanqiangdaren.com/data/",
+    "evidence_url": "https://fanqiangdaren.com/data/",
+    "reason": "14 条具备 CC BY 4.0 许可，10 条只有评测页、推广跳转或线索不充分；这些是证据不足，不是许可受限。",
+    "advertised": 14,
+    "blocked": 0
+  },
+  {
+    "pipeline": "ai-retail",
+    "access": "official",
+    "source_name": "AI 零售官网逐条核验",
+    "source_url": "https://claude360.pro/",
+    "evidence_url": "https://claude360.pro/",
+    "reason": "逐站查看原始公开页面并编写事实摘要。",
+    "rows": [
+      {
+        "name": "Claude360",
+        "url": "https://claude360.pro/",
+        "category": "ai-topup",
+        "summary": "商家网站公开列出 Claude 订阅代充与成品号，规格分别说明是否包含质保。",
+        "excerpt": "商家网站公开列出 Claude 订阅代充与成品号，规格分别说明是否包含质保。",
+        "source_kind": "official",
+        "source_url": "https://claude360.pro/",
+        "source_title": "Claude360 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "Claude",
+          "delivery_methods": "topup,account"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "EasyChat",
+        "url": "https://easychat.top/",
+        "category": "ai-card",
+        "summary": "公开站点说明提供 Claude 与 ChatGPT 使用服务，并公告 Claude 独享 Pro 套餐暂停开通。",
+        "excerpt": "公开站点说明提供 Claude 与 ChatGPT 使用服务，并公告 Claude 独享 Pro 套餐暂停开通。",
+        "source_kind": "official",
+        "source_url": "https://easychat.top/",
+        "source_title": "EasyChat · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "Claude、ChatGPT"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "AI 会员直供",
+        "url": "https://aikami.site/",
+        "category": "ai-topup",
+        "summary": "公开列出 ChatGPT、Claude、Gemini 和 Grok 的订阅商品，页面区分充值商品和卡密交付。",
+        "excerpt": "公开列出 ChatGPT、Claude、Gemini 和 Grok 的订阅商品，页面区分充值商品和卡密交付。",
+        "source_kind": "official",
+        "source_url": "https://aikami.site/",
+        "source_title": "AI 会员直供 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Gemini、Grok",
+          "delivery_methods": "topup,code"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "静物集",
+        "url": "https://stackmemoai.com/",
+        "category": "ai-topup",
+        "summary": "公开列出 ChatGPT、Claude、Gemini 与 Grok 订阅，并提供订单查询和售后说明。",
+        "excerpt": "公开列出 ChatGPT、Claude、Gemini 与 Grok 订阅，并提供订单查询和售后说明。",
+        "source_kind": "official",
+        "source_url": "https://stackmemoai.com/",
+        "source_title": "静物集 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Gemini、Grok",
+          "delivery_methods": "topup"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "云闪充",
+        "url": "https://yunsc.cn/",
+        "category": "ai-topup",
+        "summary": "第三方 AI 会员代充平台，帮助页公开说明订单与不同商品的交付方式。",
+        "excerpt": "第三方 AI 会员代充平台，帮助页公开说明订单与不同商品的交付方式。",
+        "source_kind": "official",
+        "source_url": "https://yunsc.cn/help",
+        "source_title": "云闪充 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Midjourney",
+          "delivery_methods": "topup,code"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "tehuio 自助充值",
+        "url": "https://tehuio.com/",
+        "category": "ai-card",
+        "summary": "公开数字商品商城，设有 ChatGPT、Google、Claude 和 Grok 商品分类。",
+        "excerpt": "公开数字商品商城，设有 ChatGPT、Google、Claude 和 Grok 商品分类。",
+        "source_kind": "official",
+        "source_url": "https://tehuio.com/",
+        "source_title": "tehuio 自助充值 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Google、Claude、Grok"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "TLSFox 代 AI",
+        "url": "https://www.tlsfox.com/",
+        "category": "ai-topup",
+        "summary": "官网提供 AI 订阅代充商品说明并链接同域名下的商城。",
+        "excerpt": "官网提供 AI 订阅代充商品说明并链接同域名下的商城。",
+        "source_kind": "official",
+        "source_url": "https://www.tlsfox.com/",
+        "source_title": "TLSFox 代 AI · 商家公开资料",
+        "domain_aliases": "pay.tlsfox.com",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Gemini、Grok",
+          "delivery_methods": "topup"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "Aisou 智充",
+        "url": "https://aisou.pro/",
+        "category": "ai-card",
+        "summary": "公开商城提供 AI 会员充值，商品按服务分类，页面设有订单查询。",
+        "excerpt": "公开商城提供 AI 会员充值，商品按服务分类，页面设有订单查询。",
+        "source_kind": "official",
+        "source_url": "https://aisou.pro/",
+        "source_title": "Aisou 智充 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Gemini、Grok、Cursor"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "AIXiamo（AI 夏末）",
+        "url": "https://www.aixiamo.com/",
+        "category": "ai-topup",
+        "summary": "提供 ChatGPT Plus 与 Pro 充值，公开帮助页区分自助卡密和人工代充。",
+        "excerpt": "提供 ChatGPT Plus 与 Pro 充值，公开帮助页区分自助卡密和人工代充。",
+        "source_kind": "official",
+        "source_url": "https://www.aixiamo.com/about-aixiamo",
+        "source_title": "AIXiamo（AI 夏末） · 商家公开资料",
+        "aliases": "AI夏末,AIXiamo",
+        "merchant_details": {
+          "ai_products": "ChatGPT Plus、ChatGPT Pro",
+          "delivery_methods": "topup,code"
+        },
+        "refunds": "商家公开政策称，核验为充值未成功后按规则退款。",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "Nature-Ai",
+        "url": "https://apiciyuan.top/",
+        "category": "ai-card",
+        "summary": "公开商城以 Nature-Ai 账号为名展示 AI 数字商品。",
+        "excerpt": "公开商城以 Nature-Ai 账号为名展示 AI 数字商品。",
+        "source_kind": "official",
+        "source_url": "https://apiciyuan.top/",
+        "source_title": "Nature-Ai · 商家公开资料",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "ai-buy",
+        "url": "https://ai-buy.vip/",
+        "category": "ai-card",
+        "summary": "公开销售 ChatGPT、Claude、Gemini 和 Grok 数字商品及充值卡密。",
+        "excerpt": "公开销售 ChatGPT、Claude、Gemini 和 Grok 数字商品及充值卡密。",
+        "source_kind": "official",
+        "source_url": "https://ai-buy.vip/",
+        "source_title": "ai-buy · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Gemini、Grok",
+          "delivery_methods": "code"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "云端小铺",
+        "url": "https://ycloudshop.com/",
+        "category": "ai-card",
+        "summary": "公开商城列有 AI 账号、订阅和充值商品，商品页区分卡密、代充、账号与拼车。",
+        "excerpt": "公开商城列有 AI 账号、订阅和充值商品，商品页区分卡密、代充、账号与拼车。",
+        "source_kind": "official",
+        "source_url": "https://ycloudshop.com/",
+        "source_title": "云端小铺 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Gemini、Grok、Cursor",
+          "delivery_methods": "topup,code,account,seat"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "晴天小店",
+        "url": "https://cool.cheggnow.com/",
+        "category": "ai-card",
+        "summary": "公开商城以晴天小店为名展示订阅类数字商品。",
+        "excerpt": "公开商城以晴天小店为名展示订阅类数字商品。",
+        "source_kind": "official",
+        "source_url": "https://cool.cheggnow.com/",
+        "source_title": "晴天小店 · 商家公开资料",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "AI-MEMBER 发卡网",
+        "url": "https://www.ai-member.icu/",
+        "category": "ai-card",
+        "summary": "公开发卡商城列出 ChatGPT、Gemini 及 Claude Code 等类别。",
+        "excerpt": "公开发卡商城列出 ChatGPT、Gemini 及 Claude Code 等类别。",
+        "source_kind": "official",
+        "source_url": "https://www.ai-member.icu/",
+        "source_title": "AI-MEMBER 发卡网 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Gemini、Claude Code"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "Fkai",
+        "url": "https://faka.fk-ai.cc/",
+        "category": "ai-card",
+        "summary": "开放商品页列有 ChatGPT、Claude、Grok 与 Perplexity 会员充值服务。",
+        "excerpt": "开放商品页列有 ChatGPT、Claude、Grok 与 Perplexity 会员充值服务。",
+        "source_kind": "official",
+        "source_url": "https://faka.fk-ai.cc/",
+        "source_title": "Fkai · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT、Claude、Grok、Perplexity"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "异次元店铺",
+        "url": "https://shihuiai.cn/",
+        "category": "ai-card",
+        "summary": "公开商品页列有 Gemini Pro 成品账号。",
+        "excerpt": "公开商品页列有 Gemini Pro 成品账号。",
+        "source_kind": "official",
+        "source_url": "https://shihuiai.cn/",
+        "source_title": "异次元店铺 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "Gemini Pro",
+          "delivery_methods": "account"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "以太 AI 订阅",
+        "url": "https://google7676.top/",
+        "category": "ai-card",
+        "summary": "公开商城使用以太 AI 服务订阅充值名称。",
+        "excerpt": "公开商城使用以太 AI 服务订阅充值名称。",
+        "source_kind": "official",
+        "source_url": "https://google7676.top/",
+        "source_title": "以太 AI 订阅 · 商家公开资料",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "GPTCZ",
+        "url": "https://gptcz.cc/",
+        "category": "ai-topup",
+        "summary": "公开页面说明为已有 ChatGPT 账号提供会员充值。",
+        "excerpt": "公开页面说明为已有 ChatGPT 账号提供会员充值。",
+        "source_kind": "official",
+        "source_url": "https://gptcz.cc/",
+        "source_title": "GPTCZ · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT",
+          "delivery_methods": "topup"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "YXAB GPT 代充",
+        "url": "https://yxab.cn/",
+        "category": "ai-topup",
+        "summary": "公开帮助中心说明 ChatGPT 会员代充类商品与订单售后范围。",
+        "excerpt": "公开帮助中心说明 ChatGPT 会员代充类商品与订单售后范围。",
+        "source_kind": "official",
+        "source_url": "https://yxab.cn/help",
+        "source_title": "YXAB GPT 代充 · 商家公开资料",
+        "merchant_details": {
+          "ai_products": "ChatGPT",
+          "delivery_methods": "topup"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "ProdClub",
+        "url": "https://prodclub.ai/",
+        "category": "ai-topup",
+        "summary": "公开帮助中心说明会员订单充值、交付和售后。",
+        "excerpt": "公开帮助中心说明会员订单充值、交付和售后。",
+        "source_kind": "official",
+        "source_url": "https://prodclub.ai/help",
+        "source_title": "ProdClub · 商家公开资料",
+        "merchant_details": {
+          "delivery_methods": "topup"
+        },
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "Hype",
+        "url": "https://hypeai.cc/",
+        "category": "ai-topup",
+        "summary": "公开帮助页介绍 AI 会员代充、发货与退款的适用条件。",
+        "excerpt": "公开帮助页介绍 AI 会员代充、发货与退款的适用条件。",
+        "source_kind": "official",
+        "source_url": "https://hypeai.cc/faq",
+        "source_title": "Hype · 商家公开资料",
+        "merchant_details": {
+          "delivery_methods": "topup"
+        },
+        "operator_kind": "third_party"
+      }
+    ]
+  },
+  {
+    "pipeline": "connections",
+    "access": "official",
+    "source_name": "网络商家官网逐条核验",
+    "source_url": "https://wgetcloud.ltd/",
+    "evidence_url": "https://wgetcloud.ltd/",
+    "reason": "逐站查看原始公开页面并编写事实摘要。",
+    "rows": [
+      {
+        "name": "WgetCloud",
+        "url": "https://wgetcloud.ltd/",
+        "category": "airport",
+        "summary": "官网介绍网络节点订阅服务与支持的客户端。",
+        "excerpt": "官网介绍网络节点订阅服务与支持的客户端。",
+        "source_kind": "official",
+        "source_url": "https://wgetcloud.ltd/",
+        "source_title": "WgetCloud · 商家公开资料",
+        "merchant_details": {
+          "clients": "官网列有 Clash、Shadowrocket、Quantumult X、Surfboard、v2rayNG。"
+        }
+      },
+      {
+        "name": "AdGuard VPN",
+        "url": "https://adguard-vpn.com/",
+        "category": "vpn",
+        "summary": "提供面向个人的 VPN 应用与订阅。",
+        "excerpt": "提供面向个人的 VPN 应用与订阅。",
+        "source_kind": "official",
+        "source_url": "https://adguard-vpn.com/",
+        "source_title": "AdGuard VPN · 商家公开资料"
+      },
+      {
+        "name": "CactusVPN",
+        "url": "https://www.cactusvpn.com/",
+        "category": "vpn",
+        "summary": "提供商业 VPN 和 Smart DNS，公开列有各系统客户端。",
+        "excerpt": "提供商业 VPN 和 Smart DNS，公开列有各系统客户端。",
+        "source_kind": "official",
+        "source_url": "https://www.cactusvpn.com/",
+        "source_title": "CactusVPN · 商家公开资料"
+      },
+      {
+        "name": "ClearVPN",
+        "url": "https://clearvpn.com/",
+        "category": "vpn",
+        "summary": "公开提供消费级 VPN 应用及订阅。",
+        "excerpt": "公开提供消费级 VPN 应用及订阅。",
+        "source_kind": "official",
+        "source_url": "https://clearvpn.com/",
+        "source_title": "ClearVPN · 商家公开资料"
+      },
+      {
+        "name": "X-VPN",
+        "url": "https://xvpn.io/",
+        "category": "vpn",
+        "summary": "提供面向个人的 VPN 软件和订阅方案。",
+        "excerpt": "提供面向个人的 VPN 软件和订阅方案。",
+        "source_kind": "official",
+        "source_url": "https://xvpn.io/",
+        "source_title": "X-VPN · 商家公开资料"
+      },
+      {
+        "name": "Xeovo",
+        "url": "https://xeovo.com/",
+        "category": "vpn",
+        "summary": "提供商业 VPN，公开展示支持的客户端和产品文档。",
+        "excerpt": "提供商业 VPN，公开展示支持的客户端和产品文档。",
+        "source_kind": "official",
+        "source_url": "https://xeovo.com/",
+        "source_title": "Xeovo · 商家公开资料"
+      },
+      {
+        "name": "PrivadoVPN",
+        "url": "https://www.privadovpn.com/",
+        "category": "vpn",
+        "summary": "公开提供个人 VPN 与相关软件订阅。",
+        "excerpt": "公开提供个人 VPN 与相关软件订阅。",
+        "source_kind": "official",
+        "source_url": "https://www.privadovpn.com/",
+        "source_title": "PrivadoVPN · 商家公开资料"
+      },
+      {
+        "name": "SwitchVPN",
+        "url": "https://www.switchvpn.net/",
+        "category": "vpn",
+        "summary": "销售消费级 VPN 订阅，首页提供设备支持与帮助入口。",
+        "excerpt": "销售消费级 VPN 订阅，首页提供设备支持与帮助入口。",
+        "source_kind": "official",
+        "source_url": "https://www.switchvpn.net/",
+        "source_title": "SwitchVPN · 商家公开资料"
+      },
+      {
+        "name": "TorGuard",
+        "url": "https://torguard.net/",
+        "category": "vpn",
+        "summary": "公开网站提供面向个人的 VPN 产品及订阅。",
+        "excerpt": "公开网站提供面向个人的 VPN 产品及订阅。",
+        "source_kind": "official",
+        "source_url": "https://torguard.net/",
+        "source_title": "TorGuard · 商家公开资料"
+      },
+      {
+        "name": "FastestVPN",
+        "url": "https://fastestvpn.com/",
+        "category": "vpn",
+        "summary": "提供面向个人的 VPN 客户端与订阅。",
+        "excerpt": "提供面向个人的 VPN 客户端与订阅。",
+        "source_kind": "official",
+        "source_url": "https://fastestvpn.com/",
+        "source_title": "FastestVPN · 商家公开资料"
+      },
+      {
+        "name": "CyberGuard",
+        "url": "https://cyberguard.best/",
+        "category": "airport",
+        "summary": "公开页面为独立网络加速服务入口。",
+        "excerpt": "公开页面为独立网络加速服务入口。",
+        "source_kind": "official",
+        "source_url": "https://cyberguard.best/",
+        "source_title": "CyberGuard · 商家公开资料"
+      }
+    ]
+  },
+  {
+    "pipeline": "connections",
+    "access": "licensed",
+    "source_name": "机场云 JichangCloud（CC BY 4.0）",
+    "source_url": "https://jichangcloud.blog/dataset/providers.json",
+    "evidence_url": "https://jichangcloud.blog/dataset/",
+    "advertised": 16,
+    "reason": "仅采用授权品牌名称与可追溯入口，入口独立去除推广参数；第三方公开记录状态不转写。规范许可为 https://creativecommons.org/licenses/by/4.0/",
+    "rows": [
+      {
+        "name": "光速云",
+        "url": "https://sahude.gsyvipaff.com/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/guangsuyun/",
+        "source_title": "机场云 JichangCloud · 光速云 · 原资料核验 2026-08-03"
+      },
+      {
+        "name": "星岛梦",
+        "url": "https://xingdaomeng.com/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/xingdaomeng/",
+        "source_title": "机场云 JichangCloud · 星岛梦 · 原资料核验 2026-08-03"
+      },
+      {
+        "name": "宇宙云",
+        "url": "https://wzjc.yuzoucloud.cc/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/yuzhoucloud/",
+        "source_title": "机场云 JichangCloud · 宇宙云 · 原资料核验 2026-08-11"
+      },
+      {
+        "name": "灵猫网络",
+        "url": "https://vip01.civetnet.com/",
+        "category": "airport",
+        "source_url": "https://jichangcloud.blog/brands/lingmao/",
+        "source_title": "机场云 JichangCloud · 灵猫网络 · 原资料核验 2026-08-03"
+      }
+    ]
+  },
+  {
+    "pipeline": "connections",
+    "access": "licensed",
+    "source_name": "翻墙达人（CC BY 4.0）",
+    "source_url": "https://fanqiangdaren.com/data/providers.json",
+    "evidence_url": "https://fanqiangdaren.com/data/",
+    "advertised": 14,
+    "reason": "源数据版本 2026-10-22；只使用授权名称，不搬运测速、排名、价格或推广链接。规范许可为 https://creativecommons.org/licenses/by/4.0/",
+    "rows": [
+      {
+        "name": "微风网络",
+        "url": "https://edp01.breezenetaff.com/",
+        "category": "airport",
+        "source_url": "https://fanqiangdaren.com/reviews/weifeng/",
+        "source_title": "翻墙达人 · 微风网络 · 数据版本 2026-10-22"
+      },
+      {
+        "name": "暮光加速",
+        "url": "https://varnexa.twilightaff.com/",
+        "category": "airport",
+        "source_url": "https://fanqiangdaren.com/reviews/muguang/",
+        "source_title": "翻墙达人 · 暮光加速 · 数据版本 2026-10-22"
+      },
+      {
+        "name": "无忧链接",
+        "url": "https://wep01.worryfreeaff.com/",
+        "category": "airport",
+        "source_url": "https://fanqiangdaren.com/reviews/wuyou/",
+        "source_title": "翻墙达人 · 无忧链接 · 数据版本 2026-10-22"
+      },
+      {
+        "name": "Firefly",
+        "url": "https://vip02.fireflyaff.com/",
+        "category": "airport",
+        "source_url": "https://fanqiangdaren.com/reviews/firefly/",
+        "source_title": "翻墙达人 · Firefly · 数据版本 2026-10-22"
+      }
+    ]
+  },
+  {
+    "pipeline": "payments",
+    "access": "official",
+    "source_name": "支付商家官网逐条核验",
+    "source_url": "https://pinkcard.cc/",
+    "evidence_url": "https://pinkcard.cc/",
+    "reason": "逐站查看原始公开页面并编写事实摘要。",
+    "rows": [
+      {
+        "name": "PinkCard",
+        "url": "https://pinkcard.cc/",
+        "category": "subscription-payment",
+        "summary": "公开页面说明用于数字订阅支付的预付礼品卡，并列有卡片费用和退款规则。",
+        "excerpt": "公开页面说明用于数字订阅支付的预付礼品卡，并列有卡片费用和退款规则。",
+        "source_kind": "official",
+        "source_url": "https://pinkcard.cc/",
+        "source_title": "PinkCard · 商家公开资料"
+      },
+      {
+        "name": "Gnosis Pay",
+        "url": "https://gnosispay.com/",
+        "category": "u-card",
+        "summary": "公开站点介绍稳定币卡基础设施，帮助中心另有卡产品使用说明。",
+        "excerpt": "公开站点介绍稳定币卡基础设施，帮助中心另有卡产品使用说明。",
+        "source_kind": "official",
+        "source_url": "https://gnosispay.com/",
+        "source_title": "Gnosis Pay · 商家公开资料"
+      },
+      {
+        "name": "Volet.com",
+        "url": "https://volet.com/",
+        "category": "payment-accounts",
+        "summary": "公开站点介绍电子钱包和跨境支付功能，以及其关联的卡产品。",
+        "excerpt": "公开站点介绍电子钱包和跨境支付功能，以及其关联的卡产品。",
+        "source_kind": "official",
+        "source_url": "https://volet.com/",
+        "source_title": "Volet.com · 商家公开资料"
+      }
+    ]
+  },
+  {
+    "pipeline": "ai-relay",
+    "access": "restricted",
+    "source_name": "咪仔科技与既有主域",
+    "source_url": "https://api.aishop520.com/",
+    "evidence_url": "https://api.aishop520.com/",
+    "reason": "公开子域有 API 网关，但与已有 AI 小铺共享可注册域，身份未分清，未计为独立商家。",
+    "advertised": 1,
+    "blocked": 0
+  },
+  {
+    "pipeline": "vps",
+    "access": "restricted",
+    "source_name": "VPS 本轮复用审计",
+    "source_url": "https://github.com/hiddify/awesome-freedom",
+    "evidence_url": "https://github.com/hiddify/awesome-freedom",
+    "reason": "上一轮已导入可用数据。此轮优先 AI 零售和机场，不重复提交或用 VPS 数量填补覆盖差额。",
+    "advertised": null,
+    "blocked": 0
+  }
+]

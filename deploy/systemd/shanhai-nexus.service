@@ -1,0 +1,23 @@
+[Unit]
+Description=Shanhai Nexus web service
+After=network.target
+
+[Service]
+Type=simple
+User=shanhai-nexus
+Group=shanhai-nexus
+WorkingDirectory=/opt/shanhai-nexus/current/.next/standalone
+Environment=NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=127.0.0.1 PORT=3180
+EnvironmentFile=/etc/shanhai-nexus/web.env
+ExecStart=/opt/shanhai-nexus/node/bin/node server.js
+Restart=on-failure
+RestartSec=3s
+UMask=0027
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/shanhai-nexus
+
+[Install]
+WantedBy=multi-user.target

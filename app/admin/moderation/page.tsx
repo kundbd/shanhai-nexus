@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { reviewMediaHref } from "@/lib/community/limits";
-import { AdminNav,Notice,requireAdmin } from "@/components/directory/admin";
+import { Notice,requireAdmin } from "@/components/directory/admin";
 import { param,type Params } from "@/components/directory/catalog-page";
 import { directory,one } from "@/lib/directory/db";
 import { pendingModeration } from "@/lib/moderation/admin";
@@ -24,11 +24,9 @@ export default async function ModerationAdmin({searchParams}:{searchParams:Promi
   const usage=one<{total:number;failures:number}>(db,`SELECT count(*) total,count(*) FILTER (WHERE status='error') failures
     FROM content_ai_requests WHERE started_at >= ?`,Math.floor(Date.now()/86_400_000)*86_400_000)!;
   return <div className="frame page admin-page">
-    <div className="catalog-heading"><h1>DSH 内容审核</h1></div>
-    <AdminNav/><Notice input={input}/>
-    <p className="section-note">{!config.enabled?"AI 审核未启用。":!config.key?"缺少 DSH 凭证，文字提交会进入人工复核。":`已启用 · ${config.model}`} · UTC 今日请求 {usage.total} 次，失败 {usage.failures} 次。</p>
-    <p>帖子、回复及附件须经管理员审核后公开。DSH 检查正文。确认违规后移除内容，首次警告，第二次起禁言 3 天。</p>
-    <p className="section-note">涉政审核结合正文语境和现行屏蔽词，识别简繁体、拼音、缩写和拆写等变体。<Link className="text-link" href="/admin/community">管理屏蔽词</Link></p>
+    <div className="catalog-heading"><h1>社区审核</h1></div>
+    <Notice input={input}/>
+    <p className="section-note">{!config.enabled?"AI 审核未启用":!config.key?"缺少 DSH 凭证，正文交由人工复核":`AI 审核已启用 · ${config.model}`}</p>
     <div className="directory-section"><h2>待人工复核</h2></div>
     {!queue.length&&<p className="plain-empty">暂无待复核内容。</p>}
     {queue.slice(0,30).map(item=><article key={`${item.surface}:${item.id}`} className="shop-review admin-import-row">
@@ -72,11 +70,23 @@ export default async function ModerationAdmin({searchParams}:{searchParams:Promi
       {page>1&&<Link href={`/admin/moderation?page=${page-1}`}>上一页</Link>}
       {queue.length>30&&<Link href={`/admin/moderation?page=${page+1}`}>下一页</Link>}
     </nav>}
-    <div className="directory-section"><h2>最近处置</h2></div>
-    {!penalties.length&&<p className="plain-empty">暂无违规处置记录。</p>}
-    {penalties.map(item=><article key={item.id} className="shop-review admin-import-row">
-      <h3>{item.username} · 第 {item.strike} 次 · {violationCategories[item.category]}</h3>
-      <p>{item.surface==="post"?"社区":"商家评价"} · {date.format(item.created_at)} · {item.muted_until?`禁言至 ${date.format(item.muted_until)}（北京时间）`:"首次警告"}</p>
-    </article>)}
+    <details className="admin-fold">
+      <summary>最近处置</summary>
+      <div className="admin-fold-body">
+        {!penalties.length&&<p className="plain-empty">暂无违规处置记录。</p>}
+        {penalties.map(item=><article key={item.id} className="shop-review admin-import-row">
+          <h3>{item.username} · 第 {item.strike} 次 · {violationCategories[item.category]}</h3>
+          <p>{item.surface==="post"?"社区":"商家评价"} · {date.format(item.created_at)} · {item.muted_until?`禁言至 ${date.format(item.muted_until)}（北京时间）`:"首次警告"}</p>
+        </article>)}
+      </div>
+    </details>
+    <details className="admin-fold">
+      <summary>审核设置与用量</summary>
+      <div className="admin-fold-body">
+        <p>UTC 今日请求 {usage.total} 次，失败 {usage.failures} 次。</p>
+        <p>帖子、回复和附件须经管理员审核后公开。确认违规后移除内容，首次警告，第二次起禁言 3 天。</p>
+        <Link className="text-link" href="/admin/community#blocked-words">管理屏蔽词</Link>
+      </div>
+    </details>
   </div>;
 }

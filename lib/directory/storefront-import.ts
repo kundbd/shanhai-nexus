@@ -13,11 +13,11 @@ export type StorefrontObservation = {
   discoveryUrl?: string;
   observedAt: string;
   category: "ai-topup" | "ai-card";
-  offers: Offer[];
+  offers: (Offer & {availability?: "available" | "unavailable"})[];
   relatedStorefronts?: string[];
   reportedItemUrl?: string;
 };
-type Existing = { id: number; slug: string; publication: string; category_slug: string };
+type Existing = { id: number; slug: string; publication: string; category_slug: string; lifecycle:string };
 
 const hash = (value:string) => createHash("sha256").update(value).digest("hex");
 
@@ -45,7 +45,7 @@ function offersFor(rows:Offer[]) {
   return [...offers.values()];
 }
 
-function insertObservation(db:DatabaseSync,row:StorefrontObservation,actor:string) {
+export function writeStorefrontObservation(db:DatabaseSync,row:StorefrontObservation,actor:string) {
   const name = textValue(row.name,100,"店名");
   const siteUrl = publicUrl(row.website);
   const storefront = storefrontIdentity(siteUrl.url);
@@ -90,8 +90,8 @@ function insertObservation(db:DatabaseSync,row:StorefrontObservation,actor:strin
     }
   }
   if (ids.size>1) throw new Error("关联到多个现有档案，须先合并已确认相同的店铺。");
-  const existing = one<Existing>(db,"SELECT id,slug,publication,category_slug FROM sites WHERE id=?",ids.values().next().value ?? null);
-  if (existing && (existing.publication!=="published" || !["ai-topup","ai-card"].includes(existing.category_slug))) {
+  const existing = one<Existing>(db,"SELECT id,slug,publication,category_slug,lifecycle FROM sites WHERE id=?",ids.values().next().value ?? null);
+  if (existing && (existing.publication!=="published" || existing.lifecycle==="closed" || !["ai-topup","ai-card"].includes(existing.category_slug))) {
     throw new Error("该店已有未公开档案或分类不同，需核对归属。");
   }
   const canonical = storefront?.url ?? siteUrl.url;
@@ -157,7 +157,7 @@ export function importStorefronts(db:DatabaseSync,rows:StorefrontObservation[],a
   if (!Array.isArray(rows) || rows.length>5000) throw new Error("每批最多处理 5,000 家店铺。");
   return rows.map(row=>{
     try {
-      const outcome = transaction(db,()=>insertObservation(db,row,actor));
+      const outcome = transaction(db,()=>writeStorefrontObservation(db,row,actor));
       return {website:row.website,name:row.name,...outcome};
     } catch (error) {
       return {website:row?.website,name:row?.name,error:error instanceof Error?error.message:"写入失败"};

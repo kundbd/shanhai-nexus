@@ -1,0 +1,84 @@
+[
+  {
+    "name": "GPT 订阅站",
+    "url": "https://buygpt.app/",
+    "category": "ai-card",
+    "summary": "提供 ChatGPT 订阅的人工发码与兑换协助。",
+    "merchant_details": {
+      "ai_products": "ChatGPT Plus、Pro",
+      "delivery_methods": "code",
+      "monthly_price": "ChatGPT Plus：FAQ 公开列促销价 CNY 139 / 月",
+      "delivery_window": "商家公开页称收款确认后发送卡密"
+    },
+    "basics": {
+      "refunds": "商家 FAQ 列有充值失败退款，须按服务条款。"
+    },
+    "source_url": "https://buygpt.app/faq",
+    "source_title": "GPT 订阅站 · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "提供 ChatGPT 订阅的人工发码与兑换协助。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "third_party"
+  },
+  {
+    "name": "二水 AI 订阅管家",
+    "url": "https://ai.ershuiai.com/",
+    "category": "ai-card",
+    "summary": "公布多种 AI 会员充值商品，页面列有自助发码和按商品区分的售后说明。",
+    "merchant_details": {
+      "ai_products": "ChatGPT Go、Plus、Pro，Claude Pro、Gemini Pro，Notion Business",
+      "delivery_methods": "topup,code",
+      "delivery_window": "官网称付款后自动发码"
+    },
+    "source_url": "https://ai.ershuiai.com/",
+    "source_title": "二水 AI 订阅管家 · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "公布多种 AI 会员充值商品，页面列有自助发码和按商品区分的售后说明。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "third_party"
+  },
+  {
+    "name": "魔戒",
+    "url": "https://mojie.work/",
+    "category": "airport",
+    "summary": "节点订阅商家；该入口是公开登录页，套餐细节待进一步核实。",
+    "merchant_details": {},
+    "source_url": "https://mojie.work/",
+    "source_title": "魔戒 · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "节点订阅商家；该入口是公开登录页，套餐细节待进一步核实。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "unknown"
+  },
+  {
+    "name": "飞机云",
+    "url": "https://feijicloud.com/",
+    "category": "airport",
+    "summary": "节点订阅商家；该入口是公开登录页，套餐细节待进一步核实。",
+    "merchant_details": {},
+    "source_url": "https://feijicloud.com/",
+    "source_title": "飞机云 · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "节点订阅商家；该入口是公开登录页，套餐细节待进一步核实。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "unknown"
+  },
+  {
+    "name": "NovAI",
+    "url": "https://aiapi-pro.com/",
+    "category": "ai-relay",
+    "summary": "官网列有面向开发者的多模型 API，涵盖图像、视频和文本。",
+    "merchant_details": {},
+    "source_url": "https://aiapi-pro.com/",
+    "source_title": "NovAI · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "官网列有面向开发者的多模型 API，涵盖图像、视频和文本。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "third_party"
+  }
+]

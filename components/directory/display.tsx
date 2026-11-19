@@ -2,11 +2,13 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { categoryHref, editorialOrigins, incidentLabels, natures, observationHref, siteHref, type Editorial, type Incident, type Price, type Site, type Source } from "@/lib/directory/types";
 import { publicClaims,type SitePriceMatch } from "@/lib/directory/read";
+import type { StartingPrice } from "@/lib/directory/price-board";
 import { Highlight } from "@/components/catalog/highlight";
 import { directory } from "@/lib/directory/db";
 import { reviewSummaries,type ReviewSummary } from "@/lib/directory/reviews";
 import { operators,publicLifecycleLabels,publicWebsiteLabel } from "@/lib/directory/taxonomy";
 import { MerchantAvatar } from "./merchant-avatar";
+import { OfferIcon } from "./offer-icon";
 
 export function CatalogBadge({site}:{site:Site}) {
   const label=site.product_observed_at?"公开商品已收录":site.has_public_prices?"有公开报价":"已收录";
@@ -19,6 +21,7 @@ export function quoteDetailLabel(value: string | null | undefined) {
 }
 
 const localDate = new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"});
+const startingYuan = new Intl.NumberFormat("zh-CN",{style:"currency",currency:"CNY",minimumFractionDigits:2,maximumFractionDigits:8});
 export function day(value?: string | null) {
   if (!value) return "尚未核实";
   const parsed=value.includes("T")?new Date(value):null;
@@ -35,6 +38,17 @@ export function priceLabel(price: Price) {
   }
 }
 
+export function StartingPriceLabel({price}:{price:StartingPrice|undefined}) {
+  if (!price) return <span>暂无可用报价</span>;
+  const period=quoteDetailLabel(price.period);
+  return <>
+    <span><strong>{price.converted&&"约 "}{startingYuan.format(price.cnyAmount)}</strong>{!price.referenceAt&&" 起"}</span>
+    {price.referenceAt
+      ? <small>第三方标价 · {day(price.referenceAt)}</small>
+      : period&&<small>{period==="月"||period==="年"?`${period}付`:period}</small>}
+  </>;
+}
+
 export function External({ href, children }: { href: string; children: React.ReactNode }) {
   return <a className="external-ref" href={href} rel="noreferrer" target="_blank">{children}<ArrowUpRight size={13} aria-hidden="true" /></a>;
 }
@@ -47,16 +61,19 @@ export function ShopRatingBadge({href,summary}:{href:string;summary?:ReviewSumma
   </Link>;
 }
 
-export function SiteTable({ sites,priceMatches,query="" }: { sites: readonly Site[];priceMatches?:ReadonlyMap<number,SitePriceMatch>;query?:string }) {
+export function SiteTable({ sites,priceMatches,startingPrices,query="" }: {
+  sites: readonly Site[];priceMatches?:ReadonlyMap<number,SitePriceMatch>;startingPrices?:ReadonlyMap<number,StartingPrice>;query?:string;
+}) {
   const ratings=reviewSummaries(directory(),sites.map(({id})=>id));
-  return <div className="records" role="table" aria-label="服务商档案">
-    <div className="record record-head" role="row"><span role="columnheader">服务商</span><span role="columnheader">分类</span><span role="columnheader">收录内容</span><span role="columnheader">最近更新</span><span role="columnheader" aria-label="查看档案" /></div>
+  return <div className={startingPrices?"records records-with-prices":"records"} role="table" aria-label="服务商档案">
+    <div className="record record-head" role="row"><span role="columnheader">服务商</span>{startingPrices&&<span role="columnheader">商品起价</span>}<span role="columnheader">分类</span><span role="columnheader">收录内容</span><span role="columnheader">最近更新</span><span role="columnheader" aria-label="查看档案" /></div>
     {sites.map((site) => {
       const match=priceMatches?.get(site.id);
       return <div className="record" key={site.id} role="row">
       <div className="record-name" role="cell"><MerchantAvatar site={site}/><div><Link href={siteHref(site.slug)}>{site.name}</Link><span className="record-domain">{site.hosted_storefront?site.domain+new URL(site.website).pathname:site.domain}</span>{site.summary && <p>{site.summary}</p>}
-        {match&&<p className="record-price-match">{match.storefront?"匹配商品":"匹配报价"} · <Link href={`${siteHref(site.slug)}#prices`}><Highlight value={match.label} query={query}/></Link></p>}
+        {match&&<p className="record-price-match"><OfferIcon price={match} site={site}/><span>{match.storefront?"匹配商品":"匹配报价"} · <Link href={`${siteHref(site.slug)}#prices`}><Highlight value={match.label} query={query}/></Link></span></p>}
       </div></div>
+      {startingPrices&&<div className="record-start-price" role="cell"><StartingPriceLabel price={startingPrices.get(site.id)}/></div>}
       <div className="record-category" role="cell"><Link className="category-tag" href={categoryHref(site.category_slug)}>{site.category_label}</Link><ShopRatingBadge href={`${siteHref(site.slug)}#reviews`} summary={ratings.get(site.id)}/></div>
       <div role="cell"><CatalogBadge site={site}/><small className="record-date block">{publicLifecycleLabels[site.lifecycle]}</small></div>
       <div role="cell" className="record-date">{day(site.updated_at)}<small className="block">{publicWebsiteLabel}</small>{site.operator_kind!=="unknown" && <small className="block">{operators[site.operator_kind]}</small>}</div>

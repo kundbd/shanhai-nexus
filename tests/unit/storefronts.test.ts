@@ -24,6 +24,12 @@ test("offer icons use the visible brand and distinguish Codex verification from 
   assert.equal(offerAiBrand("Gemini Ultra","ChatGPT Plus","ai-card","shop"),"Gemini");
   assert.equal(offerAiBrand("ChatGPT + Claude 组合","Claude","ai-card","shop"),undefined);
   assert.equal(offerAiBrand(null,"GLM-5.2","ai-relay","gateway"),"GLM");
+  assert.equal(offerAiBrand("GP,T plus 月卡","代充","ai-card","shop"),"ChatGPT");
+  assert.equal(offerAiBrand("Gork Premium CDK","代充","ai-card","shop"),"Grok");
+  assert.equal(offerAiBrand("GitHub Copilot 年付","Copilot","ai-topup","shop"),"GitHub Copilot");
+  assert.equal(offerAiBrand("谷歌反重力 会员","订阅","ai-topup","shop"),"Antigravity");
+  assert.equal(offerAiBrand("GeminiPro 订阅6个月 反重力可用","Gemini Pro","ai-card","shop"),"Gemini");
+  assert.equal(offerAiBrand("G Plus 月卡","代充","ai-card","shop"),undefined);
   assert.equal(offerAiBrand(null,"Plus","ai-subscriptions","claude"),"Claude");
   assert.equal(offerAiBrand(null,"VPS · 支持 ChatGPT","vps","host"),undefined);
 });
@@ -75,7 +81,9 @@ test("first-party product extraction keeps a public price even without seller do
   const row=publicProductObservation(product(),url,seenAt);
   assert.equal(row?.name,"测试 AI 小铺");
   assert.equal(row?.sourceUrl,url);
-  assert.deepEqual(row?.offers,[{plan:"ChatGPT Plus 月卡代充",cnyMinor:10850,period:"1个月"}]);
+  assert.deepEqual(row?.offers,[{plan:"ChatGPT Plus 月卡代充",cnyMinor:10850,period:"1个月",availability:"available"}]);
+  assert.equal(publicProductObservation(product({availability:undefined}),url,seenAt)?.offers[0].availability,undefined);
+  assert.equal(publicProductObservation(product({availability:"https://schema.org/OutOfStock"}),url,seenAt)?.offers[0].availability,"unavailable");
   assert.equal(publicProductObservation(product({priceCurrency:undefined}),url,seenAt),undefined);
   assert.equal(publicProductObservation(product({priceCurrency:"USD"}),url,seenAt),undefined);
   assert.equal(publicProductObservation(product({url:"https://other.example.net/products/cheap"}),url,seenAt),undefined);

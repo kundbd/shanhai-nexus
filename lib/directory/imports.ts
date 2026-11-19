@@ -4,7 +4,7 @@ import { all, one, transaction } from "./db";
 import type { ImportItem } from "./types";
 import { choice,dateValue, now, recordId, slugValue, textValue, today, websiteUrl } from "./validation";
 import { audit, merchantDetails,persist, type Fields } from "./write";
-import { suggestCategory,operators,lifecycleLabels,pipelineForCategory } from "./taxonomy";
+import { suggestCategory,operators,lifecycleLabels,isRetiredCategory,pipelineForCategory } from "./taxonomy";
 import { storefrontIdentity } from "./storefront-identity";
 
 export const importLimits = { bytes: 8_000_000, rows: 5000 };
@@ -194,9 +194,14 @@ export function getBatch(batch: number, db: DatabaseSync) {
 
 export function previewPage(db:DatabaseSync,batch:number,state:string,page:number) {
   const size=40;
+  type DisplayState=ImportItem["state"]|"archived";
+  const displayState="CASE WHEN r.state='archived' THEN 'archived' ELSE i.state END";
+  const from="FROM import_items i LEFT JOIN import_item_reviews r ON r.item_id=i.id WHERE i.batch_id=?";
   return {
-    counts:all<{state:ImportItem["state"];n:number}>(db,"SELECT state,count(*) n FROM import_items WHERE batch_id=? GROUP BY state",batch),
-    rows:all<ImportItem>(db,"SELECT * FROM import_items WHERE batch_id=? AND (?='' OR state=?) ORDER BY id LIMIT ? OFFSET ?",batch,state,state,size,(page-1)*size),
+    counts:all<{state:DisplayState;n:number}>(db,`SELECT ${displayState} state,count(*) n ${from} GROUP BY ${displayState}`,batch),
+    rows:all<ImportItem&{display_state:DisplayState;review_note:string|null}>(db,
+      `SELECT i.*, ${displayState} display_state,r.note review_note ${from}
+        AND (?='' OR (${displayState})=?) ORDER BY i.id LIMIT ? OFFSET ?`,batch,state,state,size,(page-1)*size),
     size,
   };
 }
@@ -213,12 +218,23 @@ export function conflicts(db:DatabaseSync,row:ImportItem) {
 }
 
 function cannotApprove(db:DatabaseSync,data:Candidate,row:ImportItem) {
+  if (one(db,"SELECT 1 FROM import_item_reviews WHERE item_id=? AND state='archived'",row.id)) return "此导入条目已归档。";
+  if (isRetiredCategory(data.category)) return "此服务分类已下架。";
   if (storefrontIdentity(data.url)) return "平台店铺按独立链接收录，请使用带公开人民币标价的店铺批次。";
   if (!one(db,"SELECT 1 FROM categories WHERE slug=? AND parent_slug IS NOT NULL",data.category)) return "人工审核时须选择有效子分类。";
   if (data.lifecycle==="closed") return "新候选不能直接标记停运，须先为档案登记经过核实的停运来源。";
   if ((data.category==="ai-subscriptions" && data.operator_kind==="third_party") ||
       (["ai-topup","ai-card","ai-relay"].includes(data.category) && data.operator_kind==="official")) return "分类与运营性质冲突。";
   if (data.basis==="basic" || data.basis==="official") {
+    if (data.basis==="basic" && one(db,`SELECT 1 FROM import_item_reviews WHERE item_id=?
+      AND state='checking' AND model_decision='approve' AND approval_digest=?`,row.id,createHash("sha256").update(row.payload).digest("hex"))) {
+      const website=websiteUrl(data.url);
+      if (data.source_kind!=="official"||website.registrable!==websiteUrl(data.source_url).registrable||data.name===website.domain) {
+        return "自动批准需要同主体官网及公开商家名称。";
+      }
+      if (one(db,"SELECT 1 FROM site_domains WHERE registrable=?",website.registrable)) return "所属注册域已登记。";
+      return "";
+    }
     if (one(db,`SELECT 1 FROM merchant_admission_decisions a JOIN merchant_candidates c ON c.id=a.candidate_id
       WHERE a.item_id=? AND a.outcome=? AND c.registrable=? AND json_extract(a.evidence,'$.name')=?
       AND json_extract(a.evidence,'$.website')=? AND json_extract(a.evidence,'$.category')=?
@@ -332,6 +348,7 @@ export function approveItems(db:DatabaseSync,batch:number,ids:number[],actor:str
 export function publishBatch(db: DatabaseSync, batchId: number, actor: string, selected?:number[],withinTransaction=false) {
   const write=()=>{
     const rows = all<ImportItem>(db,`SELECT * FROM import_items WHERE batch_id=? AND state='approved'
+      AND NOT EXISTS(SELECT 1 FROM import_item_reviews r WHERE r.item_id=import_items.id AND r.state='archived')
       AND (? IS NULL OR id IN (SELECT value FROM json_each(?))) ORDER BY id`,batchId,selected?1:null,JSON.stringify(selected??[]));
     let published = 0;
     for (const row of rows) {
@@ -398,6 +415,7 @@ export async function assistDraft(db: DatabaseSync, id: number, actor: string) {
   if (!endpoint) throw new Error("尚未配置编辑摘要服务。");
   const row = one<ImportItem>(db,"SELECT * FROM import_items WHERE id=?",recordId(id));
   if (!row || row.state === "published") throw new Error("导入项不存在或已发布。");
+  if (one(db,"SELECT 1 FROM import_item_reviews WHERE item_id=? AND state='archived'",row.id)) throw new Error("此导入条目已归档。");
   const { data } = candidate(JSON.parse(row.payload));
   if (!data.excerpt) throw new Error("请先存入可公开引用的来源摘录。");
   const headers: Record<string,string> = { "Content-Type":"application/json" };

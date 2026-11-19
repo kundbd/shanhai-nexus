@@ -1,0 +1,82 @@
+[
+  {
+    "slug": "third-party-chatgpt-toms-guide",
+    "merchant": "chatgpt",
+    "title": "Tom’s Guide 用七组提示比较 ChatGPT 与 Gemini",
+    "summary": "Amanda Caswell 在写作、代码调试等七个情境中对两款助手提出相同问题，逐题比较回答。",
+    "body": "作者在部分任务中更重视 ChatGPT 答案的结构和可读性，在另外一些任务中则更看重 Gemini 补充的背景。原文于 2026 年 3 月 31 日发布，结果对应所展示的提示和当时的模型。原文所在媒体披露站内链接可能产生联盟佣金。",
+    "source": {"url":"https://www.tomsguide.com/ai/i-put-chatgpt-vs-gemini-through-7-real-world-tests-the-results-werent-what-i-expected","title":"Tom’s Guide · ChatGPT 与 Gemini 七组测试原文","publisher":"Tom’s Guide / Amanda Caswell","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-gemini-toms-guide",
+    "merchant": "gemini",
+    "title": "Tom’s Guide 比较 Gemini 在七个实际任务中的表现",
+    "summary": "Amanda Caswell 用相同的提示测试 Gemini 与 ChatGPT，并公开了问题、回答截图和逐项判断理由。",
+    "body": "作者认为 Gemini 在部分任务中更善于补充背景和处理模糊问题，其他题目的判断则取决于清晰度和完成方式。原文于 2026 年 3 月 31 日发布，评价范围限于文章展示的任务。原文所在媒体披露站内链接可能产生联盟佣金。",
+    "source": {"url":"https://www.tomsguide.com/ai/i-put-chatgpt-vs-gemini-through-7-real-world-tests-the-results-werent-what-i-expected","title":"Tom’s Guide · ChatGPT 与 Gemini 七组测试原文","publisher":"Tom’s Guide / Amanda Caswell","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-claude-code-toms-guide",
+    "merchant": "claude",
+    "title": "Tom’s Guide 观察 Claude Code 与 Codex 的使用额度",
+    "summary": "媒体结合公开额度说明与实际使用记录，分析同价位订阅处理开发任务时的额度差异。",
+    "body": "文章于 2026 年 11 月 10 日发布，指出模型、会话长度与任务复杂度都可能影响消耗。作者说明参与者执行的任务并未统一，样本结论仅适用于原文记录的使用情形。媒体披露站内链接可能产生联盟佣金。",
+    "source": {"url":"https://www.tomsguide.com/ai/i-compared-openai-codex-and-claude-codes-usage-limits-and-theres-a-catch-with-both-usd20-plans","title":"Tom’s Guide · Claude Code 与 Codex 额度观察原文","publisher":"Tom’s Guide","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-surfshark-techradar",
+    "merchant": "surfshark-com",
+    "title": "TechRadar 的 Surfshark 协议与速度测试",
+    "summary": "TechRadar 使用 10 Gbps 测试环境，对都柏林、洛杉矶的连接分别测试 WireGuard 与 OpenVPN。",
+    "body": "在这轮测试中，评测方记录的 WireGuard 吞吐高于 OpenVPN。原文公开了测试地点、重复测量方法和上一轮结果，便于读者理解不同环境下的变化。媒体披露站内链接可能产生联盟佣金。",
+    "source": {"url":"https://www.techradar.com/reviews/surfshark","title":"TechRadar · Surfshark 测评原文","publisher":"TechRadar","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-mullvad-privacy-guides",
+    "merchant": "mullvad",
+    "title": "Privacy Guides 对 Mullvad 的隐私功能评估",
+    "summary": "Privacy Guides 根据项目公开标准，整理了 Mullvad 的客户端开源情况、独立审计与付款选项。",
+    "body": "该评估也记录了 Mullvad 在 2023 年取消端口转发，依赖该选项的应用可能受到影响。原文附有审计记录、源代码及功能变更的链接，侧重隐私选型和功能差异。",
+    "source": {"url":"https://www.privacyguides.org/en/vpn/","title":"Privacy Guides · VPN 评估原文（Mullvad）","publisher":"Privacy Guides","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-proton-vpn-privacy-guides",
+    "merchant": "proton-vpn",
+    "title": "Privacy Guides 对 Proton VPN 的审计与客户端评估",
+    "summary": "Privacy Guides 整理了 Proton VPN 的浏览器扩展、客户端和基础设施的公开审计，并列出平台特定的功能限制。",
+    "body": "原文列出各次审计的机构和时间，并提醒 macOS 上的断线保护在主动断开连接时有适用限制。引用的审计覆盖特定版本与范围，原始报告可从评估页查阅。",
+    "source": {"url":"https://www.privacyguides.org/en/vpn/","title":"Privacy Guides · VPN 评估原文（Proton VPN）","publisher":"Privacy Guides","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-buyvm-vpsbenchmarks",
+    "merchant": "buyvm-net",
+    "title": "VPSBenchmarks 的 BuyVM Slice 2048 基准测试",
+    "summary": "评测方公开了 BuyVM Slice 2048 实例的 Web 负载、CPU、磁盘、网络传输和持续运行测试。",
+    "body": "这次测试记录于 2024 年 5 月 28 日。原文可以逐项查看指标和测试数据，用于了解当时该实例的性能。对其他机房和套餐的判断需要单独的同条件样本。",
+    "source": {"url":"https://www.vpsbenchmarks.com/trials/buyvm_performance_trial_28May2024","title":"VPSBenchmarks · BuyVM Slice 2048 测试原文","publisher":"VPSBenchmarks","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-vultr-vpsbenchmarks",
+    "merchant": "vultr",
+    "title": "VPSBenchmarks 的 Vultr 伊利诺伊州实例测试",
+    "summary": "VPSBenchmarks 在美国伊利诺伊州对 Vultr CPU Optimized 1-2-25 样本进行了基准测试。",
+    "body": "2026 年 11 月 1 日的测试页列出样本配置及 Web、CPU、磁盘和网络等分项结果。原始分项有助于评估具体工作负载，同品牌的其他地区与配置需要查阅相应样本。",
+    "source": {"url":"https://www.vpsbenchmarks.com/trials/vultr_performance_trial_01Nov2026","title":"VPSBenchmarks · Vultr CPU Optimized 1-2-25 测试原文","publisher":"VPSBenchmarks","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-openrouter-surelio",
+    "merchant": "openrouter",
+    "title": "Surelio 测试 OpenRouter 同一模型的不同上游响应",
+    "summary": "Surelio 选择 Llama 3.3 70B，通过 OpenRouter 向不同上游发送相同的翻译和摘要任务。",
+    "body": "在这组样本中，作者观察到一些上游拒绝执行任务的比例明显不同。结果描述的是这一个模型、所选上游与研究者的测试任务，可以作为固定上游做复测的参考。",
+    "source": {"url":"https://www.surelio.com/insights/research/openrouter-same-model-different-behaviour/","title":"Surelio · OpenRouter 上游响应差异测试原文","publisher":"Surelio","accessedAt":"2026-11-15"}
+  },
+  {
+    "slug": "third-party-just-my-socks-xiaoming2028",
+    "merchant": "justmysocks-net",
+    "title": "GitHub 作者记录 Just My Socks 的个人使用体验",
+    "summary": "GitHub 作者 xiaoming2028 分享了本人约半年的使用经历，并记录了连接速度变化与切换节点的情形。",
+    "body": "作者称在自己的网络环境中，速度随时段变化，偶尔需要换节点。原文是个人报告，未提供可复现的统一测速数据，参考范围限于作者的使用时段和网络。",
+    "source": {"url":"https://github.com/xiaoming2028/Just-My-Socks/blob/main/README.md","title":"GitHub · xiaoming2028 的 Just My Socks 体验原文","publisher":"GitHub / xiaoming2028","accessedAt":"2026-11-15"}
+  }
+]

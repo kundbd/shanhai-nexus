@@ -1,0 +1,38 @@
+[
+  {
+    "key": "shop-pay2gpt-sitemap",
+    "name": "Pay2GPT 官网 Sitemap",
+    "pipeline": "ai-retail",
+    "kind": "sitemap",
+    "access": "official",
+    "url": "https://pay2gpt.com/sitemap.xml",
+    "evidence_url": "https://pay2gpt.com/robots.txt",
+    "notes": "使用官网通过 robots.txt 公布的 sitemap，只记录同注册域证据站点，不导入报价或商品。",
+    "enabled": true,
+    "interval_hours": 168
+  },
+  {
+    "key": "shop-tangguo-sitemap",
+    "name": "Tangguo 官网 Sitemap",
+    "pipeline": "ai-retail",
+    "kind": "sitemap",
+    "access": "official",
+    "url": "https://tangguo.app/sitemap.xml",
+    "evidence_url": "https://tangguo.app/robots.txt",
+    "notes": "使用官网通过 robots.txt 公布的 sitemap，只采公开同注册域入口，按主域去重。",
+    "enabled": true,
+    "interval_hours": 168
+  },
+  {
+    "key": "vpn-audit-snapshot",
+    "name": "VPNInfobase 授权本地快照",
+    "pipeline": "connections",
+    "kind": "manual",
+    "access": "licensed",
+    "url": "https://github.com/hardcor3nl/vpn-audit-register/blob/8f896819cec392f1e8cf9c6c82a6b7cf7e6001f7/vpn-audit-register.json",
+    "evidence_url": "https://vpninfobase.com/vpn-audit-register/",
+    "notes": "VPNInfobase · CC BY 4.0。只验证上一轮已留存的名录名称、原始网站与去重，不发布历史或状态未经复核的条目。",
+    "enabled": false,
+    "interval_hours": 168
+  }
+]

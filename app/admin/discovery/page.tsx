@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdminNav,Notice,requireAdmin } from "@/components/directory/admin";
+import { Notice,requireAdmin } from "@/components/directory/admin";
 import { param,type Params } from "@/components/directory/catalog-page";
 import { all,directory,one } from "@/lib/directory/db";
 import { deepSeekSearchUsage,discoveryJobs,discoverySources,type Job } from "@/lib/directory/discovery";
@@ -22,7 +22,7 @@ export default async function Discovery({searchParams}:{searchParams:Promise<Par
   const hits=selectedJob?all<{id:number;url:string;domain:string;evidence_url:string;query:string;decision:string;reason:string}>(db,
     "SELECT * FROM discovery_hits WHERE job_id=? ORDER BY id LIMIT 51 OFFSET ?",selectedJob.id,(page-1)*50):[];
   return <div className="frame page admin-page"><div className="catalog-heading"><h1>商家发现</h1><p>来源许可、任务历史与候选审核。搜索结果先保存出处，由编辑批准后进入公开目录。</p></div>
-    <AdminNav/><Notice input={input}/>
+    <Notice input={input}/>
     <div className="child-categories"><Link href="/admin/campaigns">批量采集任务</Link><Link href="/admin/imports">候选池与分类统计</Link><a href="/api/admin/discovery-export?format=csv">导出档案 CSV</a><a href="/api/admin/discovery-export?format=json">导出档案 JSON</a><a href="/api/admin/discovery-export?kind=candidates&format=csv">导出候选 CSV</a></div>
     {sources.some(source=>source.kind==="deepseek")&&<p>DeepSeek Search · 今日已占用 {deepSeek.used} / {deepSeek.limit} 次（UTC）</p>}
     <h2>发现来源</h2>

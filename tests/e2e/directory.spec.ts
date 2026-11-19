@@ -9,11 +9,6 @@ async function capture(page:Page,name:string,project:string) {
 test("directory filtering, evidence and shareable routes",async({page},testInfo)=>{
   await page.goto("/");
   await expect(page.locator('head link[rel~="icon"],head link[rel="apple-touch-icon"]')).toHaveCount(0);
-  const announcement=page.getByRole("region",{name:"站点公告"});
-  await expect(announcement).toContainText("当前可用");
-  await expect(announcement).toContainText("后续维护");
-  await expect(announcement.getByText("评论区严禁涉政",{exact:true})).toBeVisible();
-  await expect(announcement.getByRole("link",{name:"提交纠错"})).toHaveAttribute("href","/contact");
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   await expect(page.locator('#main-navigation a[href="/compare"]')).toHaveCount(0);
   await page.locator("#home-categories").getByRole("link",{name:/AI 代充与卡网/}).click();
@@ -44,6 +39,37 @@ test("directory filtering, evidence and shareable routes",async({page},testInfo)
   await expect(page.getByRole("heading",{name:"判断与来源"})).toBeVisible();
   await expect(page.getByText("官方公开资料",{exact:true})).toHaveCount(3);
   await capture(page,"observation",testInfo.project.name);
+});
+
+test("guests can read each public announcement and clear the unread badge",async({page})=>{
+  await page.goto("/");
+  await expect(page.getByRole("main")).not.toContainText("站点公告");
+  const messages=page.getByRole("banner").getByRole("link",{name:/^消息/});
+  await expect(messages).toHaveAccessibleName("消息，有未读公告");
+  await messages.click();
+  await expect(page).toHaveURL(/\/messages$/);
+  await expect(page.getByRole("heading",{name:"消息",exact:true})).toBeVisible();
+  await expect(page.locator("main summary")).toContainText(["第 1 条公告", "第 2 条公告"]);
+
+  const first=page.locator("main details").filter({hasText:"站点公告"});
+  const second=page.locator("main details").filter({hasText:"注册验证码提醒"});
+  await first.locator("summary").click();
+  await expect(first.getByText("评论区严禁涉政",{exact:true})).toBeVisible();
+  await expect(first).toContainText("当前可用");
+  await expect(first).toContainText("后续维护");
+  await expect(first.getByRole("link",{name:"提交纠错"})).toHaveAttribute("href","/contact");
+  await expect(first.getByRole("img",{name:"未读"})).toHaveCount(0);
+  await expect(messages).toHaveAccessibleName("消息，有未读公告");
+
+  await page.reload();
+  await expect(first.getByRole("img",{name:"未读"})).toHaveCount(0);
+  await expect(second.getByRole("img",{name:"未读"})).toBeVisible();
+  await second.locator("summary").click();
+  await expect(second.getByText("用户注册时未接收到验证码可以检查垃圾邮箱或者等待片刻",{exact:true})).toBeVisible();
+  await expect(messages).toHaveAccessibleName("消息");
+  await page.goto("/");
+  await expect(messages).toHaveAccessibleName("消息");
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 });
 
 test("footer links open site information, policy sections and the cooperation email",async({page})=>{
@@ -101,14 +127,17 @@ test("home shows CNY price extremes in separate categories and AI products",asyn
   const categories=board.getByRole("navigation",{name:"报价分类"});
   const category=(title:string)=>categories.getByRole("link",{name:title,exact:true});
   await expect(categories).toHaveClass(/\bfilter-pills\b/);
-  await expect(categories.getByRole("link")).toHaveText(["AI 代充与卡网","AI API 中转","机场与 VPN","U 卡与支付","VPS 与云服务"]);
+  await expect(categories.getByRole("link")).toHaveText(["AI 代充与卡网","AI API 中转","U 卡与支付","VPS 与云服务"]);
   await expect(category("AI 代充与卡网")).toHaveAttribute("aria-current","page");
   await expect(board.getByRole("heading",{name:/公开报价区间.*人民币/})).toBeVisible();
+  await expect(board.locator(".price-updated")).toHaveText(/^每 5 小时更新一次(?: · 最近更新 .+)?$/);
+  await expect(board.locator(".price-scope")).toHaveCount(0);
+  await expect(board.getByText(/项原页在售核对|项第三方有货观测|项同组报价未进入当前区间/)).toHaveCount(0);
   await expect(board.getByRole("link",{name:"价格对比",exact:true})).toHaveCount(0);
-  await expect(board.getByRole("heading",{name:"价格最低",exact:true})).toBeVisible();
-  await expect(board.getByRole("heading",{name:"价格最高",exact:true})).toBeVisible();
+  await expect(board.getByRole("heading",{name:/^(价格最低|现有报价)$/})).toBeVisible();
   await expect(board.locator(".quote-amount").first()).toContainText(/[¥￥]/);
-  await expect(board.getByRole("link",{name:/^(报价来源|第三方报价快照)$/})).toHaveCount(2);
+  await expect(board.getByRole("link",{name:"报价来源",exact:true}).first()).toBeVisible();
+  await expect(board.getByRole("link",{name:"第三方报价快照"})).toHaveCount(0);
   const products=board.getByRole("navigation",{name:"AI 产品"});
   const tiers=board.getByRole("navigation",{name:"订阅等级"});
   const billing=board.getByRole("navigation",{name:"订阅周期"});
@@ -118,32 +147,30 @@ test("home shows CNY price extremes in separate categories and AI products",asyn
     await expect(tiers.getByRole("link",{name:"Pro 200",exact:true})).toHaveAttribute("aria-current","page");
   }
   await tiers.getByRole("link",{name:"Plus",exact:true}).click();
-  await expect(board.locator(".price-scope")).toContainText("ChatGPT Plus · 月付");
-  if(process.env.E2E_STOREFRONT_PRICES==="1") {
-    await expect(board.locator(".price-scope")).toContainText(/\d{3,} 家商家/);
-    await expect(board.getByText(/含 \d+ 项店铺公开标价/)).toBeVisible();
-    await expect(board.getByRole("link",{name:"原商品页"}).first()).toHaveAttribute("href",/^https:\/\//);
-  }
+  await expect(products.getByRole("link",{name:"ChatGPT",exact:true})).toHaveAttribute("aria-current","page");
+  await expect(tiers.getByRole("link",{name:"Plus",exact:true})).toHaveAttribute("aria-current","page");
+  await expect(billing.getByRole("link",{name:"月付",exact:true})).toHaveAttribute("aria-current","page");
   await billing.getByRole("link",{name:"年付"}).click();
-  await expect(board.locator(".price-scope")).toContainText("ChatGPT Plus · 年付");
+  await expect(billing.getByRole("link",{name:"年付",exact:true})).toHaveAttribute("aria-current","page");
   await expect(board.locator(".quote-tile").first()).toBeVisible();
   await tiers.getByRole("link",{name:"Pro 100",exact:true}).click();
-  await expect(board.locator(".price-scope, .plain-empty")).toContainText("ChatGPT Pro 100 · 年付");
+  await expect(tiers.getByRole("link",{name:"Pro 100",exact:true})).toHaveAttribute("aria-current","page");
+  await expect(billing.getByRole("link",{name:"年付",exact:true})).toHaveAttribute("aria-current","page");
   await billing.getByRole("link",{name:"月付"}).click();
-  await expect(board.locator(".price-scope")).toContainText("ChatGPT Pro 100 · 月付");
+  await expect(billing.getByRole("link",{name:"月付",exact:true})).toHaveAttribute("aria-current","page");
   await products.getByRole("link",{name:"Claude",exact:true}).click();
   await expect(products.getByRole("link",{name:"Claude",exact:true})).toHaveAttribute("aria-current","page");
   await tiers.getByRole("link",{name:"Pro",exact:true}).click();
   await expect(tiers.getByRole("link",{name:"Pro",exact:true})).toHaveAttribute("aria-current","page");
-  await expect(board.locator(".price-scope")).toContainText("Claude Pro · 月付");
+  await expect(billing.getByRole("link",{name:"月付",exact:true})).toHaveAttribute("aria-current","page");
   await expect(board.locator(".quote-tile").first()).not.toContainText("ChatGPT");
   await billing.getByRole("link",{name:"年付"}).click();
-  await expect(board.locator(".price-scope")).toContainText("Claude Pro · 年付");
+  await expect(billing.getByRole("link",{name:"年付",exact:true})).toHaveAttribute("aria-current","page");
   await capture(page,"home-ai-tier-year",info.project.name);
   if(process.env.E2E_CODEX_VERIFICATION==="1") {
     await expect(products.getByRole("link",{name:"Codex",exact:true})).toHaveCount(0);
     await products.getByRole("link",{name:"Codex 接码",exact:true}).click();
-    await expect(board.locator(".price-scope")).toContainText("Codex 接码 · 每次");
+    await expect(products.getByRole("link",{name:"Codex 接码",exact:true})).toHaveAttribute("aria-current","page");
     await expect(tiers).toHaveCount(0);
     await expect(billing).toHaveCount(0);
     await capture(page,"home-codex-verification",info.project.name);
@@ -154,23 +181,12 @@ test("home shows CNY price extremes in separate categories and AI products",asyn
   await expect(board.locator(".quote-tile").first()).toContainText("NixiHost");
   await expect(board.getByRole("navigation",{name:"AI 产品"})).toHaveCount(0);
   await capture(page,"home-cny-prices",info.project.name);
-  await category("机场与 VPN").click();
-  const network=board.getByRole("navigation",{name:"机场与 VPN 子类"});
-  await network.getByRole("link",{name:"VPN",exact:true}).click();
-  await expect(board.locator(".price-scope")).toContainText("VPN");
-  await expect(category("机场与 VPN")).toHaveAttribute("aria-current","page");
-  await network.getByRole("link",{name:"机场",exact:true}).click();
-  await expect(page).toHaveURL(/price=airport/);
-  if (process.env.E2E_AIRPORT_PRICE_DATA==="1") {
-    await expect(board.getByRole("link",{name:"乘风 Windway",exact:true})).toBeVisible();
-    await expect(board.getByRole("navigation",{name:"计费周期与地区"}).getByRole("link",{name:/^季/})).toBeVisible();
-  } else await expect(board.locator(".plain-empty")).toContainText("机场暂无可比的公开报价");
   await category("AI API 中转").click();
   await expect(category("AI API 中转")).toHaveAttribute("aria-current","page");
-  if(process.env.E2E_STOREFRONT_PRICES==="1")await expect(board.locator(".price-scope")).toContainText("AI API 中转");
+  if(process.env.E2E_STOREFRONT_PRICES==="1")await expect(board.locator(".quote-tile").first()).toBeVisible();
   await category("U 卡与支付").click();
   await expect(category("U 卡与支付")).toHaveAttribute("aria-current","page");
-  if(process.env.E2E_STOREFRONT_PRICES==="1")await expect(board.locator(".price-scope")).toContainText("跨境支付");
+  if(process.env.E2E_STOREFRONT_PRICES==="1")await expect(board.locator(".quote-tile").first()).toBeVisible();
   await capture(page,"home-price-category-pills",info.project.name);
 });
 
@@ -277,6 +293,10 @@ test("reported RMB prices show the archive and merchant item independently",asyn
   }
   if(process.env.E2E_REPORTED_OUT_OF_STOCK==="1")await expect(section).toContainText("观测时缺货。");
   await capture(page,"reported-storefront",info.project.name);
+  await page.goto("/?price=ai&product=ChatGPT&tier=Plus&billing=month&delivery=topup#home-prices");
+  const board=page.locator("#home-prices");
+  await expect(board.getByRole("navigation",{name:"交付方式"}).getByRole("link",{name:"代充",exact:true})).toHaveAttribute("aria-current","page");
+  await expect(board.getByRole("link",{name:"第三方报价快照"})).toHaveCount(0);
 });
 
 test("third-party review labels and publisher source follow the merchant into the observation",async({page},info)=>{
@@ -304,15 +324,17 @@ test("editor workflow imports, approves, publishes, edits and moderates",async({
   await page.getByLabel("用户名").fill("test-editor");
   await page.getByLabel("密码").fill(process.env.E2E_ADMIN_PASSWORD!);
   await page.getByRole("button",{name:"登录后台"}).click();
-  await expect(page.getByRole("heading",{name:"编辑后台"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"概览",exact:true})).toBeVisible();
   await expect(page.getByRole("heading",{name:"目录概况"})).toBeVisible();
-  await expect(page.getByRole("link",{name:/25 公开商家/})).toHaveAttribute("href","/admin/sites");
+  await expect(page.getByRole("link",{name:/22 公开商家/})).toHaveAttribute("href","/admin/sites");
   await expect(page.getByRole("link",{name:/待审核投稿/})).toHaveAttribute("href","/admin/submissions?state=pending");
-  await expect(page.getByRole("navigation",{name:"后台栏目"}).getByRole("link",{name:"批量采集"})).toHaveAttribute("href","/admin/campaigns");
+  const adminNavigation=page.getByRole("navigation",{name:"后台栏目"});
+  await adminNavigation.getByText("更多管理",{exact:true}).click();
+  await expect(adminNavigation.getByRole("link",{name:"批量采集"})).toHaveAttribute("href","/admin/campaigns");
   const forged = await page.request.post("/api/admin/manage",{form:{action:"delete",entity:"sites",id:"1"},headers:{origin:"https://wrong-origin.net"},maxRedirects:0});
   expect(forged.status()).toBe(403);
   await page.getByRole("link",{name:"批量导入"}).click();
-  await expect(page.getByRole("heading",{name:"采集覆盖统计"})).toBeVisible();
+  await expect(page.getByText("采集覆盖统计",{exact:true})).toBeVisible();
   await page.getByText("按采集管线导入或登记受限来源",{exact:true}).click();
   await expect(page.getByRole("combobox",{name:"采集管线"}).locator("option")).toHaveCount(5);
   await page.getByLabel("导入格式").selectOption("json");
@@ -335,6 +357,7 @@ test("editor workflow imports, approves, publishes, edits and moderates",async({
   await page.getByRole("link",{name:/隔离测试工具/}).click();
   await expect(page.getByRole("combobox",{name:"分类",exact:true})).toHaveValue("digital-services");
   await expect(page.getByRole("combobox",{name:"发布状态",exact:true})).toHaveValue("published");
+  await page.getByText("更多资料",{exact:true}).click();
   await page.getByRole("combobox",{name:"资料状态",exact:true}).selectOption("verified");
   await page.getByRole("button",{name:"保存",exact:true}).click();
   await expect(page.getByText(/须先保存相符/)).toBeVisible();
@@ -348,9 +371,8 @@ test("editor workflow imports, approves, publishes, edits and moderates",async({
   await expect(page.getByText("已收到，资料进入编辑审核。")).toBeVisible();
   await page.goto("/admin/submissions?state=pending");
   await expect(page.locator("form.field-stack").getByRole("combobox",{name:"审核状态",exact:true})).toHaveValue("pending");
-  await page.getByRole("link",{name:/correction.*待审核/}).click();
-  await page.locator("form.admin-form").getByRole("combobox",{name:"审核状态",exact:true}).selectOption("accepted");
-  await page.getByRole("button",{name:"保存审核"}).click();
+  await expect(page.getByRole("heading",{name:"资料纠错",exact:true})).toBeVisible();
+  await page.getByRole("button",{name:"接受投稿",exact:true}).click();
   await expect(page.getByText("已保存。")).toBeVisible();
   await page.goto("/admin/audit");
   await expect(page.locator("summary").filter({hasText:/update · submissions/})).toHaveCount(1);
@@ -363,7 +385,8 @@ test("editor workflow imports, approves, publishes, edits and moderates",async({
   await page.getByRole("button",{name:"提交商家资料"}).click();
   await expect(page.getByText("已收到，资料进入编辑审核。")).toBeVisible();
   await page.goto("/admin/submissions?state=pending");
-  await page.getByRole("link",{name:/site · 待审核/}).click();
+  await expect(page.getByRole("heading",{name:"浏览器投稿隔离样本",exact:true})).toBeVisible();
+  await page.getByText("手动转入采集",{exact:true}).click();
   await page.getByRole("checkbox",{name:/已确认投稿人有权/}).check();
   await page.getByRole("button",{name:"转入采集管线"}).click();
   await expect(page.getByText("商家投稿已转入候选审核。")).toBeVisible();
@@ -460,13 +483,6 @@ test("re-reviewed leads keep source links and separate public evidence statuses"
 
 test("basic catalog intake shows public service evidence without implying trust",async({page})=>{
   test.skip(process.env.E2E_BASIC_REVIEW_DATA!=="1","需要完成基础收录复核的本地数据库副本。");
-  await page.goto("/services?category=airport&q=9yunjichang.com&official=pending");
-  await page.getByRole("link",{name:"九云机场",exact:true}).click();
-  await expect(page.getByRole("heading",{name:"九云机场",exact:true})).toBeVisible();
-  await expect(page.locator(".profile-header").getByText("资料待核实",{exact:true})).toBeVisible();
-  await expect(page.locator("#basics").getByText(/^可达(?: · |$)/)).toBeVisible();
-  await expect(page.getByText("暂无评价 · 暂无评分",{exact:true})).toBeVisible();
-  await expect(page.locator('#sources a[href="https://www.9yunjichang.com/"]')).toBeVisible();
   await page.goto("/search?q=aizzx.me&type=service");
   await page.getByRole("link",{name:"AI猪的店铺",exact:true}).click();
   await expect(page.locator(".profile-header").getByText("资料待核实",{exact:true})).toBeVisible();
@@ -509,6 +525,26 @@ test("retired price comparison and domain-only records have no public pages or s
   expect((await page.request.get("/compare")).status()).toBe(404);
   const sitemap=await (await page.request.get("/sitemap.xml")).text();
   expect(sitemap).not.toMatch(/\/compare<|\/services\/domains\//);
+});
+
+test("retired network directory, ads and shop links are gone from public routes",async({page})=>{
+  await page.goto("/");
+  await expect(page.locator("#home-categories a")).toHaveCount(4);
+  await expect(page.locator("#home-prices").getByRole("navigation",{name:"报价分类"}).getByRole("link")).toHaveCount(4);
+  await expect(page.locator(".home-ad-track .home-ad-heading strong")).toHaveText([
+    "Roogoo 乐享卡","Gate AI Card","MusePay Global Nova Card",
+  ]);
+  await page.goto("/rankings");
+  await expect(page.getByRole("navigation",{name:"排行榜分类"}).getByRole("link")).toHaveCount(4);
+  await page.goto("/search?q=Proton%20VPN&type=service");
+  await expect(page.locator('a[href="/services/proton-vpn"]')).toHaveCount(0);
+  for (const path of ["/categories/airport","/categories/vpn","/categories/proxy-services","/categories/residential",
+    "/services?group=connections","/rankings?group=connections","/services/proton-vpn","/services/tailscale",
+    "/ad-icons/flowercloud.webp","/ad-icons/liangxin-yun.webp"]) {
+    expect((await page.request.get(path)).status(),path).toBe(404);
+  }
+  const sitemap=await (await page.request.get("/sitemap.xml")).text();
+  expect(sitemap).not.toMatch(/\/categories\/(airport|vpn|proxy-services|residential)<|\/services\/(proton-vpn|tailscale)</);
 });
 
 test("bulk merchant campaign traces real requests and newly published profiles",async({page},info)=>{

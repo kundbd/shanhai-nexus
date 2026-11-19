@@ -1,0 +1,44 @@
+[
+  {
+    "name": "AICC 数卡商城",
+    "url": "https://aicc98.xyz/",
+    "category": "ai-card",
+    "summary": "商家公开网页介绍 ChatGPT、Gemini、Claude、Midjourney 会员成品号与代充。",
+    "excerpt": "商家公开网页介绍 ChatGPT、Gemini、Claude、Midjourney 会员成品号与代充。",
+    "source_url": "https://aicc98.xyz/",
+    "source_title": "AICC 数卡商城 · 官网公开资料",
+    "source_kind": "official",
+    "operator_kind": "third_party",
+    "merchant_details": {
+      "ai_products": "ChatGPT、Gemini、Claude、Midjourney",
+      "delivery_methods": "account,topup"
+    }
+  },
+  {
+    "name": "HuaBF AI 软件商城",
+    "url": "https://c.huabfoo.store/",
+    "category": "ai-card",
+    "summary": "公开商城页面说明提供 AI 软件、工具订阅、API 与数字商品。",
+    "excerpt": "公开商城页面说明提供 AI 软件、工具订阅、API 与数字商品。",
+    "source_url": "https://c.huabfoo.store/",
+    "source_title": "HuaBF AI 软件商城 · 官网公开资料",
+    "source_kind": "official",
+    "operator_kind": "third_party",
+    "merchant_details": {}
+  },
+  {
+    "name": "刘能 AI",
+    "url": "https://liunenglabs.xyz/",
+    "category": "ai-topup",
+    "summary": "公开主页说明为已有账号提供 ChatGPT Plus、Pro 订阅充值和续费。",
+    "excerpt": "公开主页说明为已有账号提供 ChatGPT Plus、Pro 订阅充值和续费。",
+    "source_url": "https://liunenglabs.xyz/",
+    "source_title": "刘能 AI · 官网公开资料",
+    "source_kind": "official",
+    "operator_kind": "third_party",
+    "merchant_details": {
+      "ai_products": "ChatGPT Plus、Pro",
+      "delivery_methods": "topup"
+    }
+  }
+]

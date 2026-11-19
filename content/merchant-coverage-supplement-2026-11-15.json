@@ -1,0 +1,23 @@
+[
+  {
+    "pipeline": "ai-retail",
+    "access": "official",
+    "source_name": "贝果科技官网定向复核",
+    "source_url": "https://bigolab.com/chongzhi",
+    "evidence_url": "https://bigolab.com/chongzhi",
+    "reason": "独立商家公开商品页，移除来源追踪参数。",
+    "rows": [
+      {
+        "name": "贝果科技",
+        "url": "https://bigolab.com/",
+        "category": "ai-topup",
+        "source_url": "https://bigolab.com/chongzhi",
+        "source_title": "贝果科技 · AI 会员服务",
+        "source_kind": "official",
+        "summary": "公开页面介绍 AI 会员充值与账号服务，列有 ChatGPT 和 Claude 等。",
+        "excerpt": "商家公开的 AI 会员充值页列出 ChatGPT Plus 和 Claude Pro 类别。",
+        "operator_kind": "third_party"
+      }
+    ]
+  }
+]

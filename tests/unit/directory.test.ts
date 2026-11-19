@@ -2,9 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { all,migrate,one,openDirectory } from "../../lib/directory/db";
-import { getSite,latestPrices,listSites,publicClaims,publicEditorial,publicIncidents,publicPrices } from "../../lib/directory/read";
+import { getCategory,getSite,latestPrices,listPublicCategories,listSites,publicClaims,publicEditorial,publicIncidents,publicPrices } from "../../lib/directory/read";
+import { getPublicProduct,productKey } from "../../lib/directory/products";
 import { assistDraft,createImport,getBatch,parseImport,publishBatch,reviseItem } from "../../lib/directory/imports";
 import { importThirdPartyObservation,writeEntity } from "../../lib/directory/write";
+import { saveExchangeRates } from "../../lib/directory/exchange-rates";
 import { websiteUrl } from "../../lib/directory/validation";
 import { adminActor,login,mutationOrigin } from "../../lib/directory/auth";
 
@@ -13,11 +15,40 @@ test("migration and seed are idempotent and enforce referential integrity", () =
   migrate(db);
   const applied=all<{name:string}>(db,"SELECT name FROM migrations ORDER BY name").map(({name})=>name);
   assert.deepEqual(applied,readdirSync("lib/directory/migrations").filter(name=>name.endsWith(".sql")).sort());
-  assert.equal(listSites({},db).total,25);
-  assert.equal(listSites({status:"verified"},db).total,24);
+  assert.equal(listSites({},db).total,22);
+  assert.equal(listSites({status:"verified"},db).total,21);
   assert.equal(listSites({status:"tested"},db).total,0);
   assert.deepEqual(all(db,"PRAGMA foreign_key_check"),[]);
   assert.throws(()=>db.prepare("DELETE FROM categories WHERE slug=?").run("ai-subscriptions"),/FOREIGN KEY/);
+});
+
+test("network retirement archives existing stores and makes their public URLs and products unavailable", () => {
+  using db = openDirectory(":memory:");
+  const retiredSlugs = ["mullvad","proton-vpn","tailscale"];
+  db.exec(`DROP TRIGGER retired_network_site_insert;
+    DROP TRIGGER retired_network_site_update;
+    DELETE FROM migrations WHERE name='040-retire-network-services.sql';
+    UPDATE sites SET publication='published' WHERE slug IN ('mullvad','proton-vpn','tailscale');`);
+  const vpn = getSite("proton-vpn",db)!;
+  const key = productKey(publicPrices(vpn.id,db)[0]);
+  assert.ok(getPublicProduct(db,vpn.id,key));
+
+  migrate(db);
+  migrate(db);
+  for (const slug of retiredSlugs) {
+    assert.equal(getSite(slug,db),undefined);
+    assert.equal(one<{publication:string}>(db,"SELECT publication FROM sites WHERE slug=?",slug)?.publication,"archived");
+  }
+  assert.deepEqual(publicPrices(vpn.id,db),[]);
+  assert.equal(getPublicProduct(db,vpn.id,key),undefined);
+  assert.equal(listSites({q:"proton-vpn"},db).total,0);
+  for (const category of ["airport","vpn","proxy-services","residential"]) {
+    assert.equal(getCategory(category,db),undefined);
+    assert.ok(!listPublicCategories(db).some(({slug})=>slug===category));
+  }
+  assert.ok(getSite("cloudflare",db));
+  assert.throws(()=>db.prepare("UPDATE sites SET publication='published' WHERE id=?").run(vpn.id),/无法发布/);
+  assert.equal(one<{count:number}>(db,"SELECT count(*) count FROM audit_log WHERE action='archive'")?.count,retiredSlugs.length);
 });
 
 test("third-party observations publish with a traceable source and leave the merchant status intact", () => {
@@ -67,6 +98,46 @@ test("published prices and evidence retain primary sources", () => {
   const observation=publicEditorial("chatgpt-claude-plans",db)!;
   assert.ok(publicClaims(observation.id,db).every((claim)=>claim.nature==="official" && claim.url?.startsWith("https:")));
   assert.ok(publicIncidents(chatgpt.id,10,db).every((item)=>item.source_url.includes("status.openai.com")));
+});
+
+test("directory sorts current starting prices before pagination and leaves unavailable prices at the end", () => {
+  using db=openDirectory(":memory:",false);
+  const rates="<Cube time='2026-11-16'><Cube currency='USD' rate='1.25'/><Cube currency='CNY' rate='7.5'/><Cube currency='JPY' rate='150'/></Cube>";
+  saveExchangeRates(db,rates);
+  const makeSite=(slug:string)=>{
+    const website=`https://${slug}.net/`;
+    const site=Number(writeEntity(db,"sites",{slug,name:`起价样本 ${slug}`,website,category_slug:"vps",summary:"目录排序测试档案。",
+      publication:"published",status:"listed"},"tester"));
+    const source=Number(writeEntity(db,"sources",{site_id:site,title:"公开套餐",url:website,accessed_at:"2026-11-16",kind:"official",verified:"1",
+      excerpt:"测试价格与计费周期。"},"tester"));
+    return {site,source};
+  };
+  function quote({site,source}:ReturnType<typeof makeSite>,plan:string,amount:string,currency:string,date:string) {
+    writeEntity(db,"price_records",{site_id:site,source_id:source,plan,amount_minor:amount,currency,period:"月付",
+      region:"公开报价",recorded_at:date,publication:"published"},"tester");
+  }
+  const low=makeSite("lower-price");
+  const high=makeSite("higher-price");
+  const unpriced=makeSite("unknown-price");
+  quote(low,"标准套餐","1000","JPY","2026-11-16");
+  quote(high,"标准套餐","100","CNY","2026-11-15");
+  quote(high,"标准套餐","10000","CNY","2026-11-16");
+  quote(high,"补差价","1","CNY","2026-11-16");
+  quote(unpriced,"标准套餐","100","TWD","2026-11-16");
+
+  const base={category:"vps",size:1,includeStartingPrices:true};
+  const first=listSites({...base,sort:"price-asc"},db);
+  assert.equal(first.rows[0]?.id,low.site);
+  assert.deepEqual(first.startingPrices?.get(low.site),{cnyAmount:50,period:"月",converted:true});
+  const second=listSites({...base,sort:"price-asc",page:2},db);
+  assert.equal(second.rows[0]?.id,high.site);
+  assert.equal(second.startingPrices?.get(high.site)?.cnyAmount,100);
+  assert.equal(listSites({...base,sort:"price-desc",q:"起价样本"},db).rows[0]?.id,high.site);
+  for (const sort of ["price-asc","price-desc"]) {
+    const last=listSites({...base,sort,page:3},db);
+    assert.equal(last.rows[0]?.id,unpriced.site);
+    assert.equal(last.startingPrices?.has(unpriced.site),false);
+  }
 });
 
 test("CSV, JSON and URL batches audit errors, manual approvals, duplicates and retries", () => {

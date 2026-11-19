@@ -1,0 +1,224 @@
+[
+  {
+    "pipeline": "ai-retail",
+    "access": "official",
+    "source_name": "V0.4 独立官网人工核验 · ai-retail",
+    "source_url": "https://tiancehub.com/accounts.html",
+    "evidence_url": "https://tiancehub.com/accounts.html",
+    "reason": "独立搜索后逐条打开商家原始公开网页；摘要仅记录其公开业务。",
+    "rows": [
+      {
+        "name": "天策",
+        "url": "https://tiancehub.com/",
+        "category": "ai-topup",
+        "summary": "商家公开页面提供 ChatGPT Plus 与 Codex 订阅代充。",
+        "source_url": "https://tiancehub.com/accounts.html",
+        "source_kind": "official",
+        "website_language": "zh-CN",
+        "source_title": "天策 · 公开官网资料",
+        "excerpt": "商家公开页面提供 ChatGPT Plus 与 Codex 订阅代充。",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "脉冲波",
+        "url": "https://maichongbo.com/",
+        "category": "ai-topup",
+        "summary": "商城公开展示 ChatGPT 与 Codex 会员代充。",
+        "source_url": "https://maichongbo.com/",
+        "source_kind": "official",
+        "website_language": "zh-CN",
+        "source_title": "脉冲波 · 公开官网资料",
+        "excerpt": "商城公开展示 ChatGPT 与 Codex 会员代充。",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "星桥订阅",
+        "url": "https://xingqiaosub.com/",
+        "category": "ai-topup",
+        "summary": "独立站点公开列有 ChatGPT Plus / Pro 和 Claude Pro 的会员充值说明。",
+        "source_url": "https://xingqiaosub.com/en",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "星桥订阅 · 公开官网资料",
+        "excerpt": "独立站点公开列有 ChatGPT Plus / Pro 和 Claude Pro 的会员充值说明。",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "CCAI 权益小铺",
+        "url": "https://aicc888.org/",
+        "category": "ai-card",
+        "summary": "公开商城以 CCAI 权益小铺名义展示 AI 订阅商品和适用条件。",
+        "source_url": "https://aicc888.org/",
+        "source_kind": "official",
+        "website_language": "zh-CN",
+        "source_title": "CCAI 权益小铺 · 公开官网资料",
+        "excerpt": "公开商城以 CCAI 权益小铺名义展示 AI 订阅商品和适用条件。",
+        "operator_kind": "third_party"
+      },
+      {
+        "name": "PayAI.Plus",
+        "url": "https://payai.plus/",
+        "category": "ai-topup",
+        "summary": "公开页面列有 ChatGPT Plus 与 Pro 会员自助开通。",
+        "source_url": "https://payai.plus/",
+        "source_kind": "official",
+        "website_language": "zh-CN",
+        "source_title": "PayAI.Plus · 公开官网资料",
+        "excerpt": "公开页面列有 ChatGPT Plus 与 Pro 会员自助开通。",
+        "operator_kind": "third_party"
+      }
+    ]
+  },
+  {
+    "pipeline": "connections",
+    "access": "official",
+    "source_name": "V0.4 独立官网人工核验 · connections",
+    "source_url": "https://amnezia.org/",
+    "evidence_url": "https://amnezia.org/",
+    "reason": "独立搜索后逐条打开商家原始公开网页；摘要仅记录其公开业务。",
+    "rows": [
+      {
+        "name": "Amnezia",
+        "url": "https://amnezia.org/",
+        "category": "vpn",
+        "summary": "项目官网提供 VPN 应用，并区分自托管与付费连接选项。",
+        "source_url": "https://amnezia.org/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "Amnezia · 公开官网资料",
+        "excerpt": "项目官网提供 VPN 应用，并区分自托管与付费连接选项。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "Geph",
+        "url": "https://geph.io/",
+        "category": "vpn",
+        "summary": "官方网站介绍面向个人的 VPN 服务与客户端。",
+        "source_url": "https://geph.io/en",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "Geph · 公开官网资料",
+        "excerpt": "官方网站介绍面向个人的 VPN 服务与客户端。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "VPNSecure",
+        "url": "https://www.vpnsecure.me/",
+        "category": "vpn",
+        "summary": "独立品牌公开展示多个平台的 VPN 客户端与个人订阅服务。",
+        "source_url": "https://www.vpnsecure.me/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "VPNSecure · 公开官网资料",
+        "excerpt": "独立品牌公开展示多个平台的 VPN 客户端与个人订阅服务。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "VPN Unlimited",
+        "url": "https://www.vpnunlimited.com/",
+        "category": "vpn",
+        "summary": "Keepsolid 的公开 VPN 产品页介绍个人服务和客户端。",
+        "source_url": "https://www.vpnunlimited.com/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "VPN Unlimited · 公开官网资料",
+        "excerpt": "Keepsolid 的公开 VPN 产品页介绍个人服务和客户端。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "ZoogVPN",
+        "url": "https://zoogvpn.com/",
+        "category": "vpn",
+        "summary": "官网列出免费和付费 VPN 服务、客户端下载与订阅入口。",
+        "source_url": "https://zoogvpn.com/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "ZoogVPN · 公开官网资料",
+        "excerpt": "官网列出免费和付费 VPN 服务、客户端下载与订阅入口。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "Urban VPN",
+        "url": "https://www.urban-vpn.com/",
+        "category": "vpn",
+        "summary": "公开网站介绍面向个人的 VPN 软件与产品版本。",
+        "source_url": "https://www.urban-vpn.com/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "Urban VPN · 公开官网资料",
+        "excerpt": "公开网站介绍面向个人的 VPN 软件与产品版本。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "VPN.ac",
+        "url": "https://vpn.ac/",
+        "category": "vpn",
+        "summary": "官网公开展示付费 VPN 服务与订阅信息。",
+        "source_url": "https://vpn.ac/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "VPN.ac · 公开官网资料",
+        "excerpt": "官网公开展示付费 VPN 服务与订阅信息。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "Unlocator",
+        "url": "https://unlocator.com/",
+        "category": "vpn",
+        "summary": "公开站点区分其 VPN 和 Smart DNS 两类订阅产品。",
+        "source_url": "https://unlocator.com/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "Unlocator · 公开官网资料",
+        "excerpt": "公开站点区分其 VPN 和 Smart DNS 两类订阅产品。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "BeePass VPN",
+        "url": "https://www.beepassvpn.com/",
+        "category": "vpn",
+        "summary": "公开网站说明其面向用户提供免费访问服务及相应应用。",
+        "source_url": "https://www.beepassvpn.com/en/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "BeePass VPN · 公开官网资料",
+        "excerpt": "公开网站说明其面向用户提供免费访问服务及相应应用。",
+        "operator_kind": "unknown"
+      }
+    ]
+  },
+  {
+    "pipeline": "payments",
+    "access": "official",
+    "source_name": "V0.4 独立官网人工核验 · payments",
+    "source_url": "https://kazepay.com/",
+    "evidence_url": "https://kazepay.com/",
+    "reason": "独立搜索后逐条打开商家原始公开网页；摘要仅记录其公开业务。",
+    "rows": [
+      {
+        "name": "KazePay",
+        "url": "https://kazepay.com/",
+        "category": "u-card",
+        "summary": "官方网站展示数字资产借记卡产品，并列出使用所需条件。",
+        "source_url": "https://kazepay.com/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "KazePay · 公开官网资料",
+        "excerpt": "官方网站展示数字资产借记卡产品，并列出使用所需条件。",
+        "operator_kind": "unknown"
+      },
+      {
+        "name": "PokePay",
+        "url": "https://www.pokepay.cc/",
+        "category": "payment-accounts",
+        "summary": "公开网站介绍面向用户的多币种支付和配套账户服务。",
+        "source_url": "https://www.pokepay.cc/",
+        "source_kind": "official",
+        "website_language": "en",
+        "source_title": "PokePay · 公开官网资料",
+        "excerpt": "公开网站介绍面向用户的多币种支付和配套账户服务。",
+        "operator_kind": "unknown"
+      }
+    ]
+  }
+]

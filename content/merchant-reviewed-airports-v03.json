@@ -1,0 +1,54 @@
+[
+  {
+    "name": "淘气兔机场",
+    "url": "https://taoqitu.uk/",
+    "source_url": "https://taoqitu.uk/subscribe",
+    "category": "airport",
+    "summary": "节点订阅商家。页面仍列有套餐，但多款商品明确提示新购不可用，本批保留公开说明供核对。",
+    "merchant_details": {
+      "monthly_traffic": "页面有 100 GB、200 GB 等月方案，部分标示新购不可用",
+      "timeless_traffic": "页面有一次性 100 GB 方案，购买状态需另核",
+      "route_claim": "商家自述提供中转线路。"
+    },
+    "source_title": "淘气兔机场 · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "节点订阅商家。页面仍列有套餐，但多款商品明确提示新购不可用，本批保留公开说明供核对。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "unknown"
+  },
+  {
+    "name": "云图机场",
+    "url": "https://www.yuntujichang.rest/",
+    "source_url": "https://www.yuntujichang.rest/faq/",
+    "category": "airport",
+    "summary": "公开帮助页列有按月和按年计费的节点订阅。",
+    "merchant_details": {
+      "monthly_price": "FAQ 列的月付样本 CNY 24 / 月",
+      "monthly_traffic": "CNY 24 月付样本为 144 GB / 月",
+      "route_claim": "商家称部分套餐采用 IPLC 线路。"
+    },
+    "source_title": "云图机场 · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "公开帮助页列有按月和按年计费的节点订阅。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "unknown"
+  },
+  {
+    "name": "Just My Socks",
+    "url": "https://justmysocks.net/",
+    "source_url": "https://justmysocks.net/members/",
+    "category": "airport",
+    "summary": "提供节点订阅，公开官网列有客户端兼容性说明。",
+    "merchant_details": {
+      "clients": "官网列有 Jamjams，并提到支持 VLESS Reality 的 v2rayN。"
+    },
+    "source_title": "Just My Socks · 官网公开资料",
+    "source_kind": "official",
+    "excerpt": "提供节点订阅，公开官网列有客户端兼容性说明。",
+    "discovery_name": "官网直查",
+    "snapshot_at": "2026-11-15",
+    "operator_kind": "unknown"
+  }
+]

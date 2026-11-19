@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import type { AvatarImage, AvatarTarget } from "./merchant-avatar";
 import { requestPublicNetwork, type ProxyRoute } from "./network-transport";
+import { storefrontIdentity } from "./storefront-identity";
 import { readPublicPage, type Visit } from "./website-check";
 import { websiteUrl } from "./validation";
 
@@ -49,7 +50,7 @@ export function declaredAvatarUrls(html:string,page:URL,hosted:boolean) {
   if (hosted) return logo?[logo]:[];
   const icons=[...html.matchAll(/<link\b(?:"[^"]*"|'[^']*'|[^'">]){0,1500}>/gi)].flatMap(([tag])=>{
     const {rel,href,sizes}=attributes(tag);
-    if (!href||!rel?.toLowerCase().split(/\s+/).some(value=>value==="icon"||value==="apple-touch-icon")) return [];
+    if (!href||!rel?.toLowerCase().split(/\s+/).some(value=>["icon","apple-touch-icon","apple-touch-icon-precomposed","mask-icon"].includes(value))) return [];
     const url=publicUrl(href,page);
     return url?[{url,rank:sizes?.toLowerCase()==="any"?128:Math.min(128,parseInt(sizes??"",10)||32)}]:[];
   }).sort((a,b)=>b.rank-a.rank);
@@ -70,7 +71,7 @@ async function webp(input:Buffer) {
 async function rasterWebp(input:Buffer) {
   const pipeline=sharp(input,{limitInputPixels:4_000_000,failOn:"error"});
   const data=await pipeline.metadata();
-  if (!data.format||!supportedRaster.has(data.format)||!data.width||!data.height||data.width/data.height>3||data.height/data.width>3) return null;
+  if (!data.format||!supportedRaster.has(data.format)||!data.width||!data.height||data.width<8||data.height<8||data.width/data.height>3||data.height/data.width>3) return null;
   return pipeline.resize(96,96,{fit:"inside",withoutEnlargement:true}).webp({quality:84}).toBuffer();
 }
 
@@ -81,7 +82,7 @@ async function ico(input:Buffer) {
   const entries=Array.from({length:count},(_,index)=>{
     const entry=input.subarray(6+index*16,22+index*16);
     return {entry,width:entry[0]||256,height:entry[1]||256,length:entry.readUInt32LE(8),offset:entry.readUInt32LE(12)};
-  }).filter(({width,height,length,offset})=>width===height&&length>40&&length<=64_000&&offset>=6+16*count&&offset+length<=input.length)
+  }).filter(({width,height,length,offset})=>width>=8&&width===height&&length>40&&length<=64_000&&offset>=6+16*count&&offset+length<=input.length)
     .sort((a,b)=>Math.abs(a.width-64)-Math.abs(b.width-64));
   for (const {entry,width,height,length,offset} of entries) {
     const frame=input.subarray(offset,offset+length);
@@ -106,16 +107,25 @@ export async function prepareAvatar(input:Buffer):Promise<Omit<AvatarImage,"sour
   return image?{image,contentType:"image/webp"}:null;
 }
 
-export function avatarCollector(wait:(url:URL,signal:AbortSignal)=>Promise<void>,proxy?:ProxyRoute) {
+type AvatarPage={url:string;body:string;contentType:string;icon?:string};
+
+export function avatarCollector(wait:(url:URL,signal:AbortSignal)=>Promise<void>,
+  {proxy,restricted,stop}:{proxy?:ProxyRoute;restricted:(url:string)=>boolean;stop?:AbortSignal}) {
   const robots=new Map<string,ReturnType<Visit>>();
   const blocked=new Set<string>();
   const request=(binary:boolean):Visit=>async(url,signal,maxBytes)=>{
+    if (stop) signal=AbortSignal.any([signal,stop]);
+    if (restricted(url.href)||blocked.has(url.origin)) throw new Error("来源限制，暂停头像核对");
     const headers={"User-Agent":agent,Accept:binary?"image/*,*/*;q=0.1":"text/html,text/plain,application/xhtml+xml"};
     const read=async()=>{
       await wait(url,signal);
-      if (!binary||url.pathname==="/robots.txt") return requestPublicNetwork(url,{signal,maxBytes,headers,proxy});
-      const page=await requestPublicNetwork(url,{signal,maxBytes,headers,proxy,binary:true});
-      return {...page,body:page.body.toString("base64")};
+      if (blocked.has(url.origin)) throw new Error("网站要求访问验证或限流");
+      const options={signal,maxBytes,headers,proxy};
+      const page=binary&&url.pathname!=="/robots.txt"
+        ?await requestPublicNetwork(url,{...options,binary:true}).then(result=>({...result,body:result.body.toString("base64")}))
+        :await requestPublicNetwork(url,options);
+      if ([401,403,407,429,451,503].includes(page.status)) blocked.add(url.origin);
+      return page;
     };
     if (url.pathname!=="/robots.txt") return read();
     const existing=robots.get(url.href);
@@ -125,19 +135,28 @@ export function avatarCollector(wait:(url:URL,signal:AbortSignal)=>Promise<void>
     void pending.catch(()=>robots.delete(url.href));
     return pending;
   };
-  return async (site:AvatarTarget):Promise<{avatar:AvatarImage|null;reason:string}>=>{
+  return async (site:AvatarTarget,supplied?:AvatarPage):Promise<{avatar:AvatarImage|null;reason:string}>=>{
     const website=new URL(websiteUrl(site.website).url);
+    if (restricted(website.href)) return {avatar:null,reason:"来源限制，暂停头像核对"};
     if (blocked.has(website.origin)) return {avatar:null,reason:"网站要求访问验证或限流"};
-    const page=await readPublicPage(website.href,request(false),360_000,8_000,0).catch(error=>{
+    const page:AvatarPage=supplied??await readPublicPage(website.href,request(false),360_000,12_000,1).catch(error=>{
       if (/HTTP (?:401|403|429|451|503)\b|要求访问验证/.test(String(error))) blocked.add(website.origin);
       throw error;
     });
     if (!/html/i.test(page.contentType)) return {avatar:null,reason:"公开页面不是 HTML"};
-    const urls=declaredAvatarUrls(page.body,new URL(page.url),Boolean(site.hosted_storefront));
+    const final=new URL(page.url);
+    const storefront=storefrontIdentity(website.href);
+    const hosted=Boolean(site.hosted_storefront)||Boolean(storefront);
+    if (hosted&&(storefront?storefrontIdentity(final.href)?.key!==storefront.key:
+      website.hostname.replace(/^www\./,"")!==final.hostname.replace(/^www\./,"")||website.pathname.replace(/\/$/,"")!==final.pathname.replace(/\/$/,""))) {
+      return {avatar:null,reason:"公开页面已跳离原店铺"};
+    }
+    const icon=page.icon?publicUrl(page.icon,final):null;
+    const urls=[...new Set([...(icon?[icon]:[]),...declaredAvatarUrls(page.body,final,hosted)])];
     if (!urls.length) return {avatar:null,reason:"店铺页面未公开独立标识"};
     for (const url of urls) {
       try {
-        const asset=await readPublicPage(url,request(true),maximumInput,5500,0);
+        const asset=await readPublicPage(url,request(true),maximumInput,8000,0);
         if (asset.truncated) continue;
         const avatar=await prepareAvatar(Buffer.from(asset.body,"base64"));
         if (avatar) return {avatar:{...avatar,sourceUrl:asset.url},reason:"公开标识"};

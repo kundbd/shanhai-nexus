@@ -1,15 +1,17 @@
 export const priorityLinks = [
   { label:"AI 代充与卡网", description:"区分代充、卡密、成品号与共享席位", group:"ai-retail" },
   { label:"AI API 中转", description:"第三方模型接口与网关", category:"ai-relay" },
-  { label:"机场与 VPN", description:"节点订阅与商用 VPN", group:"connections" },
   { label:"U 卡与支付", description:"支付卡、虚拟卡与跨境服务", category:"payments" },
   { label:"VPS 与云服务", description:"独立主机商与云服务器", category:"vps" },
 ] as const;
 export const categoryGroups = {
   "ai-retail": ["ai-topup","ai-card"],
-  connections: ["airport","vpn","residential","proxy-services"],
-  priority: ["ai-topup","ai-card","ai-relay","airport","vpn","proxy-services","u-card","virtual-card","payment-accounts","subscription-payment","vps","residential"],
+  priority: ["ai-topup","ai-card","ai-relay","u-card","virtual-card","payment-accounts","subscription-payment","vps"],
 } as const;
+
+const retiredNetworkCategories = new Set(["airport", "vpn", "proxy-services", "residential"]);
+export const isRetiredCategory = (slug: string) => retiredNetworkCategories.has(slug);
+export const isRetiredNetworkSite = (category: string, slug: string) => isRetiredCategory(category) || slug === "tailscale";
 
 export const operators = { official:"官方平台",third_party:"第三方商家",unknown:"运营性质待核实" } as const;
 export const pipelines={
@@ -20,6 +22,7 @@ export const pipelines={
   vps:{label:"VPS 与云服务",categories:["vps","residential"]},
 } as const;
 export type Pipeline=keyof typeof pipelines;
+export const publicPipelines = (Object.keys(pipelines) as Pipeline[]).filter(pipeline => pipeline !== "connections");
 export function pipelineForCategory(category:string) {
   return (Object.keys(pipelines) as Pipeline[]).find(key=>(pipelines[key].categories as readonly string[]).includes(category));
 }

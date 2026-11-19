@@ -1,0 +1,153 @@
+[
+  {
+    "key": "brave-ai-retail",
+    "name": "Brave 搜索 · AI 代充与卡网",
+    "pipeline": "ai-retail",
+    "kind": "brave",
+    "access": "leads",
+    "url": "https://brave.com/search/api/",
+    "evidence_url": "https://api-dashboard.search.brave.com/documentation/resources/terms-of-service",
+    "notes": "仅存允许保留的结果网址及自有查询语句，官网内容单独核验。启用前确认账户存储许可并配置凭证。",
+    "enabled": false,
+    "interval_hours": 24
+  },
+  {
+    "key": "brave-connections",
+    "name": "Brave 搜索 · 机场与 VPN",
+    "pipeline": "connections",
+    "kind": "brave",
+    "access": "leads",
+    "url": "https://brave.com/search/api/",
+    "evidence_url": "https://api-dashboard.search.brave.com/documentation/resources/terms-of-service",
+    "notes": "仅存允许保留的结果网址及自有查询语句，官网内容单独核验。启用前确认账户存储许可并配置凭证。",
+    "enabled": false,
+    "interval_hours": 48
+  },
+  {
+    "key": "brave-payments",
+    "name": "Brave 搜索 · U 卡与跨境支付",
+    "pipeline": "payments",
+    "kind": "brave",
+    "access": "leads",
+    "url": "https://brave.com/search/api/",
+    "evidence_url": "https://api-dashboard.search.brave.com/documentation/resources/terms-of-service",
+    "notes": "仅存允许保留的结果网址及自有查询语句，官网内容单独核验。启用前确认账户存储许可并配置凭证。",
+    "enabled": false,
+    "interval_hours": 168
+  },
+  {
+    "key": "brave-ai-relay",
+    "name": "Brave 搜索 · AI API 中转",
+    "pipeline": "ai-relay",
+    "kind": "brave",
+    "access": "leads",
+    "url": "https://brave.com/search/api/",
+    "evidence_url": "https://api-dashboard.search.brave.com/documentation/resources/terms-of-service",
+    "notes": "仅存允许保留的结果网址及自有查询语句，官网内容单独核验。启用前确认账户存储许可并配置凭证。",
+    "enabled": false,
+    "interval_hours": 168
+  },
+  {
+    "key": "brave-vps",
+    "name": "Brave 搜索 · VPS 与云服务",
+    "pipeline": "vps",
+    "kind": "brave",
+    "access": "leads",
+    "url": "https://brave.com/search/api/",
+    "evidence_url": "https://api-dashboard.search.brave.com/documentation/resources/terms-of-service",
+    "notes": "仅存允许保留的结果网址及自有查询语句，官网内容单独核验。启用前确认账户存储许可并配置凭证。",
+    "enabled": false,
+    "interval_hours": 168
+  },
+  {
+    "key": "aiprice-audit",
+    "name": "AI 价网",
+    "pipeline": "ai-retail",
+    "kind": "page",
+    "access": "restricted",
+    "url": "https://aiprice.club/",
+    "evidence_url": "https://aiprice.club/llms.txt",
+    "notes": "允许索引与引用，明示勿整库镜像。逐站独立发现；不自动读取清单。",
+    "enabled": false,
+    "interval_hours": 168
+  },
+  {
+    "key": "aitest-audit",
+    "name": "AiTest123",
+    "pipeline": "ai-relay",
+    "kind": "page",
+    "access": "restricted",
+    "url": "https://aitest123.com/sites/all",
+    "evidence_url": "https://aitest123.com/robots.txt",
+    "notes": "排除内部 API、分页加载及跳转，未获数据库再分发许可。",
+    "enabled": false,
+    "interval_hours": 168
+  },
+  {
+    "key": "jiasu-audit",
+    "name": "加速 Wiki",
+    "pipeline": "connections",
+    "kind": "page",
+    "access": "restricted",
+    "url": "https://jiasu.wiki/",
+    "evidence_url": "https://jiasu.wiki/robots.txt",
+    "notes": "首页 403、robots.txt 超时，未核实目录规模及复用许可。",
+    "enabled": false,
+    "interval_hours": 168
+  },
+  {
+    "key": "local-retail",
+    "name": "独立搜索公开线索 · AI 代充",
+    "pipeline": "ai-retail",
+    "kind": "manual",
+    "access": "leads",
+    "url": "https://shanhainexus.com/policy",
+    "evidence_url": "https://shanhainexus.com/policy",
+    "notes": "逐条输入独立找到的原始公开网址；核查采用商家自己的公开页面，未使用第三方报价、测速和账号。",
+    "enabled": false
+  },
+  {
+    "key": "local-network",
+    "name": "独立搜索公开线索 · 网络",
+    "pipeline": "connections",
+    "kind": "manual",
+    "access": "leads",
+    "url": "https://shanhainexus.com/policy",
+    "evidence_url": "https://shanhainexus.com/policy",
+    "notes": "逐条输入独立找到的原始公开网址；核查采用商家自己的公开页面，未使用第三方报价、测速和账号。",
+    "enabled": false
+  },
+  {
+    "key": "local-payments",
+    "name": "独立搜索公开线索 · 支付",
+    "pipeline": "payments",
+    "kind": "manual",
+    "access": "leads",
+    "url": "https://shanhainexus.com/policy",
+    "evidence_url": "https://shanhainexus.com/policy",
+    "notes": "逐条输入独立找到的原始公开网址；核查采用商家自己的公开页面，未使用第三方报价、测速和账号。",
+    "enabled": false
+  },
+  {
+    "key": "local-relay",
+    "name": "独立搜索公开线索 · 中转",
+    "pipeline": "ai-relay",
+    "kind": "manual",
+    "access": "leads",
+    "url": "https://shanhainexus.com/policy",
+    "evidence_url": "https://shanhainexus.com/policy",
+    "notes": "逐条输入独立找到的原始公开网址；核查采用商家自己的公开页面，未使用第三方报价、测速和账号。",
+    "enabled": false
+  },
+  {
+    "key": "vpn-audit-open",
+    "name": "VPNInfobase · CC BY 4.0 公共数据",
+    "pipeline": "connections",
+    "kind": "dataset",
+    "access": "licensed",
+    "url": "https://raw.githubusercontent.com/hardcor3nl/vpn-audit-register/8f896819cec392f1e8cf9c6c82a6b7cf7e6001f7/vpn-audit-register.json",
+    "evidence_url": "https://vpninfobase.com/vpn-audit-register/",
+    "notes": "VPNInfobase 的 CC BY 4.0 数据，只读取名称和官网地址。正文字段与第三方测试均忽略。",
+    "enabled": false
+  }
+]

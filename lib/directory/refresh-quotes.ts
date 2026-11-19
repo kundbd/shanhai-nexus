@@ -1,14 +1,17 @@
 import { currencyDigits } from "./exchange-rates";
 import { merchantNameKey,structuredObjects } from "./merchant-evidence";
 import { comparablePeriod,unspecifiedRegion,type PublishedQuote } from "./price-board";
+import { isRelayTokenPeriod,relayRateRegion } from "./relay-quote-units";
+import { websiteUrl } from "./validation";
 
-const money=/^\d{1,9}(?:\.\d{1,4})?$/;
-type QuoteIdentity=Pick<PublishedQuote,"plan"|"period"|"region"|"currency">;
+const money=/^\d{1,9}(?:\.\d{1,6})?$/;
+type QuoteIdentity=Pick<PublishedQuote,"plan"|"period"|"region"|"currency"|"amount_scale">;
+type StructuredQuote={plan:string;amount:string;currency:string;period:string;region?:string};
 
-function amountMinor(raw:unknown,currency:string) {
+export function amountMinor(raw:unknown,currency:string,scale?:number|null) {
   const value=String(raw??"").trim();
   if (!money.test(value)) return;
-  const digits=currencyDigits(currency);
+  const digits=scale??currencyDigits(currency);
   const [whole,fraction=""]=value.split(".");
   if (/[^0]/.test(fraction.slice(digits))) return;
   const result=Number(whole)*10**digits+Number(fraction.slice(0,digits).padEnd(digits,"0"));
@@ -56,25 +59,44 @@ function exactPageAmounts(html:string,url:URL,quote:QuoteIdentity) {
   return [];
 }
 
-export function verifiedQuoteAmount(html:string,url:string,quote:QuoteIdentity,date:string) {
-  const key=merchantNameKey(quote.plan);
-  const amounts:unknown[]=exactPageAmounts(html,new URL(url),quote);
+export function structuredPublicQuotes(html:string,url:string,date:string) {
+  const result:StructuredQuote[]=[];
+  const domain=websiteUrl(url).registrable;
+  const servesOwnSite=(value:unknown)=>{
+    if (value==null||value==="") return true;
+    try { return typeof value==="string"&&websiteUrl(new URL(value,url).href).registrable===domain; }
+    catch { return false; }
+  };
   for (const product of structuredObjects(html)) {
-    if (!/^(Product|Service)$/i.test(String(product["@type"]))||typeof product.name!=="string"||merchantNameKey(product.name)!==key) continue;
+    if (!/^(Product|Service)$/i.test(String(product["@type"]))||typeof product.name!=="string"||
+      !product.name.trim()||product.name.length>145||!servesOwnSite(product.url)) continue;
     const offers=Array.isArray(product.offers)?product.offers:[product.offers];
     for (const entry of offers.slice(0,24)) {
       if (!entry||typeof entry!=="object") continue;
       const offer=entry as Record<string,unknown>;
-      if (offer["@type"]!=="Offer"||/OutOfStock|Discontinued|SoldOut/i.test(String(offer.availability??""))) continue;
+      if (offer["@type"]!=="Offer"||/OutOfStock|Discontinued|SoldOut|PreOrder/i.test(String(offer.availability??""))||!servesOwnSite(offer.url)) continue;
       if (typeof offer.priceValidUntil==="string"&&offer.priceValidUntil.slice(0,10)<date.slice(0,10)) continue;
       const spec=offer.priceSpecification&&typeof offer.priceSpecification==="object"?offer.priceSpecification as Record<string,unknown>:offer;
       const currency=spec.priceCurrency??offer.priceCurrency;
-      const period=String(spec.billingDuration??spec.unitText??offer.billingDuration??"");
+      const period=spec.billingDuration??spec.unitText??offer.billingDuration;
       const region=offer.eligibleRegion;
-      const sameRegion=region==null?unspecifiedRegion(quote.region):typeof region==="string"&&region.trim()===quote.region.trim();
-      if (currency===quote.currency&&period&&comparablePeriod(period)===comparablePeriod(quote.period)&&sameRegion) amounts.push(spec.price??offer.price);
+      const seller=offer.seller??product.seller;
+      if (seller&&typeof seller==="object"&&!servesOwnSite((seller as {url?:unknown}).url)) continue;
+      const amount=String(spec.price??offer.price??"").trim();
+      if (typeof currency!=="string"||!/^[A-Z]{3}$/.test(currency)||typeof period!=="string"||!period.trim()||period.length>45||
+        (region!=null&&(typeof region!=="string"||!region.trim()||region.length>80))||!money.test(amount)) continue;
+      result.push({plan:product.name.trim(),currency,period:period.trim(),region:typeof region==="string"?region.trim():undefined,amount});
     }
   }
-  const values=new Set(amounts.flatMap(raw=>{ const value=amountMinor(raw,quote.currency); return value===undefined?[]:[value]; }));
+  return result;
+}
+
+export function verifiedQuoteAmount(html:string,url:string,quote:QuoteIdentity,date:string,structured=structuredPublicQuotes(html,url,date)) {
+  const key=merchantNameKey(quote.plan);
+  const amounts=[...exactPageAmounts(html,new URL(url),quote),...structured.filter(row=>
+    merchantNameKey(row.plan)===key&&row.currency===quote.currency&&comparablePeriod(row.period)===comparablePeriod(quote.period)&&
+    (row.region?row.region===quote.region.trim():unspecifiedRegion(quote.region)||
+      isRelayTokenPeriod(quote.period)&&quote.region===relayRateRegion)).map(row=>row.amount)];
+  const values=new Set(amounts.flatMap(raw=>{ const value=amountMinor(raw,quote.currency,quote.amount_scale); return value===undefined?[]:[value]; }));
   return values.size===1?[...values][0]:undefined;
 }

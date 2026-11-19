@@ -1,5 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import seed from "@/content/directory-seed.json";
+import { isRetiredNetworkSite } from "./taxonomy";
 import { websiteUrl } from "./validation";
 
 export function seedCategories(db: DatabaseSync) {
@@ -27,11 +28,13 @@ export function seedDatabase(db: DatabaseSync) {
   }
 
   for (const site of seed.sites) {
+    const category = updatedCategories[site.slug] ?? site.category;
+    const publication = isRetiredNetworkSite(category, site.slug) ? "archived" : "published";
     const id = Number(db.prepare(`INSERT INTO sites(slug,name,website,category_slug,summary,aliases,contact,products,payments,
       fees,renewal,refunds,regions,status,publication,added_at,updated_at,verified_at,operator_kind) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-      .run(site.slug, site.name, site.website, updatedCategories[site.slug] ?? site.category, site.summary, JSON.stringify(site.aliases), site.contact, site.products,
+      .run(site.slug, site.name, site.website, category, site.summary, JSON.stringify(site.aliases), site.contact, site.products,
         site.payments, site.fees, site.renewal, site.refunds, site.regions, site.verified ? "verified" : "listed",
-        "published", recorded, recorded, site.verified ? seed.date : null,
+        publication, recorded, recorded, site.verified ? seed.date : null,
         ["chatgpt","claude","gemini","grok","deepseek"].includes(site.slug) ? "official" : ["openrouter","perplexity","hugging-face"].includes(site.slug) ? "third_party" : "unknown").lastInsertRowid);
     siteIds.set(site.slug, id);
     const insertDomain = db.prepare("INSERT INTO site_domains(domain,site_id,kind,registrable) VALUES (?,?,?,?)");
@@ -46,7 +49,7 @@ export function seedDatabase(db: DatabaseSync) {
         VALUES (?,?,?,?,?,?,?,?,?,'published')`).run(id, source, price.plan, price.amount, price.currency, price.period, price.region, price.notes, seed.date);
     }
     db.prepare("INSERT INTO audit_log(actor,action,entity,entity_id,after_json,created_at) VALUES (?,?,?,?,?,?)")
-      .run("初始编辑资料", "seed", "sites", String(id), JSON.stringify({ slug: site.slug, publication:"published", source: site.source.url, verified: site.verified }), seed.date);
+      .run("初始编辑资料", "seed", "sites", String(id), JSON.stringify({ slug: site.slug, publication, source: site.source.url, verified: site.verified }), seed.date);
   }
 
   for (const review of seed.reviews) {
