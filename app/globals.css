@@ -148,6 +148,20 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: .86; }
 .primary:hover { background: var(--primary-hover); }
 .secondary { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
 .secondary:hover { background: var(--soft); color: var(--accent); }
+.site-consent-screen { min-height: 100dvh; display: grid; place-items: center; padding: 18px; background: var(--soft); }
+.site-consent-card { width: min(100%, 560px); padding: clamp(20px, 5vw, 34px); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; box-shadow: 0 16px 50px #0f16211c; }
+.site-consent-brand { color: var(--muted); font-size: 13px; font-weight: 650; }
+.site-consent-card h1 { margin-top: 5px; font-size: 26px; }
+.site-consent-terms { margin-block: 16px; padding-inline-start: 1.5em; list-style: decimal; color: var(--body); }
+.site-consent-terms li + li { margin-top: 7px; }
+.site-consent-privacy { padding-block: 10px; border-block: 1px solid var(--line); }
+.site-consent-privacy summary { width: fit-content; color: var(--accent); cursor: pointer; font-weight: 650; }
+.site-consent-privacy .policy-copy { max-height: min(38dvh, 300px); overflow: auto; margin-top: 10px; padding-inline-end: 8px; }
+.site-consent-form { margin-top: 12px; }
+.site-consent-form label { display: flex; align-items: center; gap: 10px; min-height: 39px; cursor: pointer; }
+.site-consent-form input[type="checkbox"] { width: 17px; height: 17px; flex: none; accent-color: var(--primary); }
+.site-consent-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.site-consent-actions button:disabled { background: var(--soft); color: var(--muted); border-color: var(--line); }
 .examples { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 14px; color: var(--muted); font-size: 12px; }
 .examples > span { margin-right: 2px; }
 .examples a { min-height: 30px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface); color: var(--body); white-space: nowrap; }

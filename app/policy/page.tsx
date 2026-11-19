@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrivacyPolicy } from "@/components/site/privacy-policy";
 
 export const metadata:Metadata = {title:"内容政策与隐私",description:"山海知序的资料核实、纠错、独立性与隐私说明。",alternates:{canonical:"/policy"}};
 export default function Policy() {
@@ -22,15 +23,7 @@ export default function Policy() {
         <Link className="text-link" href="/contact#feedback">提交纠错或回应</Link>
       </section>
       <section id="privacy"><h2>隐私说明</h2>
-        <dl>
-          <dt>浏览与工具</dt><dd>工具优先在浏览器本地处理输入。站内搜索词会出现在网址中，浏览器可能保留搜索地址。主题偏好保存在本地。</dd>
-          <dt>访问统计</dt><dd>公开页面按浏览器的随机标识去重。服务端仅保存各统计范围内的标识摘要。后台访问统计使用最近 24 小时的数据，店铺和商品排行榜可切换最近 24 小时与累计数据，帖子显示累计浏览人数。换设备、换浏览器或清除本地存储后会重新计数。统计不保存访客 IP、账号、搜索词或完整网址。</dd>
-          <dt>内容地区</dt><dd>网站根据公网出口 IP 在服务器本地查询所在国家或地区，用于执行内容可见性规则。地区识别不保存访客 IP，也不请求浏览器定位权限。</dd>
-          <dt>账号与商家评价</dt><dd>注册、邮箱验证和登录由 FILEBOX 账号服务处理。山海知序使用账号资料和加密的服务端会话维持登录。商家评分、评价和评价回复关联账号以限制重复提交，审核通过后匿名公开。</dd>
-          <dt>社区帖子</dt><dd>帖子和帖子回复的文字、图片及视频须经管理员审核。待审附件仅供管理员预览，通过后可被访客浏览。公开的帖子、回复和转发会显示账号名称。收藏列表只在登录后的个人页面显示。</dd>
-          <dt>AI 内容审核</dt><dd>启用 AI 审核时，本站将帖子、评论及回复的文字发给 DeepSeek 判断是否违反社区规则。请求只包含审核所需文字，账号资料、会话和附件不参与。请避免在正文中填写个人或账户信息。</dd>
-          <dt>表单与邮件</dt><dd>投稿或纠错表单记录你提交的资料与来源，供编辑审核。合作邮件中的发件地址和内容用于联系及跟进。请勿提交账号密码、卡号、付款凭证等敏感信息。</dd>
-        </dl>
+        <PrivacyPolicy />
         <Link className="text-link" href="/contact#feedback">提交隐私相关请求</Link>
       </section>
       <section id="disclaimer"><h2>免责声明</h2>

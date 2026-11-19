@@ -2,9 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 import { randomBytes,randomUUID } from "node:crypto";
 import { mkdirSync,mkdtempSync } from "node:fs";
 import { join,resolve } from "node:path";
+import { siteConsentCookie, siteConsentVersion } from "./lib/site-consent";
 
 const externalUrl = process.env.PLAYWRIGHT_BASE_URL;
 const baseURL = externalUrl ?? "http://127.0.0.1:3100";
+const testOrigin = new URL(baseURL);
 const channel = process.env.PLAYWRIGHT_CHANNEL || undefined;
 const password = process.env.E2E_ADMIN_PASSWORD || randomBytes(24).toString("hex");
 process.env.E2E_ADMIN_PASSWORD = password;
@@ -25,7 +27,13 @@ export default defineConfig({
   testDir: "./tests/e2e",
   workers: 2,
   reporter: "list",
-  use: { baseURL, channel, screenshot: "only-on-failure" },
+  use: {
+    baseURL, channel, screenshot: "only-on-failure",
+    storageState: { origins: [], cookies: [{
+      name: siteConsentCookie, value: siteConsentVersion, domain: testOrigin.hostname, path: "/",
+      expires: -1, httpOnly: true, secure: testOrigin.protocol === "https:", sameSite: "Lax",
+    }] },
+  },
   projects: [
     { name: "desktop-1920", use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } } },
     { name: "laptop-1366", use: { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 768 } } },

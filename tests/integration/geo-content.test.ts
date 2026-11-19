@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 import { homeAds } from "../../lib/catalog/home-ads";
+import { siteConsentAction, siteConsentVersion } from "../../lib/site-consent";
 import {
   editorialMarker, editorialSlug, hiddenArticle, hiddenGuide, hiddenSite, hiddenSiteName,
   airportOffer, networkName, networkSite, offerMarker, proxyName, proxySite, residentialName, residentialSite, startGeoStaging, vpnOffer,
@@ -20,7 +21,19 @@ test("production standalone region policies through a trusted local proxy", {tim
   const fixture=await startGeoStaging();
   t.after(fixture.close);
   const {origin,content,setRegion}=fixture;
-  const fetchPage=(path:string,init?:RequestInit)=>fetch(origin+path,{signal:AbortSignal.timeout(9_000),...init});
+  const asGuest=(path:string,init?:RequestInit)=>fetch(origin+path,{signal:AbortSignal.timeout(9_000),...init});
+  const confirm=(body:URLSearchParams,originHeader=origin)=>asGuest(siteConsentAction,{
+    method:"POST",body,headers:{Origin:originHeader,"Sec-Fetch-Site":originHeader===origin?"same-origin":"cross-site"},redirect:"manual",
+  });
+  const accepted = await confirm(new URLSearchParams({agreement:siteConsentVersion,privacy:siteConsentVersion}));
+  assert.equal(accepted.status,303);
+  const consent=accepted.headers.getSetCookie()[0]?.split(";",1)[0];
+  assert.ok(consent);
+  const fetchPage=(path:string,init?:RequestInit)=>{
+    const headers=new Headers(init?.headers);
+    headers.set("Cookie",[consent,headers.get("Cookie")].filter(Boolean).join("; "));
+    return asGuest(path,{...init,headers});
+  };
   const get=async (path:string,init?:RequestInit)=>{
     const response=await fetchPage(path,init);
     return {response,body:await response.text()};
@@ -40,6 +53,28 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.ok(header.includes("地区数据由 DB-IP 提供"));
     absent(footer,"当前内容地区","地区数据由 DB-IP 提供");
   };
+
+  await t.test("guest documents and Flight payloads request both agreements before showing content",async ()=>{
+    setRegion("HK");
+    for (const headers of [undefined,{RSC:"1"}]) {
+      const response=await asGuest(shop,{headers});
+      assert.equal(response.status,200);
+      assertNoStore(response);
+      const html=await response.text();
+      assert.ok(html.includes("不支持地区的用户禁止通过不法手段访问本站。"));
+      if (!headers) assert.ok(html.includes("本人接受本站隐私政策"));
+      absent(html,hiddenSiteName,offerMarker,"site-header");
+    }
+    const partial=await confirm(new URLSearchParams({agreement:siteConsentVersion}));
+    assert.equal(partial.status,400);
+    assert.equal(partial.headers.getSetCookie().length,0);
+    const crossSite=await confirm(new URLSearchParams({agreement:siteConsentVersion,privacy:siteConsentVersion}),"https://example.org");
+    assert.equal(crossSite.status,403);
+    assert.equal(crossSite.headers.getSetCookie().length,0);
+    const resumed=await get(shop);
+    assert.equal(resumed.response.status,200);
+    assert.ok(resumed.body.includes(hiddenSiteName));
+  });
 
   await t.test("CN home, categories, guides and navigation",async ()=>{
     setRegion("CN");

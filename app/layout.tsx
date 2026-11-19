@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { RegionIndicator } from "@/components/site/region-indicator";
 import { PageTraffic } from "@/components/site/page-traffic";
 import { siteDescription, siteUrl } from "@/lib/site";
 import { brand, legacyThemeStorageKey, themeStorageKey } from "@/lib/brand";
+import { siteConsentRequiredHeader } from "@/lib/site-consent";
 import "./globals.css";
 import "./directory.css";
 
@@ -20,15 +22,17 @@ export const metadata: Metadata = {
   openGraph: { siteName: `${brand.name} ${brand.english}`, type: "website", locale: "zh_CN", description: siteDescription },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pendingConsent = (await headers()).get(siteConsentRequiredHeader) === "1";
   return <html lang="zh-CN" suppressHydrationWarning>
     <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
     <body>
-      <a className="skip-link" href="#main">跳到主要内容</a>
-      <Header region={<RegionIndicator />} />
+      {!pendingConsent && <>
+        <a className="skip-link" href="#main">跳到主要内容</a>
+        <Header region={<RegionIndicator />} />
+      </>}
       <main id="main" tabIndex={-1}>{children}</main>
-      <Footer />
-      <PageTraffic />
+      {!pendingConsent && <><Footer /><PageTraffic /></>}
     </body>
   </html>;
 }
