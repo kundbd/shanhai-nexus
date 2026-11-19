@@ -16,8 +16,9 @@ export type PublishedQuote = Price & { site_slug:string; site_name:string; categ
 
 export const priceRecordedTime=(column:string)=>`julianday(CASE WHEN length(${column})=10 THEN ${column} || 'T00:00:00+08:00' ELSE ${column} END)`;
 
-function publishedQuotes(db:ReturnType<typeof directory>,includeStorefronts:boolean,site?:number|readonly number[]) {
+function publishedQuotes(db:ReturnType<typeof directory>,includeStorefronts:boolean,site?:number|readonly number[],visibility?:ContentVisibility) {
   const scope=typeof site==="number"?"AND p.site_id=?":site?"AND p.site_id IN (SELECT value FROM json_each(?))":"";
+  const region=siteVisibility(visibility);
   return all<PublishedQuote>(db,`WITH ranked AS (
     SELECT p.*,s.slug site_slug,s.name site_name,c.slug category_slug,c.label category_label,
       src.url source_url,src.title source_title,src.kind source_kind,avatar.digest avatar_digest,stock.checked_at stock_checked_at,stock.state stock_state,
@@ -41,9 +42,9 @@ function publishedQuotes(db:ReturnType<typeof directory>,includeStorefronts:bool
     WHERE p.publication='published' AND s.publication='published' AND s.lifecycle<>'closed'
     AND ${publicPriceEvidence}
     AND (p.storefront_observed=0 OR (?=1 AND s.category_slug IN ('ai-topup','ai-card')))
-    ${scope}
+    ${scope} AND ${region.clause}
   ) SELECT * FROM ranked WHERE position=1 ORDER BY category_slug,site_id,id`,Number(includeStorefronts),
-    ...(site===undefined?[]:[typeof site==="number"?site:JSON.stringify(site)]));
+    ...(site===undefined?[]:[typeof site==="number"?site:JSON.stringify(site)]),...region.bindings);
 }
 
 export const currentPublicQuotes=(db=directory())=>publishedQuotes(db,false).filter(quote=>quote.amount_scale==null);
@@ -133,12 +134,12 @@ function directStockAvailable(quote:PublishedQuote,now:number) {
 }
 
 export type StartingPrice={cnyAmount:number;period:string;converted:boolean;referenceAt?:string};
-export function catalogStartingPrices(db:ReturnType<typeof directory>,siteIds:readonly number[],now=Date.now()) {
+export function catalogStartingPrices(db:ReturnType<typeof directory>,siteIds:readonly number[],now=Date.now(),visibility?:ContentVisibility) {
   const prices=new Map<number,StartingPrice>();
   if (!siteIds.length) return prices;
   const references=new Map<number,StartingPrice>();
   const {byCurrency}=exchangeRates(db);
-  for (const recorded of publishedQuotes(db,true,siteIds)) {
+  for (const recorded of publishedQuotes(db,true,siteIds,visibility)) {
     const feedQuote=recentFeedQuote(recorded,now);
     const quote=feedQuote??recorded;
     // A merchant's own list price is useful in the directory even when stock is unspecified.
@@ -218,12 +219,12 @@ function excludedQuote(quote:PricedInCny):ExcludedQuote {
   return {quote,state,evidenceUrl:quote.stock_state?quote.source_url:null,evidenceAt:quote.stock_checked_at};
 }
 
-export function publicPriceBoard(db=directory(),now=Date.now(),includeExcluded=false) {
+export function publicPriceBoard(db=directory(),now=Date.now(),includeExcluded=false,visibility?:ContentVisibility) {
   const {day,byCurrency}=exchangeRates(db);
   const groups=new Map<string,QuoteGroup>();
   const relayModelNames=new Map<string,string>();
   let missingExchange=0;
-  for (const recorded of publishedQuotes(db,true)) {
+  for (const recorded of publishedQuotes(db,true,undefined,visibility)) {
     const feedQuote=recentFeedQuote(recorded,now);
     const quote=feedQuote??recorded;
     if (quote.storefront_observed&&(unavailableQuote.test(quote.notes)||partialProduct.test(quote.plan)||partialProduct.test(quote.product_title??""))) continue;
@@ -268,3 +269,4 @@ export function publicPriceBoard(db=directory(),now=Date.now(),includeExcluded=f
   }
   return {groups:result.sort((a,b)=>b.merchants-a.merchants||b.quotes.length-a.quotes.length||Number(b.period==="月")-Number(a.period==="月")||a.key.localeCompare(b.key)),rateDay:day,missingExchange};
 }
+import { siteVisibility, type ContentVisibility } from "../geo/visibility";

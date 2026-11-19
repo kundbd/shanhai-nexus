@@ -11,6 +11,7 @@ import { PostCard } from "@/components/community/post-card";
 import { currentMember } from "@/lib/accounts/current";
 import { accountEntryHref } from "@/lib/accounts/paths";
 import { communityFeed,feedSize } from "@/lib/community/posts";
+import { contentVisibility } from "@/lib/geo/request";
 
 export const dynamic="force-dynamic";
 export const metadata:Metadata={title:"评论社区",description:"浏览山海知序社区帖子和匿名商家评价，分享数字服务的使用体验。",alternates:{canonical:"/community"}};
@@ -50,8 +51,9 @@ export default async function Community({searchParams}:{searchParams:Promise<Par
   </div>;
 }
 
-function ReviewThreads({page}:{page:number}) {
-  const threads=publicThreads(page);
+async function ReviewThreads({page}:{page:number}) {
+  const visibility=await contentVisibility();
+  const threads=publicThreads(page,undefined,visibility);
   return <>
     <Link className="button secondary" href="/services">去商家目录写评价</Link>
     <section className="community-feed" aria-label="公开讨论">
@@ -59,7 +61,7 @@ function ReviewThreads({page}:{page:number}) {
       {threads.slice(0,reviewPageSize).map((thread)=><article className="shop-review community-entry" key={thread.id}>
         <h2><DiscussionShopLink slug={thread.slug} name={thread.site_name}/></h2>
         <small>匿名用户 · {day(thread.submitted_at)}{thread.score!==null&&` · ${thread.score} / 5`}</small>
-        <p className="discussion-preview">{thread.body}</p>
+        <p className="discussion-preview">{visibility.filterText(thread.body)}</p>
         <DiscussionLink thread={thread.id} count={thread.reply_count}/>
       </article>)}
     </section>

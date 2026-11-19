@@ -3,6 +3,7 @@ import { param,type Params } from "@/components/directory/catalog-page";
 import { brand } from "@/lib/brand";
 import { getSite } from "@/lib/directory/read";
 import { isRetiredCategory,pipelines,publicPipelines } from "@/lib/directory/taxonomy";
+import { contentVisibility } from "@/lib/geo/request";
 
 const merchantLabels:Record<string,string>={"ai-topup":"AI 会员代充","ai-card":"AI 卡网 / 发卡站","ai-relay":"API 中转",
   "u-card":"U 卡","virtual-card":"虚拟信用卡","payment-accounts":"跨境支付","subscription-payment":"订阅支付",vps:"VPS / 云服务器"};
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic";
 export const metadata:Metadata = {title:"联系与纠错",description:"提交资料纠错、推荐新商家、发表商家回应或联系合作。",alternates:{canonical:"/contact"}};
 export default async function Contact({searchParams}:{searchParams:Promise<Params>}) {
   const search=await searchParams;
-  const site=getSite(param(search.site));
+  const visibility=await contentVisibility();
+  const site=getSite(param(search.site),undefined,visibility);
   const result=param(search.result);
   return <div className="frame page article editorial-page">
     <div className="catalog-heading"><p className="print-label">联系本站</p><h1>联系与纠错</h1><p>{site ? `为 ${site.name} 提交信息。` : "通过表单推荐新服务、指出错误或提交商家回应。"}</p></div>
@@ -26,7 +28,8 @@ export default async function Contact({searchParams}:{searchParams:Promise<Param
             <input type="hidden" name="kind" value="site"/><input type="hidden" name="merchant" value="1"/>
             <label>商家名称<input name="merchant_name" maxLength={100} required/></label>
             <label>所属分类<select name="merchant_category" required><option value="">请选择</option>
-              {publicPipelines.map(key=><optgroup key={key} label={pipelines[key].label}>{pipelines[key].categories.filter(category=>!isRetiredCategory(category)).map(category=><option key={category} value={category}>{merchantLabels[category]}</option>)}</optgroup>)}
+              {publicPipelines.map(key=>({key,categories:pipelines[key].categories.filter(category=>!isRetiredCategory(category)&&visibility.categoryAllowed(category))}))
+                .filter(item=>item.categories.length).map(({key,categories})=><optgroup key={key} label={pipelines[key].label}>{categories.map(category=><option key={category} value={category}>{merchantLabels[category]}</option>)}</optgroup>)}
             </select></label>
             <label>商家官网<input name="url" type="url" maxLength={1500} required/></label>
             <label>公开资料说明<textarea name="body" required minLength={15} maxLength={1600} rows={3} placeholder="请说明服务类别和如何通过公开资料确认归属。"/></label>

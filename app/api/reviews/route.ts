@@ -7,6 +7,8 @@ import { accountEntryHref } from "@/lib/accounts/paths";
 import { memberCookie,memberSession } from "@/lib/accounts/store";
 import { discussionHref } from "@/lib/directory/community";
 import { siteHref } from "@/lib/directory/types";
+import { getSite } from "@/lib/directory/read";
+import { visibilityForHeaders } from "@/lib/geo/request";
 
 export async function POST(request:NextRequest) {
   const headers={"Cache-Control":"no-store"};
@@ -33,6 +35,7 @@ export async function POST(request:NextRequest) {
   if (!token) return signIn();
   try {
     const db=directory();
+    if (!getSite(slug,db,await visibilityForHeaders(request.headers))) return errorResponse("该商家在当前地区不可用。",404);
     const member=await memberSession(db,token,{verify:true});
     if (!member) return signIn();
     if(fields.company)return response("submitted");

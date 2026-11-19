@@ -6,7 +6,7 @@ import { ThemeSwitch } from "@/components/site/theme";
 import { brand } from "@/lib/brand";
 import { adminLabels } from "@/lib/directory/admin-read";
 
-const labels={...adminLabels,"":"概览",moderation:"社区审核",community:"已发布帖子"};
+const labels={...adminLabels,"":"概览",moderation:"社区审核",community:"已发布帖子",visibility:"地区可见性"};
 
 export default async function AdminLayout({children}:{children:ReactNode}) {
   const actor=await currentAdmin();

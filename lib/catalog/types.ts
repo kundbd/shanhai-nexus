@@ -24,6 +24,7 @@ export type Guide = {
   tags: string[];
   keywords: string[];
   sources: { title: string; url: string }[];
+  network?: boolean;
   relatedTool?: ToolId;
   relatedGuides?: string[];
   diagnosis?: string;

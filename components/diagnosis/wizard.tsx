@@ -41,7 +41,7 @@ export function DiagnosisWizard({ flows, initialTopic, initialStep }: { flows: R
       <p className="eyebrow"><CheckCircle2 size={16} aria-hidden="true" />建议排查方向</p>
       <h2 ref={heading} tabIndex={-1}>{current.title}</h2>
       <ol className="wizard-steps">{current.steps.map((step) => <li key={step}>{step}</li>)}</ol>
-      <Link className="button primary" href={`/guides/${current.guide}`}>查看完整方案 <ArrowRight size={16} aria-hidden="true" /></Link>
+      {current.guide&&<Link className="button primary" href={`/guides/${current.guide}`} prefetch={false}>查看完整方案 <ArrowRight size={16} aria-hidden="true" /></Link>}
       {flow.relatedTool && <Link className="button secondary diagnosis-tool" href={`/tools/${flow.relatedTool.id}`}>{flow.relatedTool.label} <ArrowRight size={16} aria-hidden="true" /></Link>}
     </div>}
     {history.length > 0 && <div className="wizard-bottom"><button className="text-link" onClick={() => { shouldFocus.current = true; setHistory(history.slice(0, -1)); }}><ArrowLeft size={16} aria-hidden="true" />上一步</button></div>}

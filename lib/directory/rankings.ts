@@ -1,8 +1,9 @@
 import type { DatabaseSync } from "node:sqlite";
+import { siteVisibility, type ContentVisibility } from "../geo/visibility";
 import { trafficProduct } from "../traffic-path";
 import { all } from "./db";
 import { currentPublicProducts } from "./products";
-import { isRetiredCategory,pipelines,type Pipeline } from "./taxonomy";
+import { pipelines,type Pipeline } from "./taxonomy";
 import { trafficWindow } from "./traffic";
 import type { Price,Site } from "./types";
 
@@ -11,7 +12,7 @@ export type RankingPeriod="24h"|"overall";
 type RankedShop=Pick<Site,"id"|"slug"|"name"|"category_slug"|"category_label"|"avatar_digest">&{visitors:number};
 type RankedProduct={path:string;visitors:number;site:Pick<Site,"id"|"slug"|"name"|"category_slug"|"category_label">;price:Price};
 
-const categories=(group:Pipeline)=>JSON.stringify(pipelines[group].categories.filter(category=>!isRetiredCategory(category)));
+const categories=(group:Pipeline)=>JSON.stringify(pipelines[group].categories);
 
 function visitorCounts(kind:"services"|"products",period:RankingPeriod,time:number) {
   const range=[`/${kind}/`,`/${kind}0`];
@@ -26,25 +27,27 @@ function visitorCounts(kind:"services"|"products",period:RankingPeriod,time:numb
   };
 }
 
-export function shopRanking(db:DatabaseSync,group:Pipeline,period:RankingPeriod="24h",time=Date.now()) {
+export function shopRanking(db:DatabaseSync,group:Pipeline,period:RankingPeriod="24h",time=Date.now(),visibility?:ContentVisibility) {
   const counts=visitorCounts("services",period,time);
+  const region=siteVisibility(visibility);
   return all<RankedShop>(db,`WITH counts AS (${counts.sql})
     SELECT s.id,s.slug,s.name,s.category_slug,c.label category_label,a.digest avatar_digest,v.visitors
     FROM sites s JOIN counts v ON v.page='/services/'||s.slug
     JOIN categories c ON c.slug=s.category_slug
     LEFT JOIN merchant_avatars a ON a.site_id=s.id AND a.website=s.website
-    WHERE s.publication='published' AND s.lifecycle<>'closed' AND s.category_slug IN (SELECT value FROM json_each(?))
-    ORDER BY v.visitors DESC,s.name COLLATE NOCASE,s.id LIMIT ?`,...counts.params,categories(group),limit);
+    WHERE s.publication='published' AND s.lifecycle<>'closed' AND s.category_slug IN (SELECT value FROM json_each(?)) AND ${region.clause}
+    ORDER BY v.visitors DESC,s.name COLLATE NOCASE,s.id LIMIT ?`,...counts.params,categories(group),...region.bindings,limit);
 }
 
-export function productRanking(db:DatabaseSync,group:Pipeline,period:RankingPeriod="24h",time=Date.now()) {
+export function productRanking(db:DatabaseSync,group:Pipeline,period:RankingPeriod="24h",time=Date.now(),visibility?:ContentVisibility) {
   const counts=visitorCounts("products",period,time);
+  const region=siteVisibility(visibility);
   const visits=db.prepare(`WITH counts AS (${counts.sql})
     SELECT v.page path,v.visitors,s.id,s.slug,s.name,s.category_slug,c.label category_label
     FROM counts v JOIN sites s ON s.id=CAST(substr(v.page,length('/products/')+1) AS INTEGER)
     JOIN categories c ON c.slug=s.category_slug
-    WHERE s.publication='published' AND s.lifecycle<>'closed' AND s.category_slug IN (SELECT value FROM json_each(?))
-    ORDER BY v.visitors DESC,v.page`).iterate(...counts.params,categories(group)) as Iterable<Omit<RankedProduct,"site"|"price">&RankedProduct["site"]>;
+    WHERE s.publication='published' AND s.lifecycle<>'closed' AND s.category_slug IN (SELECT value FROM json_each(?)) AND ${region.clause}
+    ORDER BY v.visitors DESC,v.page`).iterate(...counts.params,categories(group),...region.bindings) as Iterable<Omit<RankedProduct,"site"|"price">&RankedProduct["site"]>;
   const result:RankedProduct[]=[];
   const products=new Map<number,ReturnType<typeof currentPublicProducts>>();
   for (const {path,visitors,...site} of visits) {

@@ -9,6 +9,7 @@ import { day } from "@/components/directory/display";
 import { directory } from "@/lib/directory/db";
 import { latestPenalty,penaltyActive } from "@/lib/moderation/store";
 import { violationCategories } from "@/lib/moderation/policy";
+import { contentVisibility } from "@/lib/geo/request";
 
 export const metadata:Metadata={title:"个人中心",robots:{index:false,follow:false}};
 
@@ -16,7 +17,8 @@ export default async function Account({searchParams}:{searchParams:Promise<{page
   const member=await currentMember(true);
   if (!member) redirect("/login");
   const {page:requested}=await searchParams;
-  const result=memberActivity(member.id,typeof requested==="string"&&/^\d{1,6}$/.test(requested)?Number(requested):1);
+  const visibility=await contentVisibility();
+  const result=memberActivity(member.id,typeof requested==="string"&&/^\d{1,6}$/.test(requested)?Number(requested):1,undefined,visibility);
   const penalty=latestPenalty(directory(),member.id);
 
   return <div className="frame page narrow account-page">
@@ -44,7 +46,7 @@ export default async function Account({searchParams}:{searchParams:Promise<{page
         <ul className="account-history">{result.rows.map((row)=><li key={row.id} className="inline-observation">
           <h3>{row.published?<Link href={`${siteHref(row.slug)}#reviews`}>{row.name}</Link>:row.name}</h3>
           <p className="section-note">{row.thread_id?"回复":"商家评价"} · {reviewModeration[row.moderation]} · {day(row.submitted_at)}{row.score!==null&&` · ${row.score} / 5`}</p>
-          {row.body&&<p>{row.body}</p>}
+          {row.body&&<p>{visibility.filterText(row.body)}</p>}
         </li>)}</ul>}
       {result.pages>1&&<nav className="pagination" aria-label="个人提交记录分页">
         {result.page>1&&<Link href={`/account?page=${result.page-1}`}>上一页</Link>}

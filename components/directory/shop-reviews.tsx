@@ -9,9 +9,11 @@ import { siteHref,type Site } from "@/lib/directory/types";
 import { day } from "./display";
 import { ReviewForm } from "./review-form";
 import { DiscussionLink,DiscussionReplies,ReplyBox,ReviewNotice } from "./discussion";
+import { contentVisibility } from "@/lib/geo/request";
 
 export async function ShopReviews({site,page,status,summary}:{site:Site;page:number;status:string;summary:ReviewSummary}) {
   const signedIn=!!await currentMember();
+  const visibility=await contentVisibility();
   const totalPages=Math.max(1,Math.ceil(site.review_count/reviewPageSize));
   const current=Math.min(page,totalPages);
   const reviews=publicReviews(site.id,directory(),current);
@@ -25,9 +27,9 @@ export async function ShopReviews({site,page,status,summary}:{site:Site;page:num
     {reviews.map((review)=><article key={review.id} className="inline-observation shop-review">
       <small>匿名用户 · {day(review.submitted_at)}{review.body&&` · #${review.id}`}{review.score!==null&&` · ${review.score} / 5`}{review.evidence_state==="verified"&&" · 证据已核实"}</small>
       {review.body&&<>
-        <p>{review.body}</p>
+        <p>{visibility.filterText(review.body)}</p>
         <div className="discussion-actions"><DiscussionLink thread={review.id} count={review.reply_count}/><ReplyBox slug={site.slug} thread={review.id} target={review.id} signedIn={signedIn} returnTo={returnTo}/></div>
-        {review.reply_count>0&&<DiscussionReplies thread={review.id} slug={site.slug} rows={threadReplies(review.id,{preview:true})} signedIn={signedIn}/>}
+        {review.reply_count>0&&<DiscussionReplies thread={review.id} slug={site.slug} rows={threadReplies(review.id,{preview:true},undefined,visibility)} signedIn={signedIn}/>}
       </>}
     </article>)}
     {totalPages>1&&<nav className="pagination" aria-label="评价分页">

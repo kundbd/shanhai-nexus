@@ -2,36 +2,7 @@
 
 import { ArrowUpRight, Nfc } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
-
-const ads = [
-  {
-    id: "roogoo",
-    title: "Roogoo 乐享卡",
-    description: "美元结算的 Visa 虚拟卡，用于线上消费和数字订阅。",
-    href: "https://wap.roogoo.cloud/register?inviteCode=n0qxgt",
-    action: "前往注册",
-    cardBrand: "Roogoo",
-    cardLabel: "VISA",
-  },
-  {
-    id: "gate",
-    title: "Gate AI Card",
-    description: "用于支付 AI 工具和数字服务订阅的虚拟卡。",
-    href: "https://app.bxjddjt.com/card/redirect?key=invite&invite_code=VAMRAV9DVQ",
-    action: "前往申请",
-    cardBrand: "Gate",
-    cardLabel: "AI Card",
-  },
-  {
-    id: "musepay",
-    title: "MusePay Global Nova Card",
-    description: "面向 AI 订阅和线上消费的 Visa 虚拟卡。",
-    href: "https://h5.musepayapp.io/h5/?type=person&code=W34EQX",
-    action: "前往申请",
-    cardBrand: "Muse Card",
-    cardLabel: "VISA",
-  },
-];
+import type { HomeAd } from "@/lib/catalog/home-ads";
 
 const rotationDelay = 6_000;
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
@@ -54,7 +25,7 @@ function scrollToAd(track: HTMLDivElement | null, index: number) {
   }
 }
 
-export function HomeAdCarousel() {
+export function HomeAdCarousel({ ads }: { ads: readonly HomeAd[] }) {
   const track = useRef<HTMLDivElement>(null);
   const autoplayDirection = useRef<1 | -1>(1);
   const mouseStart = useRef<{ x: number; y: number } | null>(null);
@@ -71,10 +42,10 @@ export function HomeAdCarousel() {
     if (active === 0) autoplayDirection.current = 1;
     else if (active === ads.length - 1) autoplayDirection.current = -1;
 
-    if (prefersReducedMotion || hovering || touching || keyboardFocus) return;
+    if (ads.length < 2 || prefersReducedMotion || hovering || touching || keyboardFocus) return;
     const timer = window.setTimeout(() => scrollToAd(track.current, active + autoplayDirection.current), rotationDelay);
     return () => window.clearTimeout(timer);
-  }, [active, hovering, keyboardFocus, prefersReducedMotion, touching]);
+  }, [active, ads.length, hovering, keyboardFocus, prefersReducedMotion, touching]);
 
   function startPointer(event: PointerEvent<HTMLDivElement>) {
     suppressClick.current = false;
@@ -156,7 +127,7 @@ export function HomeAdCarousel() {
           </a>
         ))}
       </div>
-      <div className="home-ad-controls">
+      {ads.length > 1 && <div className="home-ad-controls">
         {ads.map((ad, index) => (
           <button
             key={ad.id}
@@ -167,7 +138,7 @@ export function HomeAdCarousel() {
             onClick={() => scrollToAd(track.current, index)}
           />
         ))}
-      </div>
+      </div>}
     </section>
   );
 }

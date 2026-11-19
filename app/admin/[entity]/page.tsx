@@ -26,6 +26,7 @@ export default async function EntityPage({params,searchParams}:{params:Promise<{
   const id=explicit||(creating?"":automatic);
   const record=id?adminRecord(entity,id):undefined;
   const base=`/admin/${entity}`;
+  const regionKind=entity==="sites"?"site":entity==="categories"?"category":entity==="editorials"?"editorial":undefined;
   const filters={q,state:submissions?state||"all":"",page};
   function listHref(target:number,targetId?:string,create=false) {
     const filters=new URLSearchParams();
@@ -69,6 +70,7 @@ export default async function EntityPage({params,searchParams}:{params:Promise<{
       </div>
       <div className="admin-record-panel">{record||creating?<>
         <h2>{record?.display??`新建${adminLabels[entity]}`}</h2>
+        {record&&regionKind&&<Link className="text-link" href={`/admin/visibility?${new URLSearchParams({kind:regionKind,key:String(record.slug)})}`} prefetch={false}>地区可见性</Link>}
         <RecordForm key={`${entity}:${id}`} entity={entity} row={record} filters={filters} showAdvanced={Boolean(param(input.error))}/>
       </>:<p className="plain-empty boxed-empty">{explicit?"记录不存在或已被删除。":submissions?"暂无可审核的投稿。":"选择列表中的记录进行编辑。"}</p>}
         {submissions&&!!record?.publication_consent&&(record.batch_id?

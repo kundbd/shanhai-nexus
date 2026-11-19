@@ -8,8 +8,9 @@ import { param,type Params } from "@/components/directory/catalog-page";
 import { directory } from "@/lib/directory/db";
 import { productName } from "@/lib/directory/products";
 import { productRanking,shopRanking,type RankingPeriod } from "@/lib/directory/rankings";
-import { pipelines,publicPipelines,type Pipeline } from "@/lib/directory/taxonomy";
+import { pipelines,type Pipeline } from "@/lib/directory/taxonomy";
 import { categoryHref,siteHref } from "@/lib/directory/types";
+import { contentVisibility } from "@/lib/geo/request";
 
 export const dynamic="force-dynamic";
 export const metadata:Metadata={
@@ -23,17 +24,20 @@ const rankingHref=(group:Pipeline,type:"shops"|"products",period:RankingPeriod)=
 
 export default async function Rankings({searchParams}:{searchParams:Promise<Params>}) {
   const input=await searchParams;
+  const visibility=await contentVisibility();
+  const groups=(Object.keys(pipelines) as Pipeline[]).filter(key=>pipelines[key].categories.some(category=>visibility.categoryAllowed(category)));
   const selected=param(input.group);
-  if (selected==="connections") notFound();
-  const group=publicPipelines.find(key=>key===selected)??"ai-retail";
+  if (Object.hasOwn(pipelines,selected)&&!groups.some(key=>key===selected)) notFound();
+  const group=groups.find(key=>key===selected)??groups[0];
+  if (!group) notFound();
   const type=param(input.type)==="products"?"products":"shops";
   const period=param(input.period)==="overall"?"overall":"24h";
   const label=type==="shops"?"店铺排行":"商品排行";
-  const browse=group==="ai-retail"?`/services?group=${group}`:categoryHref(group);
+  const browse=group==="ai-retail"||group==="connections"?`/services?group=${group}`:categoryHref(group);
   const db=directory();
-  const rows=type==="shops"?shopRanking(db,group,period).map(site=>({
+  const rows=type==="shops"?shopRanking(db,group,period,undefined,visibility).map(site=>({
     path:siteHref(site.slug),name:site.name,details:site.category_label,visitors:site.visitors,icon:<MerchantAvatar site={site}/>,
-  })):productRanking(db,group,period).map(({path,visitors,site,price})=>({
+  })):productRanking(db,group,period,undefined,visibility).map(({path,visitors,site,price})=>({
     path,name:productName(price),details:[site.name,priceLabel(price),quoteDetailLabel(price.period)].filter(Boolean).join(" · "),
     visitors,icon:<OfferIcon price={price} site={site}/>,
   }));
@@ -53,7 +57,7 @@ export default async function Rankings({searchParams}:{searchParams:Promise<Para
       </nav>
     </div>
     <nav className="child-categories ranking-categories" aria-label="排行榜分类">
-      {publicPipelines.map(key=><Link key={key} href={rankingHref(key,type,period)} prefetch={false} aria-current={group===key?"page":undefined}>{pipelines[key].label}</Link>)}
+      {groups.map(key=><Link key={key} href={rankingHref(key,type,period)} prefetch={false} aria-current={group===key?"page":undefined}>{pipelines[key].label}</Link>)}
     </nav>
     <section aria-labelledby="ranking-heading">
       <div className="ranking-heading"><h2 id="ranking-heading">{pipelines[group].label} · {label}</h2>{rows.length>0&&<span>浏览人数</span>}</div>

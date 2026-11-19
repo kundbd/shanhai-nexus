@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const primary=["","sites","submissions","reviews","moderation","traffic"];
 const extra=[
-  {label:"内容维护",items:["editorials","price_records","sources","categories","incidents"]},
+  {label:"内容维护",items:["editorials","price_records","sources","categories","incidents","visibility"]},
   {label:"导入与采集",items:["imports","discovery","campaigns"]},
   {label:"其他",items:["community","audit"]},
 ];

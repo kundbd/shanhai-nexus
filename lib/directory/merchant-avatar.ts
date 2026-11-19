@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { one } from "./db";
+import { siteVisibility, type ContentVisibility } from "../geo/visibility";
 
 export type AvatarType = "image/webp" | "image/x-icon";
 export type AvatarImage = { sourceUrl:string; contentType:AvatarType; image:Uint8Array };
@@ -17,8 +18,9 @@ export function saveMerchantAvatar(db:DatabaseSync,site:Pick<AvatarTarget,"id"|"
     .run(result?.sourceUrl??null,result?.contentType??null,result?.image??null,digest,checkedAt,reason,site.id,site.website);
 }
 
-export function findMerchantAvatar(db:DatabaseSync,slug:string,digest:string) {
+export function findMerchantAvatar(db:DatabaseSync,slug:string,digest:string,visibility?:ContentVisibility) {
+  const region=siteVisibility(visibility);
   return one<{image:Uint8Array;content_type:AvatarType}>(db,`SELECT a.image,a.content_type
     FROM merchant_avatars a JOIN sites s ON s.id=a.site_id AND s.website=a.website
-    WHERE s.slug=? AND s.publication='published' AND a.digest=?`,slug,digest);
+    WHERE s.slug=? AND s.publication='published' AND a.digest=? AND ${region.clause}`,slug,digest,...region.bindings);
 }

@@ -7,10 +7,14 @@ import { HomePrices } from "@/components/directory/home-prices";
 import type { Params } from "@/components/directory/catalog-page";
 import { CatalogBadge, StartingPriceLabel, day } from "@/components/directory/display";
 import { MerchantAvatar } from "@/components/directory/merchant-avatar";
-import { priorityCategoryTabs } from "@/components/directory/priority-category-tabs";
-import { countPublicAiRetailProducts, countPublicSites, listSites } from "@/lib/directory/read";
+import { visiblePriorityCategoryTabs } from "@/components/directory/priority-category-tabs";
+import { countPublicAiRetailProducts, countPublicSites, listPublicCategories, listSites } from "@/lib/directory/read";
+import { isRetiredCategory } from "@/lib/directory/taxonomy";
 import { categoryHref, siteHref } from "@/lib/directory/types";
 import { brand } from "@/lib/brand";
+import { visibleHomeAds } from "@/lib/geo/catalog";
+import { contentVisibility } from "@/lib/geo/request";
+import { categoryIcons } from "@/components/directory/category-icon";
 
 export const dynamic = "force-dynamic";
 const countFormat=new Intl.NumberFormat("zh-CN");
@@ -22,7 +26,10 @@ export const metadata: Metadata = {
 
 export default async function Home({searchParams}:{searchParams:Promise<Params>}) {
   const input=await searchParams;
-  const {rows:recent,startingPrices}=listSites({size:6,lifecycle:"current",sort:"recent",includeStartingPrices:true});
+  const visibility=await contentVisibility();
+  const ads=visibleHomeAds(visibility);
+  const {rows:recent,startingPrices}=listSites({size:6,lifecycle:"current",sort:"recent",includeStartingPrices:true,visibility});
+  const networkCategories=listPublicCategories(undefined,visibility).filter(category=>isRetiredCategory(category.slug));
   return <div className="frame directory-home">
     <section className="intro" aria-labelledby="home-title">
       <div className="intro-content">
@@ -39,20 +46,26 @@ export default async function Home({searchParams}:{searchParams:Promise<Params>}
             </Link>
           ))}
         </div>
-        <HomeAdCarousel />
+        {ads.length>0 && <HomeAdCarousel key={ads.map(ad=>ad.id).join(",")} ads={ads}/>}
       </div>
-      <nav id="home-categories" className="category-strip" aria-label="重点服务分类">{priorityCategoryTabs.map(({item:c,Icon})=><Link key={c.label} href={"group" in c?`/services?group=${c.group}`:categoryHref(c.category)}>
+      <nav id="home-categories" className="category-strip" aria-label="重点服务分类">{visiblePriorityCategoryTabs(visibility).map(({item:c,Icon})=><Link key={c.label} href={"group" in c?`/services?group=${c.group}`:categoryHref(c.category)} prefetch={false}>
         <div>
           <h2><Icon size={16} aria-hidden="true"/>{c.label}</h2><p>{c.description}</p>
           <p className="category-count">
-            公开档案 {countPublicSites({...("group" in c?{group:c.group}:{category:c.category}),lifecycle:"current"})} 家
-            {"group" in c&&c.group==="ai-retail"&&<><br/>公开商品 {countFormat.format(countPublicAiRetailProducts())} 件</>}
+            公开档案 {countPublicSites({...("group" in c?{group:c.group}:{category:c.category}),lifecycle:"current",visibility})} 家
+            {"group" in c&&c.group==="ai-retail"&&<><br/>公开商品 {countFormat.format(countPublicAiRetailProducts(undefined,visibility))} 件</>}
           </p>
         </div><ArrowUpRight size={19} aria-hidden="true" />
-      </Link>)}</nav>
+      </Link>)}{networkCategories.map(category=>{
+        const Icon=categoryIcons[category.slug as keyof typeof categoryIcons];
+        return <Link key={category.slug} href={categoryHref(category.slug)} prefetch={false}>
+          <div><h2>{Icon&&<Icon size={16} aria-hidden="true"/>}{category.label}</h2><p>{category.description}</p></div>
+          <ArrowUpRight size={19} aria-hidden="true"/>
+        </Link>;
+      })}</nav>
     </section>
 
-    <HomePrices input={input}/>
+    <HomePrices input={input} visibility={visibility}/>
 
     {!!recent.length && <section aria-labelledby="recent">
       <div className="directory-section"><h2 id="recent">最近更新</h2></div>

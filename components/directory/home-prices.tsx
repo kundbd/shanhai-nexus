@@ -12,16 +12,19 @@ import { param,type Params } from "./catalog-page";
 import { AiProductIcon } from "./ai-product-icon";
 import { MerchantAvatar } from "./merchant-avatar";
 import { OfferIcon } from "./offer-icon";
-import { priorityCategoryTabs } from "./priority-category-tabs";
+import { visiblePriorityCategoryTabs } from "./priority-category-tabs";
+import type { ContentVisibility } from "@/lib/geo/visibility";
 
 const yuan=new Intl.NumberFormat("zh-CN",{style:"currency",currency:"CNY"});
 const rateYuan=new Intl.NumberFormat("zh-CN",{style:"currency",currency:"CNY",maximumFractionDigits:4});
 const localUpdate=new Intl.DateTimeFormat("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
 
-export function HomePrices({input}:{input:Params}) {
+export function HomePrices({input,visibility}:{input:Params;visibility:ContentVisibility}) {
+  const tabs=visiblePriorityCategoryTabs(visibility);
+  if (!tabs.length) return null;
   const view=param(input.price);
-  const active=Object.hasOwn(priceCategories,view)?view as keyof typeof priceCategories:"ai";
-  const {groups}=publicPriceBoard();
+  const active=(tabs.find(tab=>tab.key===view)??tabs[0]).key;
+  const {groups}=publicPriceBoard(undefined,undefined,false,visibility);
   const brands=[...new Set<string>([...featuredAiProducts,...groups.flatMap(group=>group.product?[group.product]:[]),codexVerificationProduct])];
   const product=brands.includes(param(input.product))?param(input.product):brands[0];
   const verification=active==="ai"&&product===codexVerificationProduct;
@@ -68,7 +71,7 @@ export function HomePrices({input}:{input:Params}) {
   return <section id="home-prices" className="home-prices" aria-labelledby="price-title">
     <div className="directory-section"><h2 id="price-title">公开报价区间<span className="price-unit">人民币</span></h2></div>
     <p className="section-note">{verification?"以下为明确标注单次计价的公开报价。":active==="ai"?"同一产品、等级和周期内，按交付方式计算报价区间。店铺标价采用近期原页核对或第三方有货观测。":relay?"按同一模型分别查看输入和输出单价。缓存、渠道及附加费请看商家的原始价目。":"金额按公开价目记录。"}</p>
-    <nav className="filter-pills price-tabs" aria-label="报价分类">{priorityCategoryTabs.map(({key,item:{label},Icon})=><Link key={key}
+    <nav className="filter-pills price-tabs" aria-label="报价分类">{tabs.map(({key,item:{label},Icon})=><Link key={key}
       href={url(key)} scroll={false} aria-current={key===active?"page":undefined}>
       <Icon size={16} aria-hidden="true"/>{label}
     </Link>)}</nav>

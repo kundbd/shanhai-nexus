@@ -1,4 +1,5 @@
 import type { SQLInputValue } from "node:sqlite";
+import { editorialVisibility, siteVisibility, type ContentVisibility } from "../geo/visibility";
 import { all, directory, one } from "./db";
 import type { Category, Claim, Editorial, Incident, Price, Site, Source, Status } from "./types";
 import { categoryGroups,isRetiredCategory } from "./taxonomy";
@@ -24,17 +25,20 @@ const siteSelect = `SELECT s.*, a.digest avatar_digest, coalesce(d.domain,
 
 export const listCategories = (db = directory()) =>
   all<Category>(db, "SELECT * FROM categories ORDER BY parent_slug IS NOT NULL, parent_slug, position, label");
-export const listPublicCategories = (db = directory()) =>
-  listCategories(db).filter(({slug}) => !isRetiredCategory(slug));
-export const getCategory = (slug: string, db = directory()) =>
-  isRetiredCategory(slug) ? undefined : one<Category>(db, "SELECT * FROM categories WHERE slug=?", slug);
+export const listPublicCategories = (db = directory(), visibility?: ContentVisibility) =>
+  listCategories(db).filter(({slug}) => visibility ? visibility.categoryAllowed(slug) : !isRetiredCategory(slug));
+export const getCategory = (slug: string, db = directory(), visibility?: ContentVisibility) =>
+  (visibility ? visibility.categoryAllowed(slug) : !isRetiredCategory(slug))
+    ? one<Category>(db, "SELECT * FROM categories WHERE slug=?", slug) : undefined;
 
-export function getSite(slug: string, db = directory()) {
-  return one<Site>(db, `${siteSelect} WHERE s.slug=? AND s.publication='published'`, slug.slice(0,90));
+export function getSite(slug: string, db = directory(), visibility?: ContentVisibility) {
+  const region = visibility ? siteVisibility(visibility) : {clause:"1",bindings:[]};
+  return one<Site>(db, `${siteSelect} WHERE s.slug=? AND s.publication='published' AND ${region.clause}`, slug.slice(0,90), ...region.bindings);
 }
 
-export function getSiteById(id:number, db=directory()) {
-  return one<Site>(db,`${siteSelect} WHERE s.id=? AND s.publication='published'`,id);
+export function getSiteById(id:number, db=directory(), visibility?: ContentVisibility) {
+  const region = visibility ? siteVisibility(visibility) : {clause:"1",bindings:[]};
+  return one<Site>(db,`${siteSelect} WHERE s.id=? AND s.publication='published' AND ${region.clause}`,id,...region.bindings);
 }
 
 export function getDomains(site: number, db = directory()) {
@@ -74,19 +78,23 @@ export function latestPrices(prices: readonly Price[]) {
   return [...current.values()];
 }
 
-export function publicIncidents(site?: number, limit = 100, db = directory()) {
+export function publicIncidents(site?: number, limit = 100, db = directory(), visibility?: ContentVisibility) {
+  const region = siteVisibility(visibility);
   return all<Incident>(db, `SELECT i.*, src.url source_url, s.name site_name,s.slug site_slug FROM incidents i
     JOIN sources src ON src.id=i.source_id AND src.verified=1 JOIN sites s ON s.id=i.site_id AND s.publication='published'
-    WHERE i.publication='published' AND (? IS NULL OR i.site_id=?) ORDER BY occurred_at DESC, id DESC LIMIT ?`, site ?? null, site ?? null, limit);
+    WHERE i.publication='published' AND (? IS NULL OR i.site_id=?) AND ${region.clause}
+    ORDER BY i.occurred_at DESC, i.id DESC LIMIT ?`, site ?? null, site ?? null, ...region.bindings, limit);
 }
 
-const editorialVisible = "e.publication='published' AND (e.site_id IS NULL OR EXISTS(SELECT 1 FROM sites s WHERE s.id=e.site_id AND s.publication='published'))";
-export function publicEditorial(slug: string, db = directory()) {
-  return one<Editorial>(db, `SELECT e.* FROM editorials e WHERE ${editorialVisible} AND e.slug=?`, slug);
+export function publicEditorial(slug: string, db = directory(), visibility?: ContentVisibility) {
+  const region = editorialVisibility(visibility);
+  return one<Editorial>(db, `SELECT e.* FROM editorials e WHERE e.publication='published' AND ${region.clause} AND e.slug=?`, ...region.bindings, slug);
 }
 
-export function publicEditorials(site?: number, limit = 100, db = directory()) {
-  return all<Editorial>(db, `SELECT e.* FROM editorials e WHERE ${editorialVisible} AND (? IS NULL OR e.site_id=?) ORDER BY updated_at DESC,id ASC LIMIT ?`, site ?? null, site ?? null, limit);
+export function publicEditorials(site?: number, limit = 100, db = directory(), visibility?: ContentVisibility) {
+  const region = editorialVisibility(visibility);
+  return all<Editorial>(db, `SELECT e.* FROM editorials e WHERE e.publication='published' AND ${region.clause}
+    AND (? IS NULL OR e.site_id=?) ORDER BY updated_at DESC,id ASC LIMIT ?`, ...region.bindings, site ?? null, site ?? null, limit);
 }
 export function publicClaims(editorial: number, db = directory()) {
   return all<Claim & { url: string | null; source_title: string | null }>(db, `SELECT c.*,s.url, s.title source_title FROM editorial_claims c
@@ -94,11 +102,12 @@ export function publicClaims(editorial: number, db = directory()) {
 }
 
 export type DirectoryFilter = { q?: string; category?: string; group?:string; status?: string; reachability?:string; lifecycle?:string; operator?:string; official?:string;
-  sort?: string; page?: number; size?: number; showAll?: boolean; includeStartingPrices?:boolean };
+  sort?: string; page?: number; size?: number; showAll?: boolean; includeStartingPrices?:boolean; visibility?: ContentVisibility };
 
 function filters(input: DirectoryFilter) {
-  const clauses = ["s.publication='published'"];
-  const params: SQLInputValue[] = [];
+  const region = siteVisibility(input.visibility);
+  const clauses = ["s.publication='published'",region.clause];
+  const params: SQLInputValue[] = [...region.bindings];
   if (input.category) {
     clauses.push(`s.category_slug IN (WITH RECURSIVE descendants(slug) AS
       (SELECT slug FROM categories WHERE slug=? UNION SELECT c.slug FROM categories c JOIN descendants p ON c.parent_slug=p.slug)
@@ -181,7 +190,7 @@ export function listSites(input: DirectoryFilter = {}, db = directory()) {
   const size = Number.isInteger(input.size) ? Math.min(100, Math.max(1, input.size!)) : 12;
   const requestPage = Number.isInteger(input.page) ? Math.max(1,input.page!) : 1;
   function pageRows(rows:Site[],page:number,paginate:boolean) {
-    const rankedPrices=priceDirection?catalogStartingPrices(db,rows.map(({id})=>id)):undefined;
+    const rankedPrices=priceDirection?catalogStartingPrices(db,rows.map(({id})=>id),undefined,input.visibility):undefined;
     if (rankedPrices) rows.sort((a,b)=>{
       const first=rankedPrices.get(a.id);
       const second=rankedPrices.get(b.id);
@@ -191,7 +200,7 @@ export function listSites(input: DirectoryFilter = {}, db = directory()) {
       return priceDirection*(left-right);
     });
     const visible=paginate&&!input.showAll?rows.slice((page-1)*size,page*size):rows;
-    const startingPrices=rankedPrices??(input.includeStartingPrices?catalogStartingPrices(db,visible.map(({id})=>id)):undefined);
+    const startingPrices=rankedPrices??(input.includeStartingPrices?catalogStartingPrices(db,visible.map(({id})=>id),undefined,input.visibility):undefined);
     return {rows:visible,startingPrices};
   }
   if (!input.q?.trim()) {
@@ -204,18 +213,20 @@ export function listSites(input: DirectoryFilter = {}, db = directory()) {
   }
   const search=directorySearch(input.q);
   const priceMatches=matchingPublicPrices(db,where,params,search);
+  const hiddenEditorials = input.visibility?.hiddenEditorials ?? [];
   const candidates = all<Site & { extra_domains: string | null; shop_urls: string | null; editorials: string; parent_label: string; parent_slug: string|null; service_tags:string }>(db, `SELECT base.*,
     (SELECT group_concat(domain, ' ') FROM site_domains sd WHERE sd.site_id=base.id) extra_domains,
     (SELECT group_concat(url, ' ') FROM merchant_storefronts sf WHERE sf.site_id=base.id) shop_urls,
     COALESCE((SELECT group_concat(tag, ' ') FROM merchant_site_tags mt WHERE mt.site_id=base.id),'') service_tags,
     COALESCE((SELECT group_concat(e.title || ' ' || e.summary || ' ' || e.body || ' ' || COALESCE(
       (SELECT group_concat(ec.statement,' ') FROM editorial_claims ec JOIN sources src ON src.id=ec.source_id AND src.verified=1 WHERE ec.editorial_id=e.id), ''))
-      FROM editorials e WHERE e.site_id=base.id AND e.publication='published'), '') editorials,
+      FROM editorials e WHERE e.site_id=base.id AND e.publication='published'
+      ${hiddenEditorials.length ? "AND e.slug NOT IN (SELECT value FROM json_each(?))" : ""}), '') editorials,
     COALESCE(p.label,'') parent_label,p.slug parent_slug
     FROM (${siteSelect} WHERE ${where}) base
     JOIN categories category ON category.slug=base.category_slug
     LEFT JOIN categories p ON p.slug=category.parent_slug
-    ORDER BY ${order.replaceAll("s.","base.")}`, ...params);
+    ORDER BY ${order.replaceAll("s.","base.")}`, ...(hiddenEditorials.length ? [JSON.stringify(hiddenEditorials)] : []), ...params);
   const matches = candidates.map(({ extra_domains, shop_urls, editorials, parent_label, parent_slug, service_tags, ...site }) => {
     const quoteScore=priceMatches.get(site.id)?.score??0;
     if (search.hasQuoteFilter) return {site,score:search.literalMatch(site.name)?168:quoteScore};
@@ -246,8 +257,8 @@ export function countPublicSites(input:DirectoryFilter,db=directory()) {
   return one<{n:number}>(db,`SELECT count(*) n FROM sites s WHERE ${where}`,...params)!.n;
 }
 
-export function countPublicAiRetailProducts(db=directory()) {
-  const {where,params}=filters({group:"ai-retail",lifecycle:"current"});
+export function countPublicAiRetailProducts(db=directory(),visibility?: ContentVisibility) {
+  const {where,params}=filters({group:"ai-retail",lifecycle:"current",visibility});
   return one<{n:number}>(db,`SELECT count(*) n FROM (
     SELECT DISTINCT s.id,p.reported_item_url,
       CASE WHEN p.reported_item_url IS NULL THEN src.url END,

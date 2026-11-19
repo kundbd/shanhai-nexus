@@ -9,7 +9,7 @@ async function checkLayout(page: Page, project: string, name: string) {
 test("home, navigation, theme, filters, and search result routes", async ({ page, isMobile }, testInfo) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "了解清楚，再做选择。" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "山海观察" })).toBeVisible();
+  await expect(page.getByRole("searchbox", { name: "搜索服务商、域名或关键词" })).toBeVisible();
   await expect(page).toHaveTitle(/山海知序 Shanhai Nexus/);
   await checkLayout(page, testInfo.project.name, "home");
   await page.getByRole("button", { name: "切换主题，当前跟随系统" }).click();
@@ -33,7 +33,8 @@ test("home, navigation, theme, filters, and search result routes", async ({ page
 
   if (isMobile) await page.getByRole("button", { name: "打开菜单" }).click();
   await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "工具与指南",exact:true }).click();
-  await page.getByRole("link",{name:"知识中心",exact:true}).click();
+  await expect(page.getByRole("heading", { name: "工具中心", exact:true })).toBeVisible();
+  await page.getByRole("navigation", { name: "工具与指南" }).getByRole("link",{name:"知识中心",exact:true}).click();
   await page.getByRole("combobox", { name: "类别" }).selectOption("网络运维");
   await page.getByRole("combobox", { name: "难度" }).selectOption("进阶");
   await page.getByRole("searchbox", { name: "搜索教程" }).fill("CNAME");

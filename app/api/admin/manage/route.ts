@@ -14,6 +14,7 @@ import { moderateReview,setReviewBlockedWords } from "@/lib/directory/reviews";
 import { removeCommunityPost } from "@/lib/community/posts";
 import { discardCommunityFiles } from "@/lib/community/media";
 import { approvePendingPost,moderateWithAi } from "@/lib/moderation/admin";
+import { saveVisibility } from "@/lib/geo/admin";
 
 export async function POST(request: NextRequest) {
   const actor = adminActor(request.cookies.get(sessionCookie)?.value);
@@ -23,6 +24,11 @@ export async function POST(request: NextRequest) {
   try {
     const form = await formFields(request,24_100_000);
     const db = directory();
+    if (form.action==="region-visibility") {
+      path="/admin/visibility";
+      const key=saveVisibility(db,form,actor);
+      return returnTo(request,`${path}?${new URLSearchParams({kind:form.kind,key})}`,"已保存地区可见性。",true);
+    }
     if(form.action==="ai-moderation-check"||form.action==="ai-moderation-approve") {
       path="/admin/moderation";
       const id=recordId(form.id);

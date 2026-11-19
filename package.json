@@ -20,6 +20,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "tsx --test tests/unit/*.test.ts",
     "test:e2e": "node scripts/prepare-standalone.mjs && playwright test",
+    "test:geo": "node scripts/prepare-standalone.mjs && tsx --test tests/integration/geo-content.test.ts",
     "directory:avatars": "tsx scripts/collect-merchant-avatars.ts"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "ipaddr.js": "^2.5.0",
     "jsonc-parser": "^3.3.1",
     "lucide-react": "^0.577.0",
+    "maxmind": "5.0.7",
     "next": "^16.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

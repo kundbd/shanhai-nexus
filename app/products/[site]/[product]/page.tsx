@@ -9,22 +9,23 @@ import { getPublicProduct,productHref,productName } from "@/lib/directory/produc
 import { getSiteById } from "@/lib/directory/read";
 import { siteHref } from "@/lib/directory/types";
 import { trafficProduct } from "@/lib/traffic-path";
+import { contentVisibility } from "@/lib/geo/request";
 
 export const dynamic="force-dynamic";
 type Props={params:Promise<{site:string;product:string}>};
-const details=cache((site:string,product:string)=>{
+const details=cache(async (site:string,product:string)=>{
   const ref=trafficProduct(`/products/${site}/${product}`);
   if (!ref) return;
   const db=directory();
-  const price=getPublicProduct(db,ref.siteId,ref.key);
-  const merchant=price&&getSiteById(ref.siteId,db);
+  const merchant=getSiteById(ref.siteId,db,await contentVisibility());
+  const price=merchant&&getPublicProduct(db,ref.siteId,ref.key);
   if (price&&merchant) return {price,merchant};
 });
 
 export async function generateMetadata({params}:Props):Promise<Metadata> {
   const {site,product}=await params;
-  const result=details(site,product);
-  if (!result) return {};
+  const result=await details(site,product);
+  if (!result) return {robots:{index:false,follow:false}};
   return {
     title:`${productName(result.price)} · ${result.merchant.name}`,
     alternates:{canonical:productHref(result.price)},
@@ -34,9 +35,10 @@ export async function generateMetadata({params}:Props):Promise<Metadata> {
 
 export default async function Product({params}:Props) {
   const {site,product}=await params;
-  const result=details(site,product);
+  const result=await details(site,product);
   if (!result) notFound();
   const {price,merchant}=result;
+  const visibility=await contentVisibility();
   const period=quoteDetailLabel(price.period);
   const region=quoteDetailLabel(price.region);
   return <div className="frame page directory-page product-page">
@@ -51,7 +53,7 @@ export default async function Product({params}:Props) {
       {region&&<div><dt>计价地区</dt><dd>{region}</dd></div>}
       <div><dt>报价记录</dt><dd>{day(price.recorded_at)}</dd></div>
     </dl>
-    {price.notes&&<p className="section-note">{price.notes}</p>}
+    {price.notes&&<p className="section-note">{visibility.filterText(price.notes)}</p>}
     <div className="product-sources">
       <External href={price.source_url}>{price.reported_item_url?"第三方报价快照":"报价来源"}</External>
       {price.reported_item_url&&<External href={price.reported_item_url}>原商品页</External>}

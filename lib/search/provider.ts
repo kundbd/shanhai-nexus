@@ -1,7 +1,7 @@
 import { resultLabels, searchCatalog, type ResultKind, type SearchResult } from "./index";
 
 export interface SearchService {
-  search(query: string, kind?: ResultKind): Promise<readonly SearchResult[]>;
+  search(query: string, kind?: ResultKind, visible?: (result: SearchResult)=>boolean): Promise<readonly SearchResult[]>;
 }
 
 /** Optional local semantic/model adapter. Every result is a candidate ID. */
@@ -16,8 +16,8 @@ export interface AISearchProvider {
 export function createSearchService(provider?: AISearchProvider, timeoutMs = 350): SearchService {
   let busy = false;
   return {
-    async search(query, kind) {
-      const base = searchCatalog(query, kind);
+    async search(query, kind, visible) {
+      const base = searchCatalog(query, kind, visible);
       if (!provider || busy || base.length < 2) return base;
       const candidates = base.slice(0, 12).map(({ id, title, description }) => ({ id, title, description }));
       const allowed = new Set(candidates.map(({ id }) => id));

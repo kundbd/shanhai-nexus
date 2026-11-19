@@ -71,14 +71,14 @@ function excerpt(entry: IndexEntry, words: string[], phrase: string): string | u
   return `${start > 0 ? "…" : ""}${best.line.slice(start, end)}${end < best.line.length ? "…" : ""}`;
 }
 
-export function searchCatalog(rawQuery: string, kind?: ResultKind): SearchResult[] {
+export function searchCatalog(rawQuery: string, kind?: ResultKind, visible?: (result: SearchResult)=>boolean): SearchResult[] {
   const normalized = canonicalize(rawQuery.slice(0, MAX_QUERY_LENGTH).trim());
   const phrase = compact(normalized);
   if (!phrase) return [];
   const { words, grams } = queryTerms(normalized);
   const records = process.env.NODE_ENV === "development" ? buildIndex() : (index ??= buildIndex());
   return records
-    .filter(({ result }) => !kind || result.kind === kind)
+    .filter(({ result }) => (!kind || result.kind === kind) && (!visible || visible(result)))
     .map((entry) => {
       const { result, fields } = entry;
       const phraseScore = fields.reduce((total, { values, weight }) =>

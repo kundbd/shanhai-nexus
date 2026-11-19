@@ -3,24 +3,27 @@ import { notFound } from "next/navigation";
 import { directoryStats,listPublicCategories,listSites } from "@/lib/directory/read";
 import type { Category } from "@/lib/directory/types";
 import { day,SiteTable } from "./display";
-import { categoryGroups,isRetiredCategory,operators,publicLifecycleLabels,reachabilityLabels } from "@/lib/directory/taxonomy";
+import { categoryGroups,operators,publicLifecycleLabels,reachabilityLabels } from "@/lib/directory/taxonomy";
+import { contentVisibility } from "@/lib/geo/request";
 
 export type Params = Record<string, string | string[] | undefined>;
 export const param = (value: string | string[] | undefined) => typeof value === "string" ? value : "";
 
-const groupLabels: Record<string,string> = { priority:"重点类别", "ai-retail":"AI 代充与卡网", all:"全部服务" };
+const groupLabels: Record<string,string> = { priority:"重点类别", "ai-retail":"AI 代充与卡网", connections:"网络服务", all:"全部服务" };
 const catalogStatuses:Record<string,string>={priced:"有公开报价",unpriced:"暂无公开报价","product-observed":"有公开商品"};
 const catalogSorts:Record<string,string>={
   recent:"最近更新",name:"按名称",relevance:"按相关度","price-asc":"价格从低到高","price-desc":"价格从高到低",
 };
 
-export function CatalogPage({ input, fixed }: { input: Params; fixed?: Category }) {
+export async function CatalogPage({ input, fixed }: { input: Params; fixed?: Category }) {
+  const visibility=await contentVisibility();
   const base = fixed ? `/categories/${fixed.slug}` : "/services";
   const q = param(input.q).trim().slice(0,160);
   const filter = fixed?.slug ?? param(input.category);
   const requestedGroup = param(input.group);
-  if (isRetiredCategory(filter)||(!fixed&&requestedGroup==="connections")) notFound();
-  const categories = listPublicCategories();
+  const connections=categoryGroups.connections.some(category=>visibility.categoryAllowed(category));
+  if ((filter&&!visibility.categoryAllowed(filter))||(!fixed&&requestedGroup==="connections"&&!connections)) notFound();
+  const categories = listPublicCategories(undefined,visibility);
   const category = categories.find((item)=>item.slug === filter)?.slug ?? "";
   const requestedStatus=param(input.status);
   const status = Object.hasOwn(catalogStatuses,requestedStatus)?requestedStatus:"";
@@ -31,8 +34,8 @@ export function CatalogPage({ input, fixed }: { input: Params; fixed?: Category 
   const rawSort = param(input.sort);
   const sort = Object.hasOwn(catalogSorts,rawSort) ? rawSort : q ? "relevance" : "recent";
   const page = Math.min(100_000,Math.max(1,parseInt(param(input.page),10) || 1));
-  const { rows,total,page:current,size,priceMatches,startingPrices } = listSites({q,category,group,status,operator,reachability,lifecycle,sort,page,includeStartingPrices:true});
-  const stats=directoryStats({category,group});
+  const { rows,total,page:current,size,priceMatches,startingPrices } = listSites({q,category,group,status,operator,reachability,lifecycle,sort,page,includeStartingPrices:true,visibility});
+  const stats=directoryStats({category,group,visibility});
   const pages = Math.max(1,Math.ceil(total/size));
   const selected = [
     q && `关键词：${q}`,
@@ -65,7 +68,7 @@ export function CatalogPage({ input, fixed }: { input: Params; fixed?: Category 
     <div className="catalog-heading"><h1>{fixed?.label ?? "服务目录"}</h1><p>{fixed?.description ?? "按分类、商家名称、官网域名或公开商品查找服务档案。"}</p></div>
     <p className="catalog-count">公开 {stats.total} 家 · 有公开报价 {stats.priced} 家{stats.last&&` · 最近更新 ${day(stats.last)}`}</p>
     {fixed && categories.some((item)=>item.parent_slug === fixed.slug) && <nav className="child-categories" aria-label="子分类">{categories.filter((item)=>item.parent_slug === fixed.slug).map((item)=><Link key={item.slug} href={`/categories/${item.slug}`}>{item.label}</Link>)}</nav>}
-    {!fixed && <nav className="child-categories" aria-label="重点目录"><Link href="/services?group=priority">重点类别</Link><Link href="/services?group=ai-retail">AI 代充与卡网</Link><Link href="/services?group=all">全部服务</Link></nav>}
+    {!fixed && <nav className="child-categories" aria-label="重点目录"><Link href="/services?group=priority">重点类别</Link>{categoryGroups["ai-retail"].some(item=>visibility.categoryAllowed(item))&&<Link href="/services?group=ai-retail">AI 代充与卡网</Link>}{connections&&<Link href="/services?group=connections" prefetch={false}>网络服务</Link>}<Link href="/services?group=all">全部服务</Link></nav>}
     <form key={JSON.stringify([q,category,group,status,operator,reachability,lifecycle,sort])} className="catalog-filters" action={base}>
       {(requestedGroup||!q)&&!fixed && <input type="hidden" name="group" value={requestedGroup||""}/>}
       <label>名称或关键词<input name="q" type="search" maxLength={160} defaultValue={q} placeholder="例如 OpenRouter、模型聚合" /></label>

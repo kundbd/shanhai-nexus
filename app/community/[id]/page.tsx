@@ -7,18 +7,21 @@ import { DiscussionReplies,DiscussionShopLink,ReplyBox,ReviewNotice } from "@/co
 import { day } from "@/components/directory/display";
 import { discussionHref,publicThread,threadReplies } from "@/lib/directory/community";
 import { discussionId,reviewPageSize } from "@/lib/directory/reviews";
+import { contentVisibility, universalVisibility } from "@/lib/geo/request";
 
 export const dynamic="force-dynamic";
 type Props={params:Promise<{id:string}>;searchParams:Promise<Params>};
 
 async function getThread(params:Props["params"]) {
   const id=discussionId((await params).id);
-  return id?publicThread(id):undefined;
+  return id?publicThread(id,undefined,await contentVisibility()):undefined;
 }
 
 export async function generateMetadata({params}:Props):Promise<Metadata> {
   const thread=await getThread(params);
-  return thread?{title:`${thread.site_name}的公开讨论`,description:`查看关于${thread.site_name}的匿名评价和回复。`,alternates:{canonical:discussionHref(thread.id)}}:{};
+  if (!thread) return {robots:{index:false,follow:false}};
+  return {title:`${thread.site_name}的公开讨论`,description:`查看关于${thread.site_name}的匿名评价和回复。`,alternates:{canonical:discussionHref(thread.id)},
+    ...(!publicThread(thread.id,undefined,universalVisibility())&&{robots:{index:false,follow:false}})};
 }
 
 export default async function Thread({params,searchParams}:Props) {
@@ -28,7 +31,8 @@ export default async function Thread({params,searchParams}:Props) {
   const signedIn=!!await currentMember();
   const totalPages=Math.max(1,Math.ceil(thread.reply_count/reviewPageSize));
   const page=Math.min(totalPages,Math.max(1,Number.parseInt(param(query.page),10)||1));
-  const rows=threadReplies(thread.id,{page});
+  const visibility=await contentVisibility();
+  const rows=threadReplies(thread.id,{page},undefined,visibility);
   const href=(next:number)=>`${discussionHref(thread.id)}?page=${next}#replies`;
   return <div className="frame page narrow directory-page community-page">
     <div className="crumbs"><Link href="/community?view=reviews">商家评价</Link></div>
@@ -37,7 +41,7 @@ export default async function Thread({params,searchParams}:Props) {
       <h2>商家评价 #{thread.id}</h2>
       <div><DiscussionShopLink slug={thread.slug} name={thread.site_name}/></div>
       <small>匿名用户 · {day(thread.submitted_at)}{thread.score!==null&&` · ${thread.score} / 5`}</small>
-      <p>{thread.body}</p>
+      <p>{visibility.filterText(thread.body)}</p>
       <ReviewNotice status={param(query.review)}/>
       <ReplyBox slug={thread.slug} thread={thread.id} target={thread.id} signedIn={signedIn} returnTo={`${discussionHref(thread.id)}#thread`}/>
     </article>

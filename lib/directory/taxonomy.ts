@@ -7,6 +7,7 @@ export const priorityLinks = [
 export const categoryGroups = {
   "ai-retail": ["ai-topup","ai-card"],
   priority: ["ai-topup","ai-card","ai-relay","u-card","virtual-card","payment-accounts","subscription-payment","vps"],
+  connections: ["airport","vpn","proxy-services","residential"],
 } as const;
 
 const retiredNetworkCategories = new Set(["airport", "vpn", "proxy-services", "residential"]);

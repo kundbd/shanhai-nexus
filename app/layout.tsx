@@ -9,6 +9,8 @@ import "./directory.css";
 
 const themeScript = `try{var t=localStorage.getItem('${themeStorageKey}')??localStorage.getItem('${legacyThemeStorageKey}');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`;
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
   title: { default: `${brand.name} ${brand.english} · 独立数字服务评测与消费指南`, template: `%s · ${brand.name}` },

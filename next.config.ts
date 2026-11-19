@@ -19,6 +19,10 @@ const config: NextConfig = {
         ],
       },
       {
+        source: "/sitemap.xml",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
         source: "/search",
         headers: [
           { key: "X-Robots-Tag", value: "noindex, nofollow" },

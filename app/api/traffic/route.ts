@@ -2,6 +2,7 @@ import { directory } from "@/lib/directory/db";
 import { recordPageVisitor } from "@/lib/directory/traffic";
 import { sameOriginBrowserRequest } from "@/lib/site-request";
 import { isTrafficPath,isTrafficVisitor,trafficPathLimit,trafficVisitorHeader } from "@/lib/traffic-path";
+import { visibilityForHeaders } from "@/lib/geo/request";
 
 const reply=(status:number)=>new Response(null,{status,headers:{"Cache-Control":"no-store"}});
 const capacity=1_200;
@@ -44,7 +45,7 @@ export async function POST(request:Request) {
   try { page=await readPage(request); } catch { return reply(400); }
   if (!page || !isTrafficPath(page)) return reply(400);
   try {
-    const recorded=recordPageVisitor(directory(),page,visitor,now);
+    const recorded=recordPageVisitor(directory(),page,visitor,now,await visibilityForHeaders(request.headers));
     if(typeof recorded==="object")return Response.json(recorded,{headers:{"Cache-Control":"no-store"}});
     return reply(recorded?204:404);
   }
