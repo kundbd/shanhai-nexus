@@ -16,3 +16,23 @@ the dataset has a specific correction. It is a public reference snapshot.
 
 To rebuild, extract bins.csv and conflicts.csv from the pinned source and run
 python scripts/build-bin-regions.py SOURCE_DIR public/bin-data/issuer-regions-fcc907c.bin
+
+Mainland China supplement
+
+bcbc by Runrioter, snapshot de631827ffe8db2792d140f3476b02498fc1244f (MIT).
+https://github.com/hexindai/bcbc/tree/de631827ffe8db2792d140f3476b02498fc1244f
+License: LICENSE-bcbc.txt in this directory.
+
+Additional public records:
+ICBC card product: https://m.icbc.com.cn/page/721854222751383576.html
+Shenzhen Human Resources and Social Security Bureau, social security card BINs:
+https://szeb.sz.gov.cn/attachment/1/1447/1447926/11303034.pdf
+Jilin University, payroll card prefixes: https://talent.jlu.edu.cn/info/1036/1372.htm
+
+The supplement keeps exact published six- and eight-digit prefixes. The bcbc
+import selects reviewed mainland issuers and omits conflicts with overseas or
+unreviewed records. A verified eight-digit match takes priority over a six-digit
+match. New or otherwise unlisted card ranges may be absent.
+
+To rebuild, extract bin.csv from the pinned bcbc source and run
+node scripts/build-bin-mainland.mjs SOURCE_DIR

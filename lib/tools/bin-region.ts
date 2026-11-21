@@ -8,7 +8,7 @@ export const binDescription = "根据银行卡号开头的数字查询发卡国�
 export function binPrefix(input: string) {
   if (input.length > 40) return;
   const digits = input.normalize("NFKC").replace(/[\s-]/g, "");
-  if (/^(?:[0-9]{6}|[0-9]{8})$/.test(digits)) return digits.slice(0, 6);
+  if (/^(?:[0-9]{6}|[0-9]{8})$/.test(digits)) return digits;
 }
 
 export function readBinRegions(buffer: ArrayBuffer) {

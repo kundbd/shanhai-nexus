@@ -14,16 +14,28 @@ test("the only tool looks up a region locally and rejects longer numbers", async
   await submit.click();
   await expect(page.locator(".bin-lookup").getByRole("alert")).toHaveText("请输入卡号前 6 位或前 8 位数字。");
   expect(requests.some(url => url.endsWith(binDataPath))).toBe(false);
+  const result = page.locator(".bin-lookup-result");
+  for (const [prefix, digits] of [["621226", 6], ["62220842", 8]] as const) {
+    await field.fill(prefix);
+    await submit.click();
+    await expect(result).toContainText("中国大陆");
+    await expect(result).toContainText("CN");
+    await expect(result).toContainText(`前 ${digits} 位匹配`);
+  }
+  expect(requests.some(url => url.endsWith(binDataPath))).toBe(false);
   await field.fill("４５７１ ７３６０");
   await submit.click();
-  await expect(page.locator(".bin-lookup-result")).toContainText("丹麦");
-  await expect(page.locator(".bin-lookup-result")).toContainText("DK");
-  await field.fill("000000");
+  await expect(result).toContainText("丹麦");
+  await expect(result).toContainText("DK");
+  await field.fill("620202");
+  await field.press("Enter");
+  await expect(result).toContainText("HK");
+  await field.fill("629999");
   await field.press("Enter");
   await expect(page.getByText("未找到该 BIN 的可靠地区记录。")).toBeVisible();
   await expect(page).toHaveURL(/\/tools\/bin-lookup$/);
   expect(requests.filter(url => url.endsWith(binDataPath))).toHaveLength(1);
-  expect(requests.some(url => /457173|1234567890123456|000000/.test(url))).toBe(false);
+  expect(requests.some(url => /457173|1234567890123456|621226|62220842|620202|629999/.test(url))).toBe(false);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 
   for (const path of ["/tools/json", "/tools/base64", "/tools/timestamp", "/tools/sha256", "/tools/url", "/tools/diff", "/guides", "/guides/pdf-to-word", "/diagnose"]) {

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { tools } from "../../lib/catalog";
 import { searchCatalog } from "../../lib/search";
+import { matchMainlandBin } from "../../lib/tools/bin-mainland";
 import { binDataPath, binPrefix, binToolPath, readBinRegions } from "../../lib/tools/bin-region";
 
 test("the BIN tool is the only tool indexed by site search", () => {
@@ -18,7 +19,7 @@ test("the BIN tool is the only tool indexed by site search", () => {
 test("the published index matches known regions and accepts only a BIN-length input", () => {
   const data = readFileSync(`public${binDataPath}`);
   const lookup = readBinRegions(new Uint8Array(data).buffer);
-  assert.equal(binPrefix("４５７１ ７３６０"), "457173");
+  assert.equal(binPrefix("４５７１ ７３６０"), "45717360");
   assert.equal(binPrefix(" 457173 "), "457173");
   for (const invalid of ["", "45717", "4571736", "457173600", "1234567890123456", "457x73"]) {
     assert.equal(binPrefix(invalid), undefined);
@@ -27,4 +28,19 @@ test("the published index matches known regions and accepts only a BIN-length in
   assert.equal(lookup("622202"), "CN");
   assert.equal(lookup("000000"), undefined);
   assert.throws(() => readBinRegions(new ArrayBuffer(1)), /Invalid BIN index/);
+});
+
+test("the mainland supplement fills gaps without assuming all 62 prefixes are from China", () => {
+  const lookup = readBinRegions(new Uint8Array(readFileSync(`public${binDataPath}`)).buffer);
+  for (const prefix of ["621225", "621226", "621721", "621785", "621786", "621799"]) {
+    assert.equal(lookup(prefix), undefined, prefix);
+    assert.deepEqual(matchMainlandBin(prefix), { code: "CN", digits: 6 }, prefix);
+  }
+  assert.deepEqual(matchMainlandBin("62220842"), { code: "CN", digits: 8 });
+  assert.deepEqual(matchMainlandBin("62122642"), { code: "CN", digits: 6 });
+  assert.equal(matchMainlandBin("62220843"), undefined);
+  assert.equal(matchMainlandBin("620202"), undefined);
+  assert.equal(lookup("620202"), "HK");
+  assert.equal(matchMainlandBin("629999"), undefined);
+  assert.equal(lookup("629999"), undefined);
 });

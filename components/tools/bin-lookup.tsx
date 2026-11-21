@@ -3,11 +3,12 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Search } from "lucide-react";
 import { useSiteLanguage, useTranslations } from "@/components/site/language";
+import { matchMainlandBin } from "@/lib/tools/bin-mainland";
 import { binDataPath, binPrefix, readBinRegions } from "@/lib/tools/bin-region";
 
 type LookupResult =
   | { status: "idle" | "invalid" | "loading" | "missing" | "unavailable" }
-  | { status: "found"; code: string };
+  | { status: "found"; code: string; digits: number };
 
 let regionIndex: Promise<ReturnType<typeof readBinRegions>> | undefined;
 
@@ -31,7 +32,7 @@ export function BinLookup() {
   const [result, setResult] = useState<LookupResult>({ status: "idle" });
   const busy = result.status === "loading";
   const country = result.status === "found"
-    ? new Intl.DisplayNames(language, { type: "region" }).of(result.code)
+    ? (result.code === "CN" ? t("中国大陆") : new Intl.DisplayNames(language, { type: "region" }).of(result.code))
     : undefined;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -42,11 +43,16 @@ export function BinLookup() {
       setResult({ status: "invalid" });
       return;
     }
+    const mainland = matchMainlandBin(prefix);
+    if (mainland) {
+      setResult({ status: "found", ...mainland });
+      return;
+    }
     setResult({ status: "loading" });
     try {
       const lookup = await loadRegionIndex();
-      const code = lookup(prefix);
-      setResult(code ? { status: "found", code } : { status: "missing" });
+      const code = lookup(prefix.slice(0, 6));
+      setResult(code ? { status: "found", code, digits: 6 } : { status: "missing" });
     } catch {
       setResult({ status: "unavailable" });
     }
@@ -71,7 +77,7 @@ export function BinLookup() {
       {result.status === "found" && <dl className="bin-lookup-result">
         <dt>{t("发卡国家或地区")}</dt>
         <dd>{country} <span className="category-tag">{result.code}</span></dd>
-        <dd className="section-note">{t("根据 BIN 前 6 位匹配，结果供参考。")}</dd>
+        <dd className="section-note">{t("根据 BIN 前 {digits} 位匹配，结果供参考。", { digits: result.digits })}</dd>
       </dl>}
     </div>
   </form>;
