@@ -1,4 +1,8 @@
 {
+  "网页版 2FA 生成器": "Web 2FA Code Generator",
+  "用 Base32 密钥或 TOTP 设置链接生成动态验证码。": "Generate one-time codes from a Base32 secret or TOTP setup link.",
+  "美区免税州账单地址生成器": "US Billing Address Sample Generator",
+  "生成美国无州级销售税地区的账单地址示例，用于表单测试。": "Generate sample billing addresses for form testing in U.S. states without statewide sales tax.",
   "银行卡 BIN 地区查询": "Bank Card BIN Region Lookup",
   "根据银行卡号前 6 位或前 8 位查询发卡地区、发卡银行、卡组织和卡片类型。": "Use the first 6 or 8 digits to look up the issuing region, bank, network, and card type.",
   "支付工具": "Payment tools",

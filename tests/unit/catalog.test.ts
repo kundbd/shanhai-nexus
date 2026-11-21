@@ -5,17 +5,44 @@ import { tools } from "../../lib/catalog";
 import { searchCatalog } from "../../lib/search";
 import { binCardDataPath, readBinCards } from "../../lib/tools/bin-cards";
 import { binPrefix, binToolPath } from "../../lib/tools/bin-region";
+import { billingToolPath } from "../../lib/tools/billing-address";
+import { parseTotp, totpCode, totpToolPath } from "../../lib/tools/totp";
 
 const lookup = readBinCards(new Uint8Array(readFileSync(`public${binCardDataPath}`)).buffer);
 
-test("the BIN tool is the only tool indexed by site search", () => {
-  assert.deepEqual(tools.map(tool => tool.href), [binToolPath]);
+test("the public tools are indexed by site search", () => {
+  assert.deepEqual(tools.map(tool => tool.href), [binToolPath, totpToolPath, billingToolPath]);
   for (const query of ["BIN", "发卡地区", "發卡地區", "BIN lookup", "银行卡地区识别"]) {
     assert.equal(searchCatalog(query, "tool")[0]?.href, binToolPath, query);
   }
   assert.deepEqual(searchCatalog("JSON 格式化"), []);
   assert.deepEqual(searchCatalog(""), []);
   assert.deepEqual(searchCatalog("BIN", undefined, () => false), []);
+  assert.equal(searchCatalog("两步验证", "tool")[0]?.href, totpToolPath);
+  assert.equal(searchCatalog("US billing address", "tool")[0]?.href, billingToolPath);
+});
+
+test("TOTP parses setup links and matches RFC 6238 test vectors", async () => {
+  const secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+  const parsed = parseTotp(secret.toLowerCase());
+  assert.equal(parsed.period, 30);
+  assert.equal(parsed.digits, 6);
+  assert.deepEqual(parseTotp(`otpauth://totp/Test?secret=${secret}&algorithm=SHA1&digits=8&period=45`),
+    { ...parsed, digits: 8, period: 45 });
+  for (const invalid of ["A", "MZ======", "BASE32!", `otpauth://hotp/Test?secret=${secret}`,
+    `otpauth://totp/Test?secret=${secret}&period=0`, `otpauth://totp/Test?secret=${secret}&algorithm=MD5`]) {
+    assert.throws(() => parseTotp(invalid));
+  }
+  const testKey = "1234567890".repeat(7);
+  for (const [hash, length, expected] of [
+    ["SHA-1", 20, "94287082"],
+    ["SHA-256", 32, "46119246"],
+    ["SHA-512", 64, "90693936"],
+  ] as const) {
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(testKey.slice(0, length)),
+      { name: "HMAC", hash }, false, ["sign"]);
+    assert.equal(await totpCode(key, 1, 8), expected);
+  }
 });
 
 test("the published index matches known regions and accepts only a BIN-length input", () => {

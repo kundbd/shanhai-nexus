@@ -23,7 +23,7 @@ test("home, navigation, theme, filters, and search result routes", async ({ page
   if (isMobile) await page.getByRole("button", { name: "打开菜单" }).click();
   await page.getByRole("navigation", { name: "主导航" }).getByRole("link", { name: "工具与指南", exact: true }).click();
   await expect(page.getByRole("heading", { name: "工具与指南", exact: true })).toBeVisible();
-  await expect(page.locator(".tool-card")).toHaveCount(1);
+  await expect(page.locator(".tool-card")).toHaveCount(3);
 
   await page.goto("/search?q=%3Cscript%3Ezzzxxy%3C%2Fscript%3E&type=unknown");
   await expect(page.getByRole("heading", { name: "没有找到匹配的内容" })).toBeVisible();
@@ -51,6 +51,8 @@ test("health, sitemap links and unknown routes respond correctly", async ({ requ
   const sitemap = await request.get("/sitemap.xml");
   const urls = [...(await sitemap.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
   expect(urls).toContain("/tools/bin-lookup");
+  expect(urls).toContain("/tools/2fa");
+  expect(urls).toContain("/tools/us-billing-address");
   expect(urls.some(path => path.startsWith("/guides") || path === "/diagnose")).toBeFalsy();
   expect(urls).toContain("/about");
   expect(urls).toContain("/services/chatgpt");

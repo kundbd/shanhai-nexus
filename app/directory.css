@@ -216,6 +216,20 @@
 .bin-lookup-fields dt{color:var(--muted);font-size:13px}
 .bin-lookup-fields dd{margin:2px 0 0;font-weight:650;overflow-wrap:anywhere}
 .bin-source{margin-top:12px}
+.tool-workbench{max-width:600px;padding:clamp(15px,3vw,24px);display:grid;gap:12px}
+.tool-workbench .section-note{margin:0}
+.tool-form{display:grid;gap:8px}
+.tool-form label{font-weight:650}
+.tool-form input,.tool-form select{width:100%;min-width:0;min-height:42px;padding:6px 10px;font-size:16px;border:1px solid var(--line-strong);border-radius:5px;background:var(--surface);color:var(--ink)}
+.tool-form input[aria-invalid=true]{border-color:var(--danger)}
+.tool-submit{justify-self:start}
+.tool-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tool-feedback,.tool-address-fields dt{font-size:13px;color:var(--muted)}
+.tool-result{display:grid;gap:8px;padding:12px 14px;border:1px solid var(--line);border-radius:5px;background:var(--soft)}
+.tool-address-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin:0}
+.tool-address-fields div:first-child{grid-column:1/-1}
+.tool-address-fields dd{margin:2px 0 0;overflow-wrap:anywhere}
+.totp-code{font-size:clamp(24px,8vw,42px);letter-spacing:.08em;font-variant-numeric:tabular-nums;font-weight:700}
 .policy-legend dt{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .catalog-filters label,.field-stack label,.admin-form label{display:grid;gap:4px;font-size:13px;font-weight:640;min-width:0}
 .catalog-filters input,.catalog-filters select,.field-stack input,.field-stack select,.field-stack textarea,.admin-form input:not([type=hidden]),.admin-form select,.admin-form textarea{width:100%;min-width:0;min-height:41px;padding:6px 9px;border:1px solid var(--line-strong);border-radius:5px;background:var(--surface);color:var(--ink);font-size:14px;font-weight:400}

@@ -2,11 +2,10 @@ import { getTranslations } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import { tools } from "@/lib/catalog";
 import { ToolCard } from "@/components/catalog/cards";
-import { binDescription } from "@/lib/tools/bin-region";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
-  return { title: t("工具与指南"), description: t(binDescription), alternates: { canonical: "/tools" } };
+  return { title: t("工具与指南"), alternates: { canonical: "/tools" } };
 }
 
 export default async function ToolsPage() {
