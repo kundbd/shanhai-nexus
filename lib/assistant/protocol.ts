@@ -19,7 +19,7 @@ export type AssistantMessage = { role: "user" | "assistant"; content: string };
 
 export function assistantCatalogHref(value: unknown) {
   if (typeof value !== "string" || value.length > 2048 || /[\s\\<>]/u.test(value)) return;
-  if (/^\/(?:services\/[a-z0-9_-]+(?:#prices)?|observations(?:\/[a-z0-9_-]+)?|products\/\d+\/[a-f0-9]{32}|\?price=ai&[^#]+#home-prices)$/i.test(value)) return value;
+  if (isAssistantTool(value) || /^\/(?:about|tools|updates|messages|services(?:\/[a-z0-9_-]+(?:#(?:prices|incidents))?)?|categories\/[a-z0-9_-]+|observations(?:\/[a-z0-9_-]+)?|products\/\d+\/[a-f0-9]{32}|community(?:\/(?:posts\/)?\d+|#compose)?|rankings(?:\?group=[a-z0-9-]+&type=(?:shops|products)&period=(?:24h|overall))?|policy(?:#[a-z-]+)?|contact(?:#(?:feedback|cooperation)|\?submit=merchant)?|\?price=(?:ai|ai-relay|airport|vpn|payments|vps)(?:&[^#]+)?#home-prices)$/i.test(value)) return value;
   if (!/^https?:\/\//i.test(value)) return;
   const url = URL.parse(value);
   if (url && !url.username && !url.password) return url.href.replace(/[()]/g, char => char === "(" ? "%28" : "%29");

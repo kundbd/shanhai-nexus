@@ -68,6 +68,12 @@ export function communityPost(id:number,viewer?:number,db=directory()) {
   return row?attachMedia(db,[row])[0]:undefined;
 }
 
+export function publicPostMatches(db: DatabaseSync, topic: string) {
+  return all<Pick<PostRow, "id" | "body" | "created_at">>(db, `SELECT p.id,p.body,p.created_at FROM community_posts p
+    WHERE p.thread_id IS NULL AND ${visible} AND (?='' OR instr(lower(p.body), lower(?))>0)
+    ORDER BY p.created_at DESC,p.id DESC LIMIT 5`, topic, topic);
+}
+
 export function communityPostVisitors(db:DatabaseSync,id:number) {
   return one<{visitors:number}>(db,`SELECT visitor_count visitors FROM community_posts p WHERE p.id=? AND ${visible}`,id);
 }

@@ -311,5 +311,7 @@
   "正在回复…": "Replying…",
   "提问太频繁，请稍后再试。": "Too many requests. Try again in a moment.",
   "回复中断，请稍后再试。": "The reply was interrupted. Please try again.",
+  "本喵还在忙，请稍后再问喵。": "This kitty is busy. Ask me again in a moment, meow.",
+  "本喵的回复中断了，稍后再试试喵。": "My reply got interrupted. Try again in a moment, meow.",
   "聊天内容发往 DeepSeek。请勿填写完整卡号、密码、密钥或验证码。": "Chat messages are sent to DeepSeek. Keep card numbers, passwords, secret keys and verification codes private."
 }

@@ -4,11 +4,18 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/assistant/route";
 import { readAssistantEvents } from "@/lib/assistant/protocol";
 import { siteConsentCookie, siteConsentVersion } from "@/lib/site-consent";
+import { openDirectory } from "@/lib/directory/db";
 
 test("assistant validates chat input, preserves streaming, and rate-limits upstream calls", async (t) => {
   const previousKey = process.env.DEEPSEEK_API_KEY;
+  const db = openDirectory(":memory:");
+  const state = globalThis as typeof globalThis & { shanhaiDirectory?: typeof db };
+  const previousDb = state.shanhaiDirectory;
+  state.shanhaiDirectory = db;
   process.env.DEEPSEEK_API_KEY = "assistant-fixture-only";
   t.after(() => {
+    state.shanhaiDirectory = previousDb;
+    db.close();
     if (previousKey === undefined) delete process.env.DEEPSEEK_API_KEY;
     else process.env.DEEPSEEK_API_KEY = previousKey;
   });
@@ -22,7 +29,7 @@ test("assistant validates chat input, preserves streaming, and rate-limits upstr
       ? ["\n[[UN", "ABLE]]", "\n本喵只懂本站工具哦。"]
       : question === "帮我写作业"
         ? ["*耳朵动了动*\n本喵的", "小脑袋瓜只装得下 AI 订阅喵。"]
-        : ["**喵**", "，核对账单资料。"];
+        : question === "普通答复" ? ["核对账单资料。"] : ["**喵**", "，核对账单资料。"];
     const payload = chunks.map((content) => `data: ${JSON.stringify({ choices: [{ delta: { content, reasoning_content: "hidden" } }] })}\r\n\r\n`).join("");
     const source = encoder.encode(`: pending\r\n\r\n${payload}data: [DONE]\n\n`);
     return new Response(new ReadableStream({
@@ -78,7 +85,14 @@ test("assistant validates chat input, preserves streaming, and rate-limits upstr
   assert.equal(unmarkedRefusal.status, 200);
   assert.match(await unmarkedRefusal.text(), /data: {"sticker":"unable"}\n\ndata: \[DONE\]/);
 
-  for (let count = 3; count < 6; count++) {
+  const plain = await POST(request([{ role: "user", content: "普通答复" }]));
+  assert.match(await plain.text(), /喵～/);
+  const direct = await POST(request([{ role: "user", content: "最新站内公告" }]));
+  const directData = await direct.text();
+  assert.match(directData, /本喵.+站点公告/);
+  assert.match(directData, /\/messages/);
+
+  for (let count = 5; count < 6; count++) {
     const reply = await POST(request());
     assert.equal(reply.status, 200);
     await reply.text();
@@ -86,5 +100,5 @@ test("assistant validates chat input, preserves streaming, and rate-limits upstr
   const limited = await POST(request());
   assert.equal(limited.status, 429);
   assert.ok(Number(limited.headers.get("Retry-After")) > 0);
-  assert.equal(trace.length, 6);
+  assert.equal(trace.length, 5);
 });

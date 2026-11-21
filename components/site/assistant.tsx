@@ -78,7 +78,7 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
       });
       if (abort.signal.aborted) return;
       if (response.status === 429) {
-        setError("提问太频繁，请稍后再试。");
+        setError("本喵还在忙，请稍后再问喵。");
         return;
       }
       if (!response.ok || !response.body) throw new Error("Assistant unavailable.");
@@ -101,7 +101,7 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
       }
       throw new Error("Assistant reply ended early.");
     } catch {
-      if (!abort.signal.aborted) setError("回复中断，请稍后再试。");
+      if (!abort.signal.aborted) setError("本喵的回复中断了，稍后再试试喵。");
     } finally {
       if (request.current === abort) {
         request.current = null;

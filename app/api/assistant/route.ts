@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
-import { assistantReplyLimit, readAssistantEvents } from "@/lib/assistant/protocol";
+import { assistantCatalogHref, assistantReplyLimit, readAssistantEvents } from "@/lib/assistant/protocol";
 import { assistantCatalogIntent, assistantCatalogReply } from "@/lib/assistant/catalog";
-import { assistantMessages, assistantModel, assistantSystemPrompt, assistantUnableMarker, isAssistantRefusal, reserveAssistantRequest } from "@/lib/assistant/server";
+import { assistantSiteEvidence, assistantSiteReply } from "@/lib/assistant/site-content";
+import { assistantMessages, assistantModel, assistantSystemPrompt, assistantUnableMarker, assistantVoice, hasAssistantVoice, isAssistantRefusal, reserveAssistantRequest } from "@/lib/assistant/server";
 import { directory } from "@/lib/directory/db";
 import { boundedText } from "@/lib/directory/imports";
 import { visibilityForHeaders } from "@/lib/geo/request";
@@ -43,18 +44,24 @@ export async function POST(request: NextRequest) {
 
   const reservation = reserveAssistantRequest(request.headers);
   if (!reservation.release) return errorResponse("rate_limit", 429, { "Retry-After": String(reservation.retryAfter) });
-  const catalogIntent = assistantCatalogIntent(messages.at(-1)!.content);
-  if (catalogIntent) {
-    try {
-      const language = request.cookies.get(languageCookie)?.value;
-      const reply = assistantCatalogReply(catalogIntent, directory(), await visibilityForHeaders(request.headers),
-        isSiteLanguage(language) ? language : defaultLanguage);
-      return new Response(eventFrame(reply) + endEvent, { headers: eventHeaders });
-    } catch {
-      return errorResponse("unavailable", 503);
-    } finally {
+  const savedLanguage = request.cookies.get(languageCookie)?.value;
+  const language = isSiteLanguage(savedLanguage) ? savedLanguage : defaultLanguage;
+  const voice = assistantVoice(language);
+  const question = messages.at(-1)!.content;
+  let references: ReturnType<typeof assistantSiteEvidence>;
+  try {
+    const db = directory();
+    const visibility = await visibilityForHeaders(request.headers);
+    const intent = assistantCatalogIntent(question);
+    const direct = assistantSiteReply(question, db, visibility, language) ?? (intent && assistantCatalogReply(intent, db, visibility, language));
+    if (direct) {
       reservation.release();
+      return new Response(eventFrame({ ...direct, text: `${voice.lookup}\n\n${direct.text}` }) + endEvent, { headers: eventHeaders });
     }
+    references = assistantSiteEvidence(question, db, visibility);
+  } catch {
+    reservation.release();
+    return errorResponse("unavailable", 503);
   }
   const upstreamAbort = new AbortController();
   const signal = AbortSignal.any([request.signal, AbortSignal.timeout(50_000), upstreamAbort.signal]);
@@ -66,7 +73,7 @@ export async function POST(request: NextRequest) {
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", Accept: "text/event-stream" },
       body: JSON.stringify({
         model: assistantModel, stream: true, thinking: { type: "disabled" }, max_tokens: 900,
-        messages: [{ role: "system", content: assistantSystemPrompt(body.currentTool) }, ...messages],
+        messages: [{ role: "system", content: assistantSystemPrompt(body.currentTool, references) }, ...messages],
       }),
       cache: "no-store", redirect: "error", signal,
     });
@@ -86,6 +93,8 @@ export async function POST(request: NextRequest) {
   let opening: string | undefined = "";
   let replyLead = "";
   let unable = false;
+  let spokenInCharacter = false;
+  let links = references.flatMap(reference => assistantCatalogHref(reference.href) ?? []);
   const eventData = (value: object) => encoder.encode(eventFrame(value));
   return new Response(new ReadableStream<Uint8Array>({
     async pull(controller) {
@@ -96,6 +105,8 @@ export async function POST(request: NextRequest) {
           if (value === "[DONE]") {
             if (opening?.trim()) controller.enqueue(eventData({ text: opening }));
             if (unable || isAssistantRefusal(replyLead)) controller.enqueue(eventData({ sticker: "unable" }));
+            if (unable && !replyLead.trim()) controller.enqueue(eventData({ text: voice.unable }));
+            else if (size && !spokenInCharacter) controller.enqueue(eventData({ text: `\n\n${voice.close}` }));
             if (size || unable) controller.enqueue(encoder.encode(endEvent));
             else controller.enqueue(encoder.encode('data: {"error":"unavailable"}\n\n'));
             controller.close();
@@ -108,7 +119,7 @@ export async function POST(request: NextRequest) {
           const content: unknown = event.choices?.[0]?.delta?.content;
           if (typeof content !== "string" || !content) continue;
           size += content.length;
-          if (size > assistantReplyLimit) break;
+          if (size > assistantReplyLimit - 12) break;
           let text = content;
           if (opening !== undefined) {
             opening += content;
@@ -120,7 +131,9 @@ export async function POST(request: NextRequest) {
           }
           if (!text) continue;
           if (replyLead.length < 400) replyLead += text.slice(0, 400 - replyLead.length);
-          controller.enqueue(eventData({ text }));
+          spokenInCharacter ||= hasAssistantVoice(text) || hasAssistantVoice(replyLead);
+          controller.enqueue(eventData({ text, ...(links.length && { links }) }));
+          links = [];
           return;
         }
       } catch {

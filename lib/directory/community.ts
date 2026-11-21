@@ -1,3 +1,4 @@
+import type { DatabaseSync } from "node:sqlite";
 import { all,directory,one } from "./db";
 import { reviewPageSize } from "./reviews";
 import { siteVisibility, type ContentVisibility } from "../geo/visibility";
@@ -19,6 +20,12 @@ export function publicThreads(page:number,db=directory(),visibility?:ContentVisi
 export function publicThread(id:number,db=directory(),visibility?:ContentVisibility) {
   const region=siteVisibility(visibility);
   return one<Thread>(db,`${threadQuery} AND r.id=? AND ${region.clause}`,id,...region.bindings);
+}
+
+export function publicThreadMatches(db: DatabaseSync, visibility: ContentVisibility, topic: string) {
+  const region = siteVisibility(visibility);
+  return all<Thread>(db, `${threadQuery} AND ${region.clause} AND (?='' OR instr(lower(s.name),lower(?))>0 OR instr(lower(r.body),lower(?))>0)
+    ORDER BY r.submitted_at DESC,r.id DESC LIMIT 5`, ...region.bindings, topic, topic, topic);
 }
 
 export function threadReplies(id:number,options:{page:number}|{preview:true},db=directory(),visibility?:ContentVisibility) {
