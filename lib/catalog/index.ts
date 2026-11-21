@@ -1,5 +1,6 @@
 import { binDescription, binTitle, binToolPath } from "@/lib/tools/bin-region";
 import { billingDescription, billingTitle, billingToolPath } from "@/lib/tools/billing-address";
+import { envDescription, envTitle, envToolPath } from "@/lib/tools/env-check";
 import { totpDescription, totpTitle, totpToolPath } from "@/lib/tools/totp";
 import type { Tool } from "./types";
 
@@ -34,4 +35,14 @@ export const tools: readonly Tool[] = [{
   tone: "amber",
   tags: ["美国账单地址", "免税州", "邮政编码"],
   keywords: ["美区免税州账单地址生成器", "美區帳單地址", "US billing address", "US address generator", "ZIP code"],
+}, {
+  id: "env-check",
+  title: envTitle,
+  description: envDescription,
+  category: "工具",
+  href: envToolPath,
+  icon: "monitor",
+  tone: "indigo",
+  tags: ["浏览器自检", "WebRTC", "时区"],
+  keywords: ["出海环境自检", "瀏覽器環境自檢", "IP 地区一致性", "browser environment check", "timezone check"],
 }];

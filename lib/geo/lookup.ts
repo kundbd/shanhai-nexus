@@ -26,13 +26,13 @@ export function nginxVisitorAddress(headers: Pick<Headers, "get">) {
   return ip.range() === "unicast" ? ip.toString() : undefined;
 }
 
-export async function identifyAudience(headers: Pick<Headers, "get">) {
+export async function identifyVisitorCountry(headers: Pick<Headers, "get">) {
   // This mode is for the audited Nginx listener, with a loopback-only Next.js upstream.
   const path = process.env.GEO_IP_DB?.trim();
   if (process.env.NODE_ENV !== "production" || process.env.GEO_IP_MODE !== "nginx-direct" || !path ||
-      !["127.0.0.1", "::1"].includes(process.env.HOSTNAME ?? "")) return makeAudience(undefined);
+      !["127.0.0.1", "::1"].includes(process.env.HOSTNAME ?? "")) return;
   const ip = nginxVisitorAddress(headers);
-  if (!ip) return makeAudience(undefined);
+  if (!ip) return;
   const now = Date.now();
   if (current?.path !== path || now - current.checkedAt >= checkEvery) {
     const previous = current?.path === path ? current.pending : undefined;
@@ -40,6 +40,10 @@ export async function identifyAudience(headers: Pick<Headers, "get">) {
   }
   try {
     const database = await current.pending;
-    return makeAudience(countryCode(database?.reader.get(ip)?.country?.iso_code));
-  } catch { return makeAudience(undefined); }
+    return countryCode(database?.reader.get(ip)?.country?.iso_code);
+  } catch { return; }
+}
+
+export async function identifyAudience(headers: Pick<Headers, "get">) {
+  return makeAudience(await identifyVisitorCountry(headers));
 }

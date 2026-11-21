@@ -6,12 +6,13 @@ import { searchCatalog } from "../../lib/search";
 import { binCardDataPath, readBinCards } from "../../lib/tools/bin-cards";
 import { binPrefix, binToolPath } from "../../lib/tools/bin-region";
 import { billingToolPath } from "../../lib/tools/billing-address";
+import { classifyIceAddress, compareBrowserRegion, envToolPath } from "../../lib/tools/env-check";
 import { parseTotp, totpCode, totpToolPath } from "../../lib/tools/totp";
 
 const lookup = readBinCards(new Uint8Array(readFileSync(`public${binCardDataPath}`)).buffer);
 
 test("the public tools are indexed by site search", () => {
-  assert.deepEqual(tools.map(tool => tool.href), [binToolPath, totpToolPath, billingToolPath]);
+  assert.deepEqual(tools.map(tool => tool.href), [binToolPath, totpToolPath, billingToolPath, envToolPath]);
   for (const query of ["BIN", "发卡地区", "發卡地區", "BIN lookup", "银行卡地区识别"]) {
     assert.equal(searchCatalog(query, "tool")[0]?.href, binToolPath, query);
   }
@@ -20,6 +21,31 @@ test("the public tools are indexed by site search", () => {
   assert.deepEqual(searchCatalog("BIN", undefined, () => false), []);
   assert.equal(searchCatalog("两步验证", "tool")[0]?.href, totpToolPath);
   assert.equal(searchCatalog("US billing address", "tool")[0]?.href, billingToolPath);
+  assert.equal(searchCatalog("WebRTC", "tool")[0]?.href, envToolPath);
+});
+
+test("browser region checks distinguish matches, differences and missing signals", () => {
+  assert.deepEqual(compareBrowserRegion("US", "US/Eastern", "en-US"),
+    { timezoneMatch: "match", languageMatch: "match", status: "green" });
+  assert.equal(compareBrowserRegion("GB", "Europe/London", "fr-GB").status, "green");
+  assert.equal(compareBrowserRegion("IN", "Asia/Calcutta", "en-IN").status, "green");
+  assert.equal(compareBrowserRegion("HK", "Asia/Shanghai", "zh-CN").status, "red");
+  assert.equal(compareBrowserRegion("CN", "Asia/Shanghai", "en-US").status, "yellow");
+  assert.equal(compareBrowserRegion("CN", "Asia/Shanghai", "zh-Hans").languageMatch, "unknown");
+  assert.equal(compareBrowserRegion("AU", "UTC", "en-AU").timezoneMatch, "unknown");
+  assert.deepEqual(compareBrowserRegion(undefined, "Asia/Shanghai", "zh-CN"),
+    { timezoneMatch: "unknown", languageMatch: "unknown", status: "yellow" });
+});
+
+test("ICE address categories distinguish masked addresses, IPv4, and IPv6", () => {
+  for (const address of ["10.0.0.7", "192.168.1.10", "100.64.0.1", "fd00::1", "::ffff:172.16.1.4"]) {
+    assert.equal(classifyIceAddress(address), "local", address);
+  }
+  assert.equal(classifyIceAddress("93.184.216.34"), "public");
+  assert.equal(classifyIceAddress("2001:4860:4860::8888"), "public");
+  assert.equal(classifyIceAddress("0.0.0.0"), "unknown");
+  assert.equal(classifyIceAddress("8dae5a3b-0b1a-4ffc.local."), "masked");
+  assert.equal(classifyIceAddress("invalid.local.example"), "unknown");
 });
 
 test("TOTP parses setup links and matches RFC 6238 test vectors", async () => {

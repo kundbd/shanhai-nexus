@@ -1,4 +1,6 @@
 {
+  "出海浏览器环境自检": "Browser Environment Check",
+  "查看浏览器时区、语言、屏幕和平台信息，并检查地区一致性与 WebRTC 地址暴露。": "Inspect your browser’s time zone, language, screen and platform, and check region consistency and WebRTC address exposure.",
   "网页版 2FA 生成器": "Web 2FA Code Generator",
   "用 Base32 密钥或 TOTP 设置链接生成动态验证码。": "Generate one-time codes from a Base32 secret or TOTP setup link.",
   "美区免税州账单地址生成器": "US Billing Address Sample Generator",

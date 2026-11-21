@@ -87,6 +87,17 @@ test("production standalone region policies through a trusted local proxy", {tim
     absent((await get("/services?group=all")).body,hiddenSiteName,networkName,"/categories/vpn");
   });
 
+  await t.test("browser self-check uses the detected country without exposing the IP or the default policy region", async () => {
+    for (const [country, label] of [["HK", "中国香港 (HK)"], ["US", "美国 (US)"], ["unknown", "未识别"]] as const) {
+      setRegion(country);
+      const page = await get("/tools/env-check", {headers: {"X-Forwarded-For":"198.51.100.7"}});
+      assert.equal(page.response.status, 200);
+      assertNoStore(page.response);
+      assert.ok(page.body.includes(`<dt>IP 所在地区</dt><dd>${label}</dd>`), country);
+      absent(page.body, "198.51.100.7");
+    }
+  });
+
   await t.test("language preferences retain consent, region visibility and private cache behavior", async () => {
     setRegion("CN");
     const changeLanguage = (language: string, destination: string, originHeader = origin) => asGuest("/api/site-language", {

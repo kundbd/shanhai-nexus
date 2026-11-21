@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { binCardDataPath } from "../../lib/tools/bin-cards";
 
-test("the only tool looks up card details locally and rejects longer numbers", async ({ page, request }) => {
+test("the BIN tool looks up card details locally and rejects longer numbers", async ({ page, request }) => {
   await page.goto("/tools");
   await expect(page.getByRole("heading", { name: "工具与指南" })).toBeVisible();
-  await expect(page.locator(".tool-card")).toHaveCount(3);
+  await expect(page.locator(".tool-card")).toHaveCount(4);
   const requests: string[] = [];
   page.on("request", request => requests.push(request.url()));
   await page.getByRole("link", { name: /银行卡 BIN 地区查询/ }).click();
