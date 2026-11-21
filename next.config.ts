@@ -3,14 +3,14 @@ import { siteConsentPath, siteConsentRequiredHeader } from "./lib/site-consent";
 
 const config: NextConfig = {
   output: "standalone",
-  outputFileTracingIncludes: { "/*": ["./content/articles/*.md", "./lib/directory/migrations/*.sql"] },
+  outputFileTracingIncludes: { "/*": ["./lib/directory/migrations/*.sql"] },
   poweredByHeader: false,
   logging: { incomingRequests: { ignore: [/^\/(?:search|api\/traffic)(?:[/?]|$)/] } },
   experimental: { cpus: 2 },
   async rewrites() {
     return {
       beforeFiles: [{
-        source: "/((?!(?:api|admin|_next|welcome|ad-icons|ai-product-icons|contact-icons|region|\\.well-known)(?:/|$)|(?:robots\\.txt|sitemap\\.xml|favicon\\.ico)$).*)",
+        source: "/((?!(?:api|admin|_next|welcome|ad-icons|ai-product-icons|contact-icons|bin-data|region|\\.well-known)(?:/|$)|(?:robots\\.txt|sitemap\\.xml|favicon\\.ico)$).*)",
         has: [{ type: "header", key: siteConsentRequiredHeader, value: "1" }],
         // Use an internal path even when the public HTTPS connection ends at Nginx.
         destination: siteConsentPath,
@@ -34,6 +34,10 @@ const config: NextConfig = {
       {
         source: "/sitemap.xml",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/bin-data/issuer-regions-fcc907c.bin",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
       {
         source: "/search",

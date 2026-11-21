@@ -40,7 +40,7 @@
 | U 卡与支付 | 虚拟卡、跨境支付和数字订阅付款服务的公开信息 | [浏览支付服务](https://shanhainexus.com/categories/payments) |
 | VPS 与云服务 | 主机商、云服务器和公开报价 | [浏览云服务](https://shanhainexus.com/categories/vps) |
 | 山海观察 | 有来源的站方编辑文章及标明出处的第三方测评 | [阅读评测与观察](https://shanhainexus.com/observations) |
-| 工具与指南 | 浏览器本地运行的 JSON、Base64、时间戳等工具，以及数字服务使用指南 | [打开工具](https://shanhainexus.com/tools) · [阅读指南](https://shanhainexus.com/guides) |
+| 工具与指南 | 在浏览器本地查询银行卡 BIN 对应的发卡国家或地区 | [打开工具](https://shanhainexus.com/tools) · [银行卡 BIN 地区查询](https://shanhainexus.com/tools/bin-lookup) |
 
 ## 价格怎么读
 

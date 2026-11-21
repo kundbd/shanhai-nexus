@@ -1,8 +1,6 @@
 import { createHash } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
-import { getGuide,getTool } from "../catalog";
 import { communityPostVisitors,recordCommunityPostVisitor } from "../community/posts";
-import { guideAllowed } from "../geo/catalog";
 import { siteVisibility, type ContentVisibility } from "../geo/visibility";
 import { isTrafficPath,isTrafficVisitor,publicPageLabels,trafficPostId,trafficProduct } from "../traffic-path";
 import { all,directory,one,transaction } from "./db";
@@ -32,11 +30,6 @@ function trafficTitle(db:DatabaseSync,path:string,visibility?:ContentVisibility)
   const [,section,slug]=path.split("/");
   if (section==="categories") return getCategory(slug,db,visibility)?.label;
   if (section==="observations") return publicEditorial(slug,db,visibility)?.title;
-  if (section==="guides") {
-    const guide=getGuide(slug);
-    return guide&&(!visibility||guideAllowed(visibility,guide))?guide.title:undefined;
-  }
-  if (section==="tools") return getTool(slug)?.title;
   if (section==="services") {
     const region=siteVisibility(visibility);
     return one<{name:string}>(db,`SELECT name FROM sites s WHERE slug=? AND publication='published' AND ${region.clause}`,slug,...region.bindings)?.name;

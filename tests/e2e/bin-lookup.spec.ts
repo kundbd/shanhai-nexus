@@ -1,0 +1,32 @@
+import { expect, test } from "@playwright/test";
+import { binDataPath } from "../../lib/tools/bin-region";
+
+test("the only tool looks up a region locally and rejects longer numbers", async ({ page, request }) => {
+  await page.goto("/tools");
+  await expect(page.getByRole("heading", { name: "工具与指南" })).toBeVisible();
+  await expect(page.locator(".tool-card")).toHaveCount(1);
+  const requests: string[] = [];
+  page.on("request", request => requests.push(request.url()));
+  await page.getByRole("link", { name: /银行卡 BIN 地区查询/ }).click();
+  const field = page.getByLabel("银行卡号前 6 位或前 8 位");
+  const submit = page.getByRole("button", { name: "查询", exact: true });
+  await field.fill("1234567890123456");
+  await submit.click();
+  await expect(page.locator(".bin-lookup").getByRole("alert")).toHaveText("请输入卡号前 6 位或前 8 位数字。");
+  expect(requests.some(url => url.endsWith(binDataPath))).toBe(false);
+  await field.fill("４５７１ ７３６０");
+  await submit.click();
+  await expect(page.locator(".bin-lookup-result")).toContainText("丹麦");
+  await expect(page.locator(".bin-lookup-result")).toContainText("DK");
+  await field.fill("000000");
+  await field.press("Enter");
+  await expect(page.getByText("未找到该 BIN 的可靠地区记录。")).toBeVisible();
+  await expect(page).toHaveURL(/\/tools\/bin-lookup$/);
+  expect(requests.filter(url => url.endsWith(binDataPath))).toHaveLength(1);
+  expect(requests.some(url => /457173|1234567890123456|000000/.test(url))).toBe(false);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+
+  for (const path of ["/tools/json", "/tools/base64", "/tools/timestamp", "/tools/sha256", "/tools/url", "/tools/diff", "/guides", "/guides/pdf-to-word", "/diagnose"]) {
+    expect((await request.get(path)).status(), path).toBe(404);
+  }
+});

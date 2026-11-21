@@ -18,7 +18,7 @@ const navigation = [
   { href: "/rankings", label: "排行榜", match: (path: string) => path === "/rankings" },
   { href: "/community", label: "评论社区", match: (path: string) => path === "/community" || path.startsWith("/community/") },
   { href: "/observations", label: "评测与观察", match: (path: string) => path.startsWith("/observations") || path.startsWith("/updates") },
-  { href: "/tools", label: "工具与指南", match: (path: string) => path.startsWith("/tools") || path.startsWith("/guides") || path.startsWith("/diagnose") },
+  { href: "/tools", label: "工具与指南", match: (path: string) => path === "/tools" || path.startsWith("/tools/") },
 ];
 
 function ContactLinks({inMenu=false}:{inMenu?:boolean}) {

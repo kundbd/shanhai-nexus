@@ -1,7 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
-import { getGuide, guides } from "../catalog";
 import { homeAds } from "../catalog/home-ads";
-import { guideKindLabels } from "../catalog/types";
 import { all, one, transaction } from "../directory/db";
 import { isRetiredCategory, isRetiredNetworkSite } from "../directory/taxonomy";
 import { choice, textValue } from "../directory/validation";
@@ -22,16 +20,9 @@ function directoryTarget(kind: keyof typeof contentQueries, row: DirectoryTarget
   return { key: row.key, label: row.label, network };
 }
 
-const guideTarget = (guide: typeof guides[number]): Target => ({
-  key: guide.id, label: `${guide.title} · ${guideKindLabels[guide.kind]}`, network:guide.network,
-});
 const adTarget = (ad: typeof homeAds[number]): Target => ({ key: ad.id, label: ad.title, network:ad.network });
 
 export function visibilityTarget(db: DatabaseSync, kind: VisibilityKind, key: string): Target | undefined {
-  if (kind === "guide") {
-    const guide=getGuide(key);
-    return guide && guideTarget(guide);
-  }
   if (kind === "ad") {
     const ad=homeAds.find(item=>item.id===key);
     return ad && adTarget(ad);
@@ -56,7 +47,7 @@ export function visibilityTargets(db: DatabaseSync, kind: VisibilityKind, query:
     ...homeAds.map(ad=>promotionKey(ad.href)!),
     ...all<{content_key:string}>(db,"SELECT content_key FROM content_region_rules WHERE kind='promotion' ORDER BY content_key").map(row=>row.content_key),
   ])].map(key=>visibilityTarget(db,"promotion",key)!);
-  const rows=kind==="guide"?guides.map(guideTarget):kind==="ad"?homeAds.map(adTarget):promotionKeys();
+  const rows=kind==="ad"?homeAds.map(adTarget):promotionKeys();
   return rows.filter(row=>(row.label+" "+row.key).toLowerCase().includes(query.toLowerCase()))
     .slice((page-1)*size,page*size+1);
 }

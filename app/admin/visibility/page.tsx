@@ -15,7 +15,7 @@ export default async function VisibilityAdmin({searchParams}:{searchParams:Promi
   await requireAdmin();
   const input=await searchParams;
   const requested=param(input.kind);
-  const kind:VisibilityKind=Object.hasOwn(visibilityKinds,requested)?requested as VisibilityKind:"guide";
+  const kind:VisibilityKind=Object.hasOwn(visibilityKinds,requested)?requested as VisibilityKind:"site";
   const q=param(input.q).slice(0,100);
   const page=Math.min(10000,Math.max(1,Number.parseInt(param(input.page),10)||1));
   const key=param(input.key).slice(0,1500);

@@ -5,12 +5,10 @@ import { homeAds } from "../../lib/catalog/home-ads";
 import { siteConsentAction, siteConsentVersion } from "../../lib/site-consent";
 import { languageCookie } from "../../lib/i18n/language";
 import {
-  editorialMarker, editorialSlug, hiddenArticle, hiddenGuide, hiddenSite, hiddenSiteName,
+  editorialMarker, editorialSlug, hiddenSite, hiddenSiteName,
   airportOffer, networkName, networkSite, offerMarker, proxyName, proxySite, residentialName, residentialSite, startGeoStaging, vpnOffer,
 } from "../fixtures/geo-staging";
 
-const guide=`/guides/${hiddenGuide}`;
-const article=`/guides/${hiddenArticle}`;
 const shop=`/services/${hiddenSite}`;
 const network=`/services/${networkSite}`;
 const editorial=`/observations/${editorialSlug}`;
@@ -79,15 +77,13 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.ok(resumed.body.includes(hiddenSiteName));
   });
 
-  await t.test("CN home, categories, guides and navigation",async ()=>{
+  await t.test("CN home, categories and navigation",async ()=>{
     setRegion("CN");
     const home=await get("/");
     assert.equal(home.response.status,200);
     regionLabel(home.body,"中国大陆","cn");
     absent(home.body,hiddenSiteName,networkName,"/categories/vpn",gate.href,content.promotion);
     assert.ok(home.body.includes(roogoo.href));
-    assert.ok((await get("/guides")).body.includes(article));
-    absent((await get("/guides")).body,`href="${guide}"`);
     absent((await get("/services?group=all")).body,hiddenSiteName,networkName,"/categories/vpn");
   });
 
@@ -118,7 +114,7 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.match(home.body, /Content region: Mainland China/);
     assert.match(home.body, /Public price ranges/);
     assertNoStore(home.response);
-    absent(home.body, ...networkAds.map(ad => ad.href), hiddenSiteName, hiddenGuide);
+    absent(home.body, ...networkAds.map(ad => ad.href), hiddenSiteName);
     const limited = await get(shop, { headers: english });
     assert.equal(limited.response.status, 404);
     absent(limited.body, hiddenSiteName, offerMarker);
@@ -160,8 +156,6 @@ test("production standalone region policies through a trusted local proxy", {tim
     const approved=await get(editorial);
     assert.ok(approved.body.includes(editorialMarker));
     assert.match(approved.body,/name="robots" content="noindex/);
-    assert.equal((await get(guide)).response.status,404);
-    assert.equal((await get(article)).response.status,404);
     assert.equal((await get(shop)).response.status,404);
     assert.ok((await get("/services/chatgpt")).body.includes("GeoCheckPromotionSource"));
   });
@@ -241,7 +235,7 @@ test("production standalone region policies through a trusted local proxy", {tim
 
   await t.test("direct HTML, product, category, editorial, review and avatar links",async ()=>{
     setRegion("CN");
-    for (const path of [guide,shop,network,editorial,"/categories/vpn",content.product,content.thread]) {
+    for (const path of [shop,network,editorial,"/categories/vpn",content.product,content.thread]) {
       const result=await get(path);
       assert.equal(result.response.status,404,path);
       assert.match(result.body,/在当前内容地区暂未开放/);
@@ -251,7 +245,7 @@ test("production standalone region policies through a trusted local proxy", {tim
     assert.equal((await fetchPage(content.avatar)).status,404);
     absent((await get("/services/chatgpt")).body,"GeoCheckPromotionSource",content.promotion);
     setRegion("HK");
-    for (const path of [guide,shop,network,content.product,content.thread,content.avatar]) {
+    for (const path of [shop,network,content.product,content.thread,content.avatar]) {
       const allowed=await get(path);
       assert.equal(allowed.response.status,200,path);
       assertNoStore(allowed.response);
@@ -265,17 +259,13 @@ test("production standalone region policies through a trusted local proxy", {tim
   await t.test("search, related links, price calculations and rankings use the same scope",async ()=>{
     const query=(value:string,type:string)=>`/search?${new URLSearchParams({q:value,type})}`;
     setRegion("CN");
-    absent((await get(query("JSON 语法错误","guide"))).body,`href="${guide}"`);
     absent((await get(query(hiddenSiteName,"service"))).body,`href="${shop}"`);
     absent((await get(query(editorialMarker,"observation"))).body,`href="${editorial}"`);
-    absent((await get("/tools/json")).body,`href="${guide}"`);
     absent((await get("/?price=vps")).body,offerMarker,hiddenSiteName);
     absent((await get("/rankings?group=vps&period=overall")).body,hiddenSiteName);
     absent((await get("/community?view=reviews")).body,hiddenSiteName,"GeoCheckReviewMarker");
     setRegion("HK");
-    assert.ok((await get(query("JSON 语法错误","guide"))).body.includes(`href="${guide}"`));
     assert.ok((await get(query(hiddenSiteName,"service"))).body.includes(`href="${shop}"`));
-    assert.ok((await get("/tools/json")).body.includes(`href="${guide}"`));
     assert.ok((await get("/?price=vps")).body.includes(offerMarker));
     assert.ok((await get("/rankings?group=vps&period=overall")).body.includes(hiddenSiteName));
     assert.ok((await get("/community?view=reviews")).body.includes("GeoCheckReviewMarker"));
@@ -351,39 +341,39 @@ test("production standalone region policies through a trusted local proxy", {tim
       const result=await get("/sitemap.xml");
       assert.equal(result.response.status,200);
       assertNoStore(result.response);
-      assert.ok(result.body.includes("/guides/unix-time"));
-      absent(result.body,guide,article,shop,network,editorial,"/categories/vpn");
+      assert.ok(result.body.includes("/tools/bin-lookup"));
+      absent(result.body,"/guides","/diagnose","/tools/json",shop,network,editorial,"/categories/vpn");
       sitemaps.push(result.body);
     }
     assert.equal(new Set(sitemaps).size,1);
   });
 
   await t.test("cached responses and RSC payloads cannot cross regions",async ()=>{
-    setRegion("HK");
-    const allowed=await get(guide);
+    setRegion("US");
+    const allowed=await get(editorial);
     assert.equal(allowed.response.status,200);
     assertNoStore(allowed.response);
-    const flight=await get(guide,{headers:{RSC:"1"}});
+    const flight=await get(editorial,{headers:{RSC:"1"}});
     assert.match(flight.response.headers.get("content-type")??"",/text\/x-component/);
-    assert.ok(flight.body.includes("如何定位 JSON 语法错误"));
+    assert.ok(flight.body.includes(editorialMarker));
     assertNoStore(flight.response);
-    for (const country of ["CN","US","unknown","HK","CN"] as const) {
+    for (const country of ["CN","HK","unknown","US","CN"] as const) {
       setRegion(country);
-      const result=await get(guide,{headers:{RSC:"1"}});
+      const result=await get(editorial,{headers:{RSC:"1"}});
       assertNoStore(result.response);
       assert.match(result.response.headers.get("content-type")??"",/text\/x-component/);
-      if (country==="HK") {
+      if (country==="US") {
         assert.equal(result.response.status,200);
-        assert.ok(result.body.includes("如何定位 JSON 语法错误"));
+        assert.ok(result.body.includes(editorialMarker));
       } else {
         // The router may return a successful Flight transport carrying the not-found state.
         assert.ok([200,404].includes(result.response.status));
-        absent(result.body,"如何定位 JSON 语法错误","检查引号、逗号");
+        absent(result.body,editorialMarker);
       }
     }
-    const prefetch=await get(guide,{headers:{RSC:"1","Next-Router-Prefetch":"1"}});
+    const prefetch=await get(editorial,{headers:{RSC:"1","Next-Router-Prefetch":"1"}});
     assertNoStore(prefetch.response);
-    absent(prefetch.body,"如何定位 JSON 语法错误","检查引号、逗号");
+    absent(prefetch.body,editorialMarker);
   });
 
   await t.test("administrator changes are authenticated, audited and immediately affect the existing carousel",async ()=>{

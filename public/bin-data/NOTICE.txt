@@ -1,0 +1,18 @@
+Shanhai Nexus BIN region index
+
+Source: Techbuddie Solutions, binlist-data (2026-09-03 snapshot, fcc907c).
+https://github.com/Techbuddie-Solutions/binlist-data/tree/fcc907c81cf02b12e396b0c12a8c16472b47619a
+
+Upstream sources:
+Ian Nuttall, binlist-data — https://github.com/iannuttall/binlist-data
+Venelin Kochev, bin-list-data — https://github.com/venelinkochev/bin-list-data
+
+The source and this adapted index are available under CC BY 4.0.
+https://creativecommons.org/licenses/by/4.0/
+
+The index keeps only six-digit prefixes and their reported issuing region.
+Rows without a region and disagreements between sources are omitted unless
+the dataset has a specific correction. It is a public reference snapshot.
+
+To rebuild, extract bins.csv and conflicts.csv from the pinned source and run
+python scripts/build-bin-regions.py SOURCE_DIR public/bin-data/issuer-regions-fcc907c.bin

@@ -34,8 +34,6 @@ export const proxySite="geo-proxy-fixture";
 export const proxyName="GeoCheckProxyMerchant";
 export const residentialSite="geo-residential-fixture";
 export const residentialName="GeoCheckResidentialMerchant";
-export const hiddenGuide="json-errors";
-export const hiddenArticle="http-status";
 export const editorialSlug="geo-observation-fixture";
 export const editorialMarker="GeoCheckPrivateObservation";
 export const offerMarker="GeoCheckPrivatePlan";
@@ -101,8 +99,6 @@ function installTestContent(file:string) {
   db.prepare("INSERT INTO editorials(slug,title,summary,body,publication,updated_at) VALUES (?,?,?,?,'published',?)")
     .run(editorialSlug,editorialMarker,editorialMarker,editorialMarker,date);
   region("editorial",editorialSlug,"countries","US");
-  region("guide",hiddenGuide,"countries","HK");
-  region("guide",hiddenArticle,"cn");
   region("ad","gate","overseas");
   const promotion=homeAds.find(ad=>ad.id==="musepay")!.href;
   region("promotion",promotion,"countries","US");

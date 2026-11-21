@@ -1,7 +1,9 @@
+import { binTitle, binToolPath } from "./tools/bin-region";
+
 export const publicPageLabels = {
   "/":"首页", "/services":"服务目录", "/rankings":"排行榜", "/search":"站内搜索", "/community":"评论社区",
-  "/observations":"评测与观察", "/updates":"站点动态", "/tools":"工具中心", "/guides":"知识与指南",
-  "/diagnose":"问题诊断", "/about":"关于本站", "/policy":"内容政策", "/contact":"联系方式",
+  "/observations":"评测与观察", "/updates":"站点动态", "/tools":"工具与指南", [binToolPath]:binTitle,
+  "/about":"关于本站", "/policy":"内容政策", "/contact":"联系方式",
 } as const;
 
 export const trafficPathLimit=120;
@@ -11,7 +13,7 @@ export function isTrafficVisitor(value:string|null):value is string {
   return value!==null&&value.length===36&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
 }
 
-const publicDetailPath=/^\/(?:services|categories|observations|guides|tools)\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const publicDetailPath=/^\/(?:services|categories|observations)\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const publicThreadPath=/^\/community\/[1-9][0-9]{0,15}$/;
 
 export function trafficProduct(path:string) {

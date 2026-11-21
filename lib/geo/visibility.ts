@@ -4,7 +4,6 @@ import { isRetiredCategory } from "../directory/taxonomy";
 import { allowsRegion, countryCode, isOverseasRule, type Audience, type VisibilityRule } from "./policy";
 
 export const visibilityKinds = {
-  guide: "知识文章与教程",
   editorial: "山海观察",
   site: "服务档案",
   category: "服务分类",
@@ -31,7 +30,7 @@ export function promotionKey(href: string) {
 
 export function loadVisibility(db: DatabaseSync, audience: Audience | "universal") {
   const rules = new Map<VisibilityKind, Map<string, VisibilityRule>>();
-  for (const row of all<RulesRow>(db, "SELECT kind,content_key,mode,countries FROM content_region_rules")) {
+  for (const row of all<RulesRow>(db, "SELECT kind,content_key,mode,countries FROM content_region_rules WHERE kind<>'guide'")) {
     const entries = rules.get(row.kind) ?? new Map<string, VisibilityRule>();
     entries.set(row.content_key, ruleFromRow(row));
     rules.set(row.kind, entries);

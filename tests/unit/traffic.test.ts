@@ -14,13 +14,13 @@ test("traffic deduplicates visitors across reloads and reports people across the
   assert.equal(recordPageVisitor(db,"/about",first,now-86_400_000),true);
   assert.deepEqual(trafficReport(db,now),{asOf:now,total:0,pages:[]});
   assert.equal(recordPageVisitor(db,"/services/chatgpt",first,now-86_340_000),true);
-  for(const [page,visitor] of [["/search",first],["/services/chatgpt",first],["/search",first],["/search",second],["/guides/pdf-to-word",third]]) {
+  for(const [page,visitor] of [["/search",first],["/services/chatgpt",first],["/search",first],["/search",second],["/tools/bin-lookup",third]]) {
     assert.equal(recordPageVisitor(db,page,visitor,now),true);
   }
   const report=trafficReport(db,now);
   assert.equal(report.total,3);
   assert.deepEqual(report.pages.map(({page,visitors})=>[page,visitors]),[
-    ["/search",2],["/guides/pdf-to-word",1],["/services/chatgpt",1],
+    ["/search",2],["/services/chatgpt",1],["/tools/bin-lookup",1],
   ]);
   assert.equal(all(db,"SELECT 1 FROM traffic_visitors WHERE page='/about'").length,0);
   const hashes=all<{visitor_hash:Uint8Array}>(db,"SELECT visitor_hash FROM traffic_visitors").map(({visitor_hash})=>Buffer.from(visitor_hash).toString("hex"));
@@ -34,7 +34,7 @@ test("traffic ignores private routes, raw search strings, missing keys and earli
   const visitor=randomUUID();
   db.exec("UPDATE sites SET publication='draft' WHERE slug='chatgpt'");
   db.prepare("INSERT INTO page_traffic(minute,page,views) VALUES (?,'/search',90)").run(now/60_000);
-  for(const page of ["/search?q=private","/search#private","https://example.com/","/admin/traffic","/api/traffic","/services/chatgpt","/services/nonexistent","/services/user%40example.com","/tools/json\n","/community/1\n"]) {
+  for(const page of ["/search?q=private","/search#private","https://example.com/","/admin/traffic","/api/traffic","/services/chatgpt","/services/nonexistent","/services/user%40example.com","/tools/json","/guides/pdf-to-word","/tools/json\n","/community/1\n"]) {
     assert.equal(recordPageVisitor(db,page,visitor,now),false,page);
   }
   assert.equal(recordPageVisitor(db,"/search","bad-identifier",now),false);

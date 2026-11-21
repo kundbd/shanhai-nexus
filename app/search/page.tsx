@@ -74,8 +74,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     </div></section>}
     {results.length ? <div className="surface result-list">
       {results.map((item) => <Link className="result-card" key={item.id} href={item.href} prefetch={false}>
-        <IconTile icon={item.kind === "tool" ? "tool" : item.kind === "diagnosis" ? "terminal" : "book"} tone={item.kind === "guide" ? "indigo" : "teal"} />
-        <div><span className="result-kind">{t(resultLabels[item.kind])} · {t(item.category)}</span><h2><Highlight value={t(visibility.filterText(item.title))} query={query} /></h2><p><Highlight value={t(visibility.filterText(item.excerpt ?? item.description))} query={query} /></p></div>
+        <IconTile icon="credit-card" />
+        <div><span className="result-kind">{t(resultLabels[item.kind])} · {t(item.category)}</span><h2><Highlight value={t(visibility.filterText(item.title))} query={query} /></h2><p><Highlight value={t(visibility.filterText(item.description))} query={query} /></p></div>
         <ArrowRight size={18} className="card-arrow" aria-hidden="true" />
       </Link>)}
     </div> : null}

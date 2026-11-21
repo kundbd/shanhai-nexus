@@ -1,13 +1,7 @@
-import { getGuide } from "../catalog";
 import { homeAds } from "../catalog/home-ads";
-import type { Guide } from "../catalog/types";
 import { getSite, publicCategoryAllowed, publicEditorial } from "../directory/read";
 import { siteUrl } from "../site";
 import type { ContentVisibility } from "./visibility";
-
-export function guideAllowed(visibility: ContentVisibility, guide: Guide) {
-  return visibility.allows("guide", guide.id, guide.network);
-}
 
 export function catalogLinkAllowed(visibility: ContentVisibility, href: string) {
   if (!visibility.linkAllowed(href)) return false;
@@ -20,9 +14,7 @@ export function catalogLinkAllowed(visibility: ContentVisibility, href: string) 
   if (section === "categories") return publicCategoryAllowed(id,visibility);
   if (section === "services") return !!getSite(id,undefined,visibility);
   if (section === "observations") return !!publicEditorial(id,undefined,visibility);
-  if (section !== "guides") return true;
-  const guide = getGuide(id);
-  return !!guide && guideAllowed(visibility,guide);
+  return true;
 }
 
 export function visibleHomeAds(visibility: ContentVisibility) {
