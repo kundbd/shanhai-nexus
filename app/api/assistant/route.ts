@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { assistantReplyLimit, readAssistantEvents } from "@/lib/assistant/protocol";
-import { assistantMessages, assistantModel, assistantSystemPrompt, reserveAssistantRequest } from "@/lib/assistant/server";
+import { assistantMessages, assistantModel, assistantSystemPrompt, assistantUnableMarker, reserveAssistantRequest } from "@/lib/assistant/server";
 import { boundedText } from "@/lib/directory/imports";
 import { siteConsentCookie, siteConsentVersion } from "@/lib/site-consent";
 import { sameOriginBrowserRequest } from "@/lib/site-request";
@@ -59,6 +59,9 @@ export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
   const stream = readAssistantEvents(upstream.body);
   let size = 0;
+  let opening: string | undefined = "";
+  let unable = false;
+  const eventData = (value: object) => encoder.encode(`data: ${JSON.stringify(value)}\n\n`);
   return new Response(new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
@@ -66,7 +69,9 @@ export async function POST(request: NextRequest) {
           const { value, done } = await stream.next();
           if (done) break;
           if (value === "[DONE]") {
-            if (size) controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            if (opening?.trim()) controller.enqueue(eventData({ text: opening }));
+            if (unable) controller.enqueue(eventData({ sticker: "unable" }));
+            if (size || unable) controller.enqueue(encoder.encode("data: [DONE]\n\n"));
             else controller.enqueue(encoder.encode('data: {"error":"unavailable"}\n\n'));
             controller.close();
             upstreamAbort.abort();
@@ -79,7 +84,17 @@ export async function POST(request: NextRequest) {
           if (typeof content !== "string" || !content) continue;
           size += content.length;
           if (size > assistantReplyLimit) break;
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: content })}\n\n`));
+          let text = content;
+          if (opening !== undefined) {
+            opening += content;
+            const start = opening.trimStart();
+            if (start.length < assistantUnableMarker.length && assistantUnableMarker.startsWith(start)) continue;
+            unable = start.startsWith(assistantUnableMarker);
+            text = unable ? start.slice(assistantUnableMarker.length).trimStart() : opening;
+            opening = undefined;
+          }
+          if (!text) continue;
+          controller.enqueue(eventData({ text }));
           return;
         }
       } catch {

@@ -15,9 +15,12 @@ test("assistant validates chat input, preserves streaming, and rate-limits upstr
   const encoder = new TextEncoder();
   const trace: { url: unknown; authorization: string | null; body: Record<string, unknown> }[] = [];
   t.mock.method(globalThis, "fetch", async (url: unknown, init: RequestInit) => {
-    trace.push({ url, authorization: new Headers(init.headers).get("Authorization"), body: JSON.parse(String(init.body)) });
-    const source = encoder.encode(': pending\r\n\r\ndata: {"choices":[{"delta":{"content":"**喵**","reasoning_content":"hidden"}}]}\r\n\r\n' +
-      'data: {"choices":[{"delta":{"content":"，核对账单资料。"}}]}\n\ndata: [DONE]\n\n');
+    const body = JSON.parse(String(init.body));
+    trace.push({ url, authorization: new Headers(init.headers).get("Authorization"), body });
+    const isUnable = body.messages.at(-1)?.content === "帮我写期末论文";
+    const chunks = isUnable ? ["\n[[UN", "ABLE]]", "\n本喵只懂本站工具哦。"] : ["**喵**", "，核对账单资料。"];
+    const payload = chunks.map((content) => `data: ${JSON.stringify({ choices: [{ delta: { content, reasoning_content: "hidden" } }] })}\r\n\r\n`).join("");
+    const source = encoder.encode(`: pending\r\n\r\n${payload}data: [DONE]\n\n`);
     return new Response(new ReadableStream({
       start(controller) {
         for (const byte of source) controller.enqueue(Uint8Array.of(byte));
@@ -61,7 +64,13 @@ test("assistant validates chat input, preserves streaming, and rate-limits upstr
   assert.deepEqual(messages.slice(1), history.slice(-11));
   assert.doesNotMatch(JSON.stringify(upstream.body), /private tool data/);
 
-  for (let count = 1; count < 6; count++) {
+  const refusal = await POST(request([{ role: "user", content: "帮我写期末论文" }]));
+  assert.equal(refusal.status, 200);
+  const refusalEvents: string[] = [];
+  for await (const event of readAssistantEvents(refusal.body!)) refusalEvents.push(event);
+  assert.deepEqual(refusalEvents, [JSON.stringify({ text: "\n本喵只懂本站工具哦。" }), '{"sticker":"unable"}', "[DONE]"]);
+
+  for (let count = 2; count < 6; count++) {
     const reply = await POST(request());
     assert.equal(reply.status, 200);
     await reply.text();

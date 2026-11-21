@@ -11,7 +11,7 @@ import { AssistantMarkdown } from "./assistant-markdown";
 const AVATAR_URL = "/assistant-avatar.jpg";
 const questions = ["绑卡被拒怎么排查原因？", "免税州地址怎么选最稳？", "帮我算算开哪家 AI 最划算"] as const;
 
-type Turn = { id: number; question: string; answer: string; complete: boolean };
+type Turn = { id: number; question: string; answer: string; complete: boolean; unable?: boolean };
 
 export function Assistant({ enabled, currentTool }: { enabled: boolean; currentTool?: string }) {
   const t = useTranslations();
@@ -37,7 +37,7 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
   }, [open]);
   useEffect(() => {
     const element = transcript.current;
-    if (element && follow.current && open) element.scrollTop = element.scrollHeight;
+    if (element && open && follow.current) element.scrollTop = turns.length ? element.scrollHeight : 0;
   }, [turns, open, pending, error]);
 
   function hide() {
@@ -82,13 +82,15 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
       }
       if (!response.ok || !response.body) throw new Error("Assistant unavailable.");
       let answer = "";
+      let unable = false;
       for await (const data of readAssistantEvents(response.body)) {
         if (abort.signal.aborted) return;
-        if (data === "[DONE]" && answer.trim()) {
-          setTurns((items) => items.map((item) => item.id === id ? { ...item, complete: true } : item));
+        if (data === "[DONE]" && (answer.trim() || unable)) {
+          setTurns((items) => items.map((item) => item.id === id ? { ...item, complete: Boolean(answer.trim()), unable } : item));
           return;
         }
         const event = JSON.parse(data);
+        if (event.sticker === "unable") { unable = true; continue; }
         if (typeof event.text !== "string") throw new Error("Assistant reply interrupted.");
         answer += event.text;
         const updated = answer;
@@ -129,14 +131,16 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
       <div className="assistant-transcript" ref={transcript} onScroll={({ currentTarget }) => {
         follow.current = currentTarget.scrollHeight - currentTarget.scrollTop - currentTarget.clientHeight < 48;
       }}>
-        {!turns.length && <div className="assistant-welcome">
-          <p>{t("你好呀，我是山海小助手。可以问我本站工具怎么用、海外 AI 订阅怎么选，或绑卡失败怎么排查。")}</p>
-          {enabled && <div className="assistant-prompts">{questions.map((question) =>
+        {visited && <div className="assistant-welcome">
+          <Image className="assistant-sticker" src="/assistant-welcome.webp" alt={t("脆皮已上线")} width={600} height={600} unoptimized />
+          <p>Ciallo～(∠・ω&lt; )⌒★</p>
+          {enabled && !turns.length && <div className="assistant-prompts">{questions.map((question) =>
             <button type="button" key={question} onClick={() => void send(t(question))}>{t(question)}</button>)}</div>}
         </div>}
         {turns.map((turn) => <div className="assistant-turn" key={turn.id}>
           <p className="assistant-question">{turn.question}</p>
           {!!turn.answer && <div className="assistant-reply"><AssistantMarkdown text={turn.answer} /></div>}
+          {turn.unable && <Image className="assistant-sticker" src="/assistant-unable.webp" alt={t("山海小助手暂时答不上来")} width={600} height={800} unoptimized />}
         </div>)}
         {pending && <p className="assistant-progress" role="status">{t("正在回复…")}</p>}
         {error && <p className="assistant-error" role="status">{t(error)}</p>}

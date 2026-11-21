@@ -72,6 +72,9 @@
 .assistant-header button:disabled, .assistant-send button:disabled { opacity: .42; }
 
 .assistant-transcript { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 14px; font-size: 14px; overflow-wrap: anywhere; }
+.assistant-welcome { margin-bottom: 12px; }
+.assistant-sticker { display: block; width: 164px; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; }
+.assistant-welcome > p { width: fit-content; margin-top: 8px; }
 .assistant-welcome > p, .assistant-question, .assistant-reply { border-radius: 12px; padding: 9px 12px; }
 .assistant-welcome > p, .assistant-reply { background: var(--soft); }
 .assistant-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
