@@ -1,6 +1,6 @@
 {
   "银行卡 BIN 地区查询": "Bank Card BIN Region Lookup",
-  "根据银行卡号开头的数字查询发卡国家或地区。": "Look up the issuing country or region from the first digits of a bank card.",
+  "根据银行卡号前 6 位或前 8 位查询发卡地区、发卡银行、卡组织和卡片类型。": "Use the first 6 or 8 digits to look up the issuing region, bank, network, and card type.",
   "支付工具": "Payment tools",
   "数据来源": "Data source",
   "数据说明": "Data notes",

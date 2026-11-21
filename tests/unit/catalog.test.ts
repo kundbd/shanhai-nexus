@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { tools } from "../../lib/catalog";
 import { searchCatalog } from "../../lib/search";
-import { matchMainlandBin } from "../../lib/tools/bin-mainland";
-import { binDataPath, binPrefix, binToolPath, readBinRegions } from "../../lib/tools/bin-region";
+import { binCardDataPath, readBinCards } from "../../lib/tools/bin-cards";
+import { binPrefix, binToolPath } from "../../lib/tools/bin-region";
+
+const lookup = readBinCards(new Uint8Array(readFileSync(`public${binCardDataPath}`)).buffer);
 
 test("the BIN tool is the only tool indexed by site search", () => {
   assert.deepEqual(tools.map(tool => tool.href), [binToolPath]);
@@ -17,42 +19,37 @@ test("the BIN tool is the only tool indexed by site search", () => {
 });
 
 test("the published index matches known regions and accepts only a BIN-length input", () => {
-  const data = readFileSync(`public${binDataPath}`);
-  const lookup = readBinRegions(new Uint8Array(data).buffer);
   assert.equal(binPrefix("４５７１ ７３６０"), "45717360");
   assert.equal(binPrefix(" 457173 "), "457173");
   for (const invalid of ["", "45717", "4571736", "457173600", "1234567890123456", "457x73"]) {
     assert.equal(binPrefix(invalid), undefined);
   }
-  assert.equal(lookup("457173"), "DK");
-  assert.equal(lookup("622202"), "CN");
+  assert.equal(lookup("457173")?.card[0], "DK");
+  assert.equal(lookup("622202")?.card[0], "CN");
   assert.equal(lookup("000000"), undefined);
-  assert.throws(() => readBinRegions(new ArrayBuffer(1)), /Invalid BIN index/);
+  assert.throws(() => readBinCards(new ArrayBuffer(1)), /Invalid card index/);
 });
 
 test("the mainland supplement fills gaps without assuming all 62 prefixes are from China", () => {
-  const lookup = readBinRegions(new Uint8Array(readFileSync(`public${binDataPath}`)).buffer);
   for (const prefix of ["621225", "621226", "621721", "621785", "621786", "621799"]) {
-    assert.equal(lookup(prefix), undefined, prefix);
-    assert.deepEqual(matchMainlandBin(prefix), { code: "CN", digits: 6 }, prefix);
+    assert.equal(lookup(prefix)?.card[0], "CN", prefix);
+    assert.equal(lookup(prefix)?.digits, 6, prefix);
   }
-  assert.deepEqual(matchMainlandBin("62220842"), { code: "CN", digits: 8 });
-  assert.deepEqual(matchMainlandBin("62122642"), { code: "CN", digits: 6 });
-  assert.equal(matchMainlandBin("62220843"), undefined);
-  assert.equal(matchMainlandBin("620202"), undefined);
-  assert.equal(lookup("620202"), "HK");
-  assert.equal(matchMainlandBin("629999"), undefined);
+  assert.equal(lookup("62220842")?.digits, 8);
+  assert.equal(lookup("62122642")?.digits, 6);
+  assert.equal(lookup("62220843")?.digits, 6);
+  assert.equal(lookup("620202")?.card[0], "HK");
   assert.equal(lookup("629999"), undefined);
 });
 
 test("published mainland debit and credit prefixes coexist with other Mastercard regions", () => {
-  const lookup = readBinRegions(new Uint8Array(readFileSync(`public${binDataPath}`)).buffer);
   for (const prefix of ["534293", "531063", "525612", "523649", "537832", "536113", "543809"]) {
-    assert.deepEqual(matchMainlandBin(prefix), { code: "CN", digits: 6 }, prefix);
+    assert.equal(lookup(prefix)?.card[0], "CN", prefix);
   }
-  assert.deepEqual(matchMainlandBin("53429300"), { code: "CN", digits: 6 });
-  assert.deepEqual(matchMainlandBin("43674502"), { code: "CN", digits: 8 });
-  assert.equal(matchMainlandBin("43674599"), undefined);
-  assert.equal(matchMainlandBin("510195"), undefined);
-  assert.equal(lookup("510195"), "MY");
+  assert.deepEqual(lookup("53429300"), { card: ["CN", "招商银行", "MASTERCARD", "DEBIT"], digits: 6 });
+  assert.deepEqual(lookup("537832"), { card: ["CN", "招商银行", "MASTERCARD", "CREDIT"], digits: 6 });
+  assert.deepEqual(lookup("43674502"), { card: ["CN", "中国建设银行", "UNIONPAY / VISA", "CREDIT"], digits: 8 });
+  assert.equal(lookup("43674599")?.digits, 6);
+  assert.deepEqual(lookup("510195"), { card: ["MY", "BANK SIMPANAN NASIONAL", "MASTERCARD", "CREDIT"], digits: 6 });
+  assert.deepEqual(lookup("457173")?.card, ["DK", "", "", "DEBIT"]);
 });

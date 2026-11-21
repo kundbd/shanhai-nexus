@@ -212,7 +212,9 @@
 .bin-lookup-controls input[aria-invalid=true]{border-color:var(--danger)}
 .bin-lookup-controls button{flex:none}
 .bin-lookup-result{margin-top:5px;padding:12px 14px;border:1px solid var(--line);border-radius:5px;background:var(--soft)}
-.bin-lookup-result dd:first-of-type{display:flex;align-items:center;gap:8px;margin:2px 0;font-size:1.25rem;font-weight:700}
+.bin-lookup-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;margin:0 0 8px}
+.bin-lookup-fields dt{color:var(--muted);font-size:13px}
+.bin-lookup-fields dd{margin:2px 0 0;font-weight:650;overflow-wrap:anywhere}
 .bin-source{margin-top:12px}
 .policy-legend dt{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .catalog-filters label,.field-stack label,.admin-form label{display:grid;gap:4px;font-size:13px;font-weight:640;min-width:0}

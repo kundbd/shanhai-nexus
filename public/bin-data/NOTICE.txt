@@ -10,9 +10,12 @@ Venelin Kochev, bin-list-data — https://github.com/venelinkochev/bin-list-data
 The source and this adapted index are available under CC BY 4.0.
 https://creativecommons.org/licenses/by/4.0/
 
-The index keeps only six-digit prefixes and their reported issuing region.
+The base region index keeps six-digit prefixes and their reported issuing region.
 Rows without a region and disagreements between sources are omitted unless
-the dataset has a specific correction. It is a public reference snapshot.
+the dataset has a specific correction. The card details index adds the issuer
+name, card network and card type to the same regions. Conflicting fields are
+blank unless supported by a correction or a reviewed mainland source. The
+index is a public reference snapshot.
 
 To rebuild, extract bins.csv and conflicts.csv from the pinned source and run
 python scripts/build-bin-regions.py SOURCE_DIR public/bin-data/issuer-regions-fcc907c.bin
@@ -61,5 +64,7 @@ unreviewed records. Public issuer and partner disclosures take precedence over
 the older region snapshot for the published prefix. An exact eight-digit match
 takes priority over a six-digit match. New or unlisted card ranges may be absent.
 
-To rebuild, extract bin.csv and name.csv from the pinned bcbc source and run
-node scripts/build-bin-mainland.mjs SOURCE_DIR
+To rebuild the card details, extract bin.csv and name.csv from the pinned bcbc
+source and bins.csv and conflicts.csv from the pinned binlist-data source. Run
+node scripts/build-bin-mainland.mjs BCBC_DIR MAINLAND_DETAILS_JSON
+python scripts/build-bin-cards.py BINLIST_DIR MAINLAND_DETAILS_JSON public/bin-data/issuer-cards-fcc907c-v1.bin
