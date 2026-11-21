@@ -6,13 +6,15 @@ import { searchCatalog } from "../../lib/search";
 import { binCardDataPath, readBinCards } from "../../lib/tools/bin-cards";
 import { binPrefix, binToolPath } from "../../lib/tools/bin-region";
 import { billingToolPath } from "../../lib/tools/billing-address";
+import { accountHelperPath, generatePassword, generateTestProfile, passwordGroups } from "../../lib/tools/account-helper";
+import { feeCosts, feeToolPath } from "../../lib/tools/fee-calculator";
 import { classifyIceAddress, compareBrowserRegion, envToolPath } from "../../lib/tools/env-check";
 import { parseTotp, totpCode, totpToolPath } from "../../lib/tools/totp";
 
 const lookup = readBinCards(new Uint8Array(readFileSync(`public${binCardDataPath}`)).buffer);
 
 test("the public tools are indexed by site search", () => {
-  assert.deepEqual(tools.map(tool => tool.href), [binToolPath, totpToolPath, billingToolPath, envToolPath]);
+  assert.deepEqual(tools.map(tool => tool.href), [binToolPath, totpToolPath, billingToolPath, envToolPath, feeToolPath, accountHelperPath]);
   for (const query of ["BIN", "发卡地区", "發卡地區", "BIN lookup", "银行卡地区识别"]) {
     assert.equal(searchCatalog(query, "tool")[0]?.href, binToolPath, query);
   }
@@ -22,6 +24,40 @@ test("the public tools are indexed by site search", () => {
   assert.equal(searchCatalog("两步验证", "tool")[0]?.href, totpToolPath);
   assert.equal(searchCatalog("US billing address", "tool")[0]?.href, billingToolPath);
   assert.equal(searchCatalog("WebRTC", "tool")[0]?.href, envToolPath);
+  assert.equal(searchCatalog("跨境订阅成本", "tool")[0]?.href, feeToolPath);
+  assert.equal(searchCatalog("password generator", "tool")[0]?.href, accountHelperPath);
+});
+
+test("subscription costs compound the two fees and handle zero and invalid rates", () => {
+  const amount = feeCosts(20, 7.1, 2, 3);
+  assert.equal(amount?.total.toFixed(2), "149.19");
+  assert.equal(amount?.loss.toFixed(2), "7.19");
+  assert.equal(amount?.effectiveRate.toFixed(6), "7.459260");
+  assert.deepEqual(feeCosts(2000, 0.04, 0, 0), { total: 80, loss: 0, effectiveRate: 0.04 });
+  assert.deepEqual(feeCosts(0, 7, 0, 0), { total: 0, loss: 0, effectiveRate: 7 });
+  assert.equal(feeCosts(20, 0, 0, 0), undefined);
+  assert.equal(feeCosts(20, 7, -2, 0), undefined);
+  assert.equal(feeCosts(Number.MAX_VALUE, 7, 2, 0), undefined);
+});
+
+test("random passwords honor selected groups and generate adults' test dates", () => {
+  const built = generatePassword(32, ["upper", "lower", "digits", "symbols"]);
+  assert.equal(built?.password.length, 32);
+  for (const group of Object.values(passwordGroups)) {
+    assert.ok([...group].some(char => built?.password.includes(char)));
+  }
+  const digits = generatePassword(12, ["digits"]);
+  assert.match(digits?.password ?? "", /^\d{12}$/);
+  assert.ok((built?.entropy ?? 0) > (digits?.entropy ?? 0));
+  assert.equal(generatePassword(16, []), undefined);
+  assert.equal(generatePassword(11, ["digits"]), undefined);
+  for (let i = 0; i < 20; i += 1) {
+    const profile = generateTestProfile(new Date(2026, 10, 21));
+    assert.match(profile.birthday, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(profile.birthday >= "1960-11-22" && profile.birthday <= "2008-11-21", profile.birthday);
+    assert.equal(new Date(profile.birthday).toISOString().slice(0, 10), profile.birthday);
+    assert.match(profile.username, /^[a-z]+\.[a-z]+\d{4}$/);
+  }
 });
 
 test("browser region checks distinguish matches, differences and missing signals", () => {

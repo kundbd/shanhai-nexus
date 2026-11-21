@@ -1,4 +1,8 @@
 {
+  "跨境订阅与 U 卡成本计算器": "Cross-Border Subscription & U Card Cost Calculator",
+  "将外币订阅与 U 卡手续费折算为人民币总成本。": "Estimate the total cost of foreign-currency subscriptions and U card fees in Chinese yuan.",
+  "本地强密码与注册资料生成器": "Local Password & Test Profile Generator",
+  "本地生成随机密码、英文姓名、成年测试出生日期和用户名。": "Generate random passwords, English names, adult test dates of birth, and usernames locally.",
   "出海浏览器环境自检": "Browser Environment Check",
   "查看浏览器时区、语言、屏幕和平台信息，并检查地区一致性与 WebRTC 地址暴露。": "Inspect your browser’s time zone, language, screen and platform, and check region consistency and WebRTC address exposure.",
   "网页版 2FA 生成器": "Web 2FA Code Generator",

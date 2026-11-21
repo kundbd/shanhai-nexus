@@ -237,6 +237,20 @@
 .env-status[data-tone=green]{background:#e1f4ea;color:#205842}
 .env-status[data-tone=yellow]{background:var(--amber-bg);color:var(--amber)}
 .env-status[data-tone=red]{background:var(--danger-bg);color:var(--danger)}
+.tool-field,.account-helper-section{display:grid;gap:8px;min-width:0}
+.fee-fields,.profile-fields{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.fee-results dd{font-variant-numeric:tabular-nums;font-weight:650}
+.tool-section-heading{margin:0;font-size:1rem}
+.tool-form input[type=range]{accent-color:var(--primary);border:0;padding:0;min-height:26px}
+.password-groups{min-width:0;padding:0;border:0;display:flex;flex-wrap:wrap;gap:6px 14px}
+.password-groups legend{padding:0;margin:0 0 5px;font-size:13px;color:var(--muted)}
+.password-groups label{display:inline-flex;align-items:center;gap:5px}
+.tool-form input[type=checkbox]{width:16px;min-height:16px;accent-color:var(--primary)}
+.generated-password,.profile-fields dd>span{overflow-wrap:anywhere}
+.generated-password{font-size:1.1rem}
+.profile-fields{margin:0}
+.profile-fields dt{font-size:13px;color:var(--muted)}
+.profile-fields dd{display:grid;gap:4px;margin:2px 0 0}
 .policy-legend dt{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .catalog-filters label,.field-stack label,.admin-form label{display:grid;gap:4px;font-size:13px;font-weight:640;min-width:0}
 .catalog-filters input,.catalog-filters select,.field-stack input,.field-stack select,.field-stack textarea,.admin-form input:not([type=hidden]),.admin-form select,.admin-form textarea{width:100%;min-width:0;min-height:41px;padding:6px 9px;border:1px solid var(--line-strong);border-radius:5px;background:var(--surface);color:var(--ink);font-size:14px;font-weight:400}

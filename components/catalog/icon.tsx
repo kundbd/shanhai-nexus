@@ -1,8 +1,9 @@
-import { CreditCard, MapPin, Monitor, ShieldCheck, Wrench } from "lucide-react";
+import { Calculator, CreditCard, KeyRound, MapPin, Monitor, ShieldCheck, Wrench } from "lucide-react";
 import type { Tone } from "@/lib/catalog/types";
 
 const icons = {
-  "credit-card": CreditCard, "map-pin": MapPin, monitor: Monitor, "shield-check": ShieldCheck, tool: Wrench,
+  calculator: Calculator, "credit-card": CreditCard, "key-round": KeyRound, "map-pin": MapPin,
+  monitor: Monitor, "shield-check": ShieldCheck, tool: Wrench,
 };
 
 export function IconTile({ icon, tone = "teal", compact = false }: { icon: string; tone?: Tone; compact?: boolean }) {
