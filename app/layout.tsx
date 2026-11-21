@@ -5,12 +5,14 @@ import { Footer } from "@/components/site/footer";
 import { RegionIndicator } from "@/components/site/region-indicator";
 import { SiteLanguageProvider } from "@/components/site/language";
 import { PageTraffic } from "@/components/site/page-traffic";
+import { Assistant } from "@/components/site/assistant";
 import { siteDescription, siteUrl } from "@/lib/site";
 import { brand, legacyThemeStorageKey, themeStorageKey } from "@/lib/brand";
 import { siteConsentRequiredHeader } from "@/lib/site-consent";
 import { getSiteLanguage, getTranslations } from "@/lib/i18n/server";
 import "./globals.css";
 import "./directory.css";
+import "./assistant.css";
 
 const themeScript = `try{var t=localStorage.getItem('${themeStorageKey}')??localStorage.getItem('${legacyThemeStorageKey}');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`;
 
@@ -44,7 +46,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <Header region={<RegionIndicator />} />
         </>}
         <main id="main" tabIndex={-1}>{children}</main>
-        {!pendingConsent && <><Footer /><PageTraffic /></>}
+        {!pendingConsent && <><Footer /><PageTraffic /><Assistant enabled={Boolean(process.env.DEEPSEEK_API_KEY?.trim())} /></>}
       </SiteLanguageProvider>
     </body>
   </html>;

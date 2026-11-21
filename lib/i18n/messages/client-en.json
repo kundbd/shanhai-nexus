@@ -294,5 +294,21 @@
   "注册验证码提醒": "Registration verification codes",
   "注册中…": "Creating account…",
   "转发": "Repost",
-  "最多 4 张照片，每张 5 MB，或 1 段 24 MB 视频。": "Up to four images at 5 MB each or one video up to 24 MB."
+  "最多 4 张照片，每张 5 MB，或 1 段 24 MB 视频。": "Up to four images at 5 MB each or one video up to 24 MB.",
+  "山海小助手": "Shanhai Assistant",
+  "打开山海小助手": "Open Shanhai Assistant",
+  "由 DeepSeek 提供回答": "Powered by DeepSeek",
+  "助手暂不可用": "Assistant unavailable",
+  "清空对话": "Clear conversation",
+  "收起助手": "Minimize assistant",
+  "你好呀，我是山海小助手。可以问我本站工具怎么用、海外 AI 订阅怎么选，或绑卡失败怎么排查。": "Hi, I’m the Shanhai Assistant. Ask me about our tools, AI subscriptions, or card payment issues.",
+  "绑卡被拒怎么排查原因？": "Why was my card declined?",
+  "免税州地址怎么选最稳？": "What should I know about tax-free state addresses?",
+  "帮我算算开哪家 AI 最划算": "Help me compare AI subscription costs",
+  "输入你的问题": "Ask a question",
+  "发送消息": "Send message",
+  "正在回复…": "Replying…",
+  "提问太频繁，请稍后再试。": "Too many requests. Try again in a moment.",
+  "回复中断，请稍后再试。": "The reply was interrupted. Please try again.",
+  "聊天内容发往 DeepSeek。请勿填写完整卡号、密码、密钥或验证码。": "Chat messages are sent to DeepSeek. Keep card numbers, passwords, secret keys and verification codes private."
 }
