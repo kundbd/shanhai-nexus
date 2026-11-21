@@ -44,3 +44,15 @@ test("the mainland supplement fills gaps without assuming all 62 prefixes are fr
   assert.equal(matchMainlandBin("629999"), undefined);
   assert.equal(lookup("629999"), undefined);
 });
+
+test("published mainland debit and credit prefixes coexist with other Mastercard regions", () => {
+  const lookup = readBinRegions(new Uint8Array(readFileSync(`public${binDataPath}`)).buffer);
+  for (const prefix of ["534293", "531063", "525612", "523649", "537832", "536113", "543809"]) {
+    assert.deepEqual(matchMainlandBin(prefix), { code: "CN", digits: 6 }, prefix);
+  }
+  assert.deepEqual(matchMainlandBin("53429300"), { code: "CN", digits: 6 });
+  assert.deepEqual(matchMainlandBin("43674502"), { code: "CN", digits: 8 });
+  assert.equal(matchMainlandBin("43674599"), undefined);
+  assert.equal(matchMainlandBin("510195"), undefined);
+  assert.equal(lookup("510195"), "MY");
+});

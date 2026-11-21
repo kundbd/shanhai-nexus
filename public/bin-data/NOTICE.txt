@@ -29,10 +29,37 @@ Shenzhen Human Resources and Social Security Bureau, social security card BINs:
 https://szeb.sz.gov.cn/attachment/1/1447/1447926/11303034.pdf
 Jilin University, payroll card prefixes: https://talent.jlu.edu.cn/info/1036/1372.htm
 
+China Merchants Bank Mastercard debit (Cathay offer):
+https://flights.cathaypacific.com/sc_CN/offers/MasterCard_promotion_CMB.html
+China Merchants Bank Mastercard credit:
+https://cc.cmbchina.com/notice/20250325gg.htm
+https://cc.cmbchina.com/detail/20250912gg_news.htm
+ICBC Mastercard, UnionPay/Visa and Amex credit:
+https://www.gd.icbc.com.cn/page/1190591204531261440.html
+https://www.icbc.com.cn/page/1085611897506119680.html
+https://m.icbc.com.cn/page/1210582170873421824.html
+Agricultural Bank of China Mastercard and UnionPay/Visa credit:
+https://www.abchina.com/cn/creditcard/aboutus/update/202503/t20250326_2441807.htm
+https://www.abchina.com/cn/Creditcard/AboutUs/Update/202504/t20250414_2442756.htm
+Bank of China Mastercard and UnionPay/Visa credit:
+https://www.boc.cn/bcservice/bi2/202509/t20250917_25499283.html
+https://www.boc.cn/bcservice/bi2/202504/t20250410_25318908.html
+China Construction Bank UnionPay/Visa credit:
+https://group2.ccb.com/chn/2025-05/24/article_2025052402262133452.shtml
+https://ccb.com/chn/2025-06/20/article_2025062010334499653.shtml
+https://creditcard.ccb.com/chn/2025-11/06/article_2025110609560196962.shtml
+Postal Savings Bank of China, China Minsheng Bank and China Guangfa Bank Mastercard credit:
+https://www.psbc.com/cn/grfw/xyk/xxplzq/xxplzqywgg/202506/t20250623_343357.html
+https://creditcard.cmbc.com.cn/tyglweb/home/cn/web/customer/import/20250123/18636.shtml
+https://www.cgbchina.com.cn/Info/27656299
+Shanghai Pudong Development Bank UnionPay debit (UnionPay International):
+https://www.unionpayintl.com/cardholderServ/serviceCenter/merchant/1223318813891?type=1
+
 The supplement keeps exact published six- and eight-digit prefixes. The bcbc
 import selects reviewed mainland issuers and omits conflicts with overseas or
-unreviewed records. A verified eight-digit match takes priority over a six-digit
-match. New or otherwise unlisted card ranges may be absent.
+unreviewed records. Public issuer and partner disclosures take precedence over
+the older region snapshot for the published prefix. An exact eight-digit match
+takes priority over a six-digit match. New or unlisted card ranges may be absent.
 
-To rebuild, extract bin.csv from the pinned bcbc source and run
+To rebuild, extract bin.csv and name.csv from the pinned bcbc source and run
 node scripts/build-bin-mainland.mjs SOURCE_DIR
