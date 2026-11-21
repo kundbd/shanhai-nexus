@@ -17,8 +17,12 @@ test("assistant validates chat input, preserves streaming, and rate-limits upstr
   t.mock.method(globalThis, "fetch", async (url: unknown, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     trace.push({ url, authorization: new Headers(init.headers).get("Authorization"), body });
-    const isUnable = body.messages.at(-1)?.content === "帮我写期末论文";
-    const chunks = isUnable ? ["\n[[UN", "ABLE]]", "\n本喵只懂本站工具哦。"] : ["**喵**", "，核对账单资料。"];
+    const question = body.messages.at(-1)?.content;
+    const chunks = question === "帮我写期末论文"
+      ? ["\n[[UN", "ABLE]]", "\n本喵只懂本站工具哦。"]
+      : question === "帮我写作业"
+        ? ["*耳朵动了动*\n本喵的", "小脑袋瓜只装得下 AI 订阅喵。"]
+        : ["**喵**", "，核对账单资料。"];
     const payload = chunks.map((content) => `data: ${JSON.stringify({ choices: [{ delta: { content, reasoning_content: "hidden" } }] })}\r\n\r\n`).join("");
     const source = encoder.encode(`: pending\r\n\r\n${payload}data: [DONE]\n\n`);
     return new Response(new ReadableStream({
@@ -70,7 +74,11 @@ test("assistant validates chat input, preserves streaming, and rate-limits upstr
   for await (const event of readAssistantEvents(refusal.body!)) refusalEvents.push(event);
   assert.deepEqual(refusalEvents, [JSON.stringify({ text: "\n本喵只懂本站工具哦。" }), '{"sticker":"unable"}', "[DONE]"]);
 
-  for (let count = 2; count < 6; count++) {
+  const unmarkedRefusal = await POST(request([{ role: "user", content: "帮我写作业" }]));
+  assert.equal(unmarkedRefusal.status, 200);
+  assert.match(await unmarkedRefusal.text(), /data: {"sticker":"unable"}\n\ndata: \[DONE\]/);
+
+  for (let count = 3; count < 6; count++) {
     const reply = await POST(request());
     assert.equal(reply.status, 200);
     await reply.text();

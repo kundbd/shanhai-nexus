@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { assistantReplyLimit, readAssistantEvents } from "@/lib/assistant/protocol";
-import { assistantMessages, assistantModel, assistantSystemPrompt, assistantUnableMarker, reserveAssistantRequest } from "@/lib/assistant/server";
+import { assistantMessages, assistantModel, assistantSystemPrompt, assistantUnableMarker, isAssistantRefusal, reserveAssistantRequest } from "@/lib/assistant/server";
 import { boundedText } from "@/lib/directory/imports";
 import { siteConsentCookie, siteConsentVersion } from "@/lib/site-consent";
 import { sameOriginBrowserRequest } from "@/lib/site-request";
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
   const stream = readAssistantEvents(upstream.body);
   let size = 0;
   let opening: string | undefined = "";
+  let replyLead = "";
   let unable = false;
   const eventData = (value: object) => encoder.encode(`data: ${JSON.stringify(value)}\n\n`);
   return new Response(new ReadableStream<Uint8Array>({
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
           if (done) break;
           if (value === "[DONE]") {
             if (opening?.trim()) controller.enqueue(eventData({ text: opening }));
-            if (unable) controller.enqueue(eventData({ sticker: "unable" }));
+            if (unable || isAssistantRefusal(replyLead)) controller.enqueue(eventData({ sticker: "unable" }));
             if (size || unable) controller.enqueue(encoder.encode("data: [DONE]\n\n"));
             else controller.enqueue(encoder.encode('data: {"error":"unavailable"}\n\n'));
             controller.close();
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
             opening = undefined;
           }
           if (!text) continue;
+          if (replyLead.length < 400) replyLead += text.slice(0, 400 - replyLead.length);
           controller.enqueue(eventData({ text }));
           return;
         }
