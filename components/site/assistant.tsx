@@ -5,13 +5,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslations } from "@/components/site/language";
-import { assistantInputLimit, assistantTurnLimit, isAssistantTool, readAssistantEvents, type AssistantMessage } from "@/lib/assistant/protocol";
+import { assistantCatalogHref, assistantInputLimit, assistantTurnLimit, isAssistantTool, readAssistantEvents, type AssistantMessage } from "@/lib/assistant/protocol";
 import { AssistantMarkdown } from "./assistant-markdown";
 
 const AVATAR_URL = "/assistant-avatar.jpg";
 const questions = ["绑卡被拒怎么排查原因？", "免税州地址怎么选最稳？", "帮我算算开哪家 AI 最划算"] as const;
 
-type Turn = { id: number; question: string; answer: string; complete: boolean; unable?: boolean };
+type Turn = { id: number; question: string; answer: string; complete: boolean; unable?: boolean; links?: string[] };
 
 export function Assistant({ enabled, currentTool }: { enabled: boolean; currentTool?: string }) {
   const t = useTranslations();
@@ -62,7 +62,8 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
     const abort = new AbortController();
     request.current = abort;
     const messages: AssistantMessage[] = turns.filter((turn) => turn.complete).slice(-(assistantTurnLimit - 1))
-      .flatMap(({ question, answer }) => [{ role: "user", content: question }, { role: "assistant", content: answer }]);
+      .flatMap(({ question, answer, links }) => [{ role: "user", content: question },
+        { role: "assistant", content: links?.length ? answer.replace(/\[([^\]\n]+)\]\([^\s)]+\)/g, "$1") : answer }]);
     messages.push({ role: "user", content: question });
     follow.current = true;
     setError("");
@@ -94,7 +95,9 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
         if (typeof event.text !== "string") throw new Error("Assistant reply interrupted.");
         answer += event.text;
         const updated = answer;
-        setTurns((items) => items.map((item) => item.id === id ? { ...item, answer: updated } : item));
+        const links: string[] | undefined = Array.isArray(event.links)
+          ? event.links.flatMap((value: unknown) => assistantCatalogHref(value) ?? []) : undefined;
+        setTurns((items) => items.map((item) => item.id === id ? { ...item, answer: updated, links: links ?? item.links } : item));
       }
       throw new Error("Assistant reply ended early.");
     } catch {
@@ -139,7 +142,7 @@ export function Assistant({ enabled, currentTool }: { enabled: boolean; currentT
         </div>}
         {turns.map((turn) => <div className="assistant-turn" key={turn.id}>
           <p className="assistant-question">{turn.question}</p>
-          {!!turn.answer && <div className="assistant-reply"><AssistantMarkdown text={turn.answer} /></div>}
+          {!!turn.answer && <div className="assistant-reply"><AssistantMarkdown text={turn.answer} links={turn.links} /></div>}
           {turn.unable && <Image className="assistant-sticker" src="/assistant-unable.webp" alt={t("山海小助手暂时答不上来")} width={600} height={800} unoptimized />}
         </div>)}
         {pending && <p className="assistant-progress" role="status">{t("正在回复…")}</p>}

@@ -1,11 +1,22 @@
 import type { NextRequest } from "next/server";
 import { assistantReplyLimit, readAssistantEvents } from "@/lib/assistant/protocol";
+import { assistantCatalogIntent, assistantCatalogReply } from "@/lib/assistant/catalog";
 import { assistantMessages, assistantModel, assistantSystemPrompt, assistantUnableMarker, isAssistantRefusal, reserveAssistantRequest } from "@/lib/assistant/server";
+import { directory } from "@/lib/directory/db";
 import { boundedText } from "@/lib/directory/imports";
+import { visibilityForHeaders } from "@/lib/geo/request";
+import { defaultLanguage, isSiteLanguage, languageCookie } from "@/lib/i18n/language";
 import { siteConsentCookie, siteConsentVersion } from "@/lib/site-consent";
 import { sameOriginBrowserRequest } from "@/lib/site-request";
 
 export const runtime = "nodejs";
+
+const eventHeaders = {
+  "Content-Type": "text/event-stream; charset=utf-8",
+  "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no",
+};
+const endEvent = "data: [DONE]\n\n";
+const eventFrame = (value: object) => `data: ${JSON.stringify(value)}\n\n`;
 
 function errorResponse(error: string, status: number, headers?: HeadersInit) {
   return Response.json({ error }, { status, headers: { "Cache-Control": "no-store", ...headers } });
@@ -32,6 +43,19 @@ export async function POST(request: NextRequest) {
 
   const reservation = reserveAssistantRequest(request.headers);
   if (!reservation.release) return errorResponse("rate_limit", 429, { "Retry-After": String(reservation.retryAfter) });
+  const catalogIntent = assistantCatalogIntent(messages.at(-1)!.content);
+  if (catalogIntent) {
+    try {
+      const language = request.cookies.get(languageCookie)?.value;
+      const reply = assistantCatalogReply(catalogIntent, directory(), await visibilityForHeaders(request.headers),
+        isSiteLanguage(language) ? language : defaultLanguage);
+      return new Response(eventFrame(reply) + endEvent, { headers: eventHeaders });
+    } catch {
+      return errorResponse("unavailable", 503);
+    } finally {
+      reservation.release();
+    }
+  }
   const upstreamAbort = new AbortController();
   const signal = AbortSignal.any([request.signal, AbortSignal.timeout(50_000), upstreamAbort.signal]);
   signal.addEventListener("abort", reservation.release, { once: true });
@@ -62,7 +86,7 @@ export async function POST(request: NextRequest) {
   let opening: string | undefined = "";
   let replyLead = "";
   let unable = false;
-  const eventData = (value: object) => encoder.encode(`data: ${JSON.stringify(value)}\n\n`);
+  const eventData = (value: object) => encoder.encode(eventFrame(value));
   return new Response(new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
@@ -72,7 +96,7 @@ export async function POST(request: NextRequest) {
           if (value === "[DONE]") {
             if (opening?.trim()) controller.enqueue(eventData({ text: opening }));
             if (unable || isAssistantRefusal(replyLead)) controller.enqueue(eventData({ sticker: "unable" }));
-            if (size || unable) controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            if (size || unable) controller.enqueue(encoder.encode(endEvent));
             else controller.enqueue(encoder.encode('data: {"error":"unavailable"}\n\n'));
             controller.close();
             upstreamAbort.abort();
@@ -111,8 +135,5 @@ export async function POST(request: NextRequest) {
       upstreamAbort.abort();
       await stream.return(undefined).catch(() => {});
     },
-  }), { headers: {
-    "Content-Type": "text/event-stream; charset=utf-8",
-    "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no",
-  } });
+  }), { headers: eventHeaders });
 }

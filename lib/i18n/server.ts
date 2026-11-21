@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { clientMessages } from "./client-messages";
-import { defaultLanguage, isSiteLanguage, languageCookie, translator } from "./language";
+import { defaultLanguage, isSiteLanguage, languageCookie, translator, type SiteLanguage } from "./language";
 import english from "./messages/en.json";
 import traditionalChinese from "./messages/zh-Hant.json";
 
@@ -17,5 +17,7 @@ export const getSiteLanguage = cache(async () => {
 });
 
 export async function getTranslations() {
-  return translations[await getSiteLanguage()];
+  return translationsForLanguage(await getSiteLanguage());
 }
+
+export const translationsForLanguage = (language: SiteLanguage) => translations[language];
